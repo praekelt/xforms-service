@@ -1,9 +1,6 @@
 # Praekelt XForms Service#
 
-----------
-
 ##A RESTful XForms Processor Service##
-
 
 ### Rest Endpoints ###
 
@@ -12,9 +9,6 @@
 - GET /results
 - GET /result/{id}
 - DELETE /form/{id}
-
-### Additional Rest Endpoints For ODK ###
-
 - GET /formList
 - GET /completed
 - GET /delete/{id}
