@@ -4,6 +4,7 @@
 	http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
     <display-name>Restful XForms</display-name>
 
+<!--
     <servlet>
         <servlet-name>jersey-servlet</servlet-name>
         <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
@@ -33,19 +34,19 @@
         <servlet-name>jersey-forms</servlet-name>
         <url-pattern>/forms/*</url-pattern>
     </servlet-mapping>
-
+-->
     <servlet>
         <servlet-name>jersey-vumi</servlet-name>
         <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>com.sun.jersey.config.property.packages</param-name>
-            <param-value>org.praekelt</param-value>
+            <param-value>org.praekelt.vumi</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
     <servlet-mapping>
-        <servlet-name>jersey-forms</servlet-name>
+        <servlet-name>jersey-vumi</servlet-name>
         <url-pattern>/vumi/*</url-pattern>
     </servlet-mapping>
 

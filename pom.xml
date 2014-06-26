@@ -42,14 +42,33 @@
             <artifactId>jersey-multipart</artifactId>
             <version>1.8</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.sun.tools.ws</groupId>
+            <artifactId>webservices-tools</artifactId>
+            <version>2.1-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.mep</groupId>
+            <artifactId>mep_client_api</artifactId>
+            <version>1.1</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.kxml2</groupId>
+            <artifactId>kxml</artifactId>
+            <version>latest</version>
+        </dependency>
+        <dependency>
+            <groupId>me.regexp</groupId>
+            <artifactId>regexp</artifactId>
+            <version>latest</version>
+        </dependency>
         <dependency>
             <groupId>org.javarosa</groupId>
-            <artifactId>javarosa-libraries</artifactId>
+            <artifactId>javarosa</artifactId>
             <version>latest</version>
-            <scope>compile</scope>
         </dependency>
-
     </dependencies>
 
     <build>
