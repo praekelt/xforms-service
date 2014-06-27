@@ -25,6 +25,9 @@
                     <tr><td>Get Sessions</td><td><input type="button" onclick="app.getSessions()" value="Send" /></td></tr>
                     <tr><td>Get A Session</td><td><input type="button" onclick="app.getSession()" value="Send" /></td></tr>
                     <tr><td>Destroy Session</td><td><input type="button" onclick="app.destroySession()" value="Send" /></td></tr>
+
+                    <tr><td>Get Forms</td><td><input type="button" onclick="app.getForms()" value="Send" /></td></tr>
+
                     <tr><td>Get Command</td><td><input type="button" onclick="app.getCommand()" value="Send" /></td></tr>
                     <tr><td>Post Command</td><td><input type="button" onclick="app.postCommand()" value="Send" /></td></tr>
                 </tbody>
@@ -40,6 +43,12 @@
                                         },
                                         getSession: function() {
                                             comms.doGet("/session.json", $("#parameter").val());
+                                        },
+                                        getForms: function() {
+                                            comms.doGet("/forms.json", "");
+                                        },
+                                        getForm: function() {
+                                            comms.doGet("/form.json", $("#parameter").val());
                                         },
                                         createSession: function() {
                                             comms.doPost("/sessions", "POST", "");

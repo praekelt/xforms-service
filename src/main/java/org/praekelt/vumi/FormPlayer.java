@@ -19,7 +19,7 @@ import org.praekelt.tools.RosaFactory;
  *
  * @author victorgeere
  */
-@Path("forms")
+@Path("/forms")
 public class FormPlayer {
 
     @Context
@@ -29,6 +29,13 @@ public class FormPlayer {
      * Creates a new instance of FormPlayer
      */
     public FormPlayer() {
+    }
+
+    @GET
+    @Path("status")
+    @Produces("text/html")
+    public String getStatus() {
+        return "alive";
     }
 
     /**
@@ -88,7 +95,7 @@ public class FormPlayer {
     @Path("forms.json")
     @Produces("text/json")
     public String jsonGetForms() {
-        Set<String> set = JedisFactory.getInstance().getKeys("form*");
+        Set<String> set = JedisFactory.getInstance().getKeys("*.xml");
 
         String s = "{";
         Iterator<String> iterator = set.iterator();
@@ -104,7 +111,7 @@ public class FormPlayer {
     @Path("forms.html")
     @Produces("text/json")
     public String htmlGetForms() {
-        Set<String> set = JedisFactory.getInstance().getKeys("form*");
+        Set<String> set = JedisFactory.getInstance().getKeys("*.xml");
 
         String s = getHeader();
         s += "<ul>";
@@ -169,7 +176,7 @@ public class FormPlayer {
     @POST
     @Produces("text/html")
     public String newSessionHtml() {
-        String id = "session-" + String.valueOf(Math.random());
+        String id = "session-" + String.valueOf(1/Math.random());
         RosaFactory xform = RosaFactory.getInstance();
         JedisFactory.getInstance().set(id, xform.serialize());
         return id;

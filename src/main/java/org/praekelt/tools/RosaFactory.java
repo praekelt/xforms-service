@@ -9,6 +9,8 @@ import java.io.StringReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.javarosa.model.xform.XFormSerializingVisitor;
+
 import org.javarosa.core.model.Constants;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
@@ -36,12 +38,36 @@ import org.javarosa.xform.parse.XFormParser;
  */
 public class RosaFactory implements Serializable {
 
+    /**
+     * Get a RosaFactory object, deal with deserialization 
+     * 
+     * @return 
+     */
     public static RosaFactory getInstance() {
         return new RosaFactory();
     }
 
     /**
-     *
+     * Serialize a form
+     * 
+     * @param form
+     * @return 
+     */
+    public String serializeForm(FormDef form) {
+        String s = "";
+        try {
+            XFormSerializingVisitor fs = new XFormSerializingVisitor();
+            byte[] ba = fs.serializeInstance(form.getInstance());
+            s = new String(ba, "UTF-8");
+        } catch (IOException ex) {
+            Logger.getLogger(RosaFactory.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return s;
+    }
+    
+    /**
+     * Serialize this object if it needs to be cached in Redis
+     * 
      * @param obj
      * @return
      */
@@ -65,7 +91,17 @@ public class RosaFactory implements Serializable {
         return bout.toString();
     }
 
-    public FormDef loadForm(String xform, String instance, Object extensions, Object sessionData, Object apiAuth) {
+    /**
+     * Instantiate a form
+     * 
+     * @param xform
+     * @param instance
+     * @param extensions
+     * @param sessionData
+     * @param apiAuth
+     * @return 
+     */
+    public FormDef loadForm(String xform, String instance) {
         Reader xformReader = (Reader) new StringReader(xform);
         XFormParser xfp;
         xfp = new XFormParser(xformReader);

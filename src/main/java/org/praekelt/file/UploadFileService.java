@@ -11,8 +11,10 @@ import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.praekelt.tools.JedisFactory;
@@ -21,9 +23,16 @@ import org.praekelt.tools.JedisFactory;
  * REST Service to upload empty forms
  *
  */
-@Path("/forms")
+@Path("/xforms")
 public class UploadFileService {
 
+    @GET
+    @Path("/status")
+    @Produces("text/html")
+    public String getStatus() {
+        return "alive";
+    }
+    
     /**
      * Read uploaded file from the inputStream
      * 
