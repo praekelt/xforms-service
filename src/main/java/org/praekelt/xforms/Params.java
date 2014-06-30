@@ -2,12 +2,13 @@ package org.praekelt.xforms;
 
 
 import com.google.gson.Gson;
+import org.javarosa.core.api.State;
 
 /**
  *
  * @author victorgeere
  */
-public class Params {
+public class Params implements State {
     public String xform;
     public String navMode;
     public String sessionData;
@@ -45,12 +46,20 @@ public class Params {
         return p;
     }
     
+    public static void update() {
+    
+    }
+    
     public String toString() {
         return "{xform: \""+this.xform+"\", navMode: \""+
                 this.navMode+"\", sessionData:\""+
                 this.sessionData+"\", apiAuth:\""+
                 this.apiAuth+"\",stalenessWindow: "+
                 this.stalenessWindow+"}";
+    }
+
+    @Override
+    public void start() {
     }
     
 }
