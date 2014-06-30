@@ -16,7 +16,6 @@
             <layout>default</layout>
         </repository>
     </repositories>
-
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -30,13 +29,11 @@
             <version>2.4.2</version>
             <type>jar</type>
         </dependency>
-
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-server</artifactId>
             <version>1.8</version>
         </dependency>
-
         <dependency>
             <groupId>com.sun.jersey.contribs</groupId>
             <artifactId>jersey-multipart</artifactId>
@@ -69,6 +66,11 @@
             <artifactId>javarosa</artifactId>
             <version>latest</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>1.7.1</version>
+        </dependency>        
     </dependencies>
 
     <build>

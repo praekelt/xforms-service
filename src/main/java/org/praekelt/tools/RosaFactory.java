@@ -34,6 +34,7 @@ import org.javarosa.model.xform.XFormSerializingVisitor;
 import org.javarosa.xform.parse.XFormParser;
 import org.praekelt.xforms.Event;
 import org.praekelt.xforms.Lock;
+import org.praekelt.xforms.Params;
 import org.praekelt.xforms.Persistence;
 import org.praekelt.xforms.SequencingException;
 
@@ -54,9 +55,28 @@ public class RosaFactory implements Serializable {
     private FormEntryController fec;
     private Event currentEvent;
     private Date lastActivity;
+    private final int stalenessWindow;
+    private final Params origParams;
 
+    /**
+     * 
+     * @param uuid
+     * @param navMode
+     * @param seqId
+     * @param xform
+     * @param instance
+     * @param extensions
+     * @param sessionData
+     * @param apiAuth
+     * @param initLang
+     * @param curIndex
+     * @param persist
+     * @param stalenessWindow 
+     */
     public RosaFactory(String uuid, String navMode, int seqId, String xform,
-            String instance, String extensions, String sessionData, String apiAuth, String initLang, int curIndex) {
+            String instance, String extensions, String sessionData, 
+            String apiAuth, String initLang, int curIndex, boolean persist, int stalenessWindow) {
+        
         this.uuid = uuid;
         this.lock = new Lock();
         this.navMode = navMode;
@@ -80,25 +100,14 @@ public class RosaFactory implements Serializable {
 
         this.parseCurrentEvent();
 
-        /*
-
-         this.staleness_window = 3600. * params['staleness_window'
-         ]
-         this.persist = params.get('persist', settings.PERSIST_SESSIONS
-         )
-         this.orig_params = {
-         'xform': xform,
-         'nav_mode'
-         : params.get('nav_mode'),
-         'session_data'
-         : params.get('session_data'),
-         'api_auth'
-         : params.get('api_auth'),
-         'staleness_window': params['staleness_window'
-         ],
-         }
-         this.update_last_activity()
-         */
+         this.stalenessWindow = 3600 * stalenessWindow;
+         
+         this.persist = persist; //params.get('persist', settings.PERSIST_SESSIONS);
+         
+         this.origParams = new Params(xform, navMode, sessionData, apiAuth, stalenessWindow);
+                 
+         this.updateLastActivity();
+         
     }
 
     /**
@@ -107,7 +116,7 @@ public class RosaFactory implements Serializable {
      * @return
      */
     public static RosaFactory getInstance() {
-        return new RosaFactory("", "", 0, "", "", "", "", "", "", 0);
+        return new RosaFactory("", "", 0, "", "", "", "", "", "", 0, true, 1);
     }
 
     /**
@@ -226,8 +235,12 @@ public class RosaFactory implements Serializable {
              this.lastActivity = new Date();//time.time();
     }
 
-    public void sessionState() {
-        State  state = dict(this.origParams);
+    /**
+     * 
+     */
+    public State sessionState() {
+        State  state = dict(this.origParams);        
+        /*
         state.update({
             'instance': self.output(),
             'init_lang': self.get_lang(),
@@ -236,7 +249,8 @@ public class RosaFactory implements Serializable {
         });
         //# prune entries with null value, so that defaults will take effect when the session is re-created
         state = dict((k, v) for k, v in state.iteritems() if v is not null);
-        return state
+        */
+        return state;
     }
 
     public void output() {
@@ -415,6 +429,10 @@ public class RosaFactory implements Serializable {
     }
 
     private void parseRepeatJuncture(Event event) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private State dict(Params origParams) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
