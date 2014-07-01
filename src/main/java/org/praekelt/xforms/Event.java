@@ -7,6 +7,9 @@ import org.javarosa.core.model.FormIndex;
  * @author victorgeere
  */
 public class Event {
+    
+    public static final int UNRECOGNISED = 0;
+    
     String type;
     FormIndex fi;
     public String caption;
@@ -14,6 +17,16 @@ public class Event {
     private String imageText;
     private boolean repeatable;
     private boolean exists;
+    
+    private int dataType;
+
+    public int getDataType() {
+        return dataType;
+    }
+
+    public void setDataType(int dataType) {
+        this.dataType = dataType;
+    }
 
     public String getCaption() {
         return caption;
@@ -62,5 +75,6 @@ public class Event {
     public boolean isExists() {
         return this.exists;
     }
+
     
 }

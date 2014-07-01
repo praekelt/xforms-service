@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
+import java.sql.Types;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.logging.Level;
@@ -16,7 +17,6 @@ import org.javarosa.core.model.Constants;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.data.DateData;
-//import org.javarosa.core.model.data.LongData;
 import org.javarosa.core.model.data.DecimalData;
 import org.javarosa.core.model.data.GeoPointData;
 import org.javarosa.core.model.data.IntegerData;
@@ -37,6 +37,9 @@ import org.praekelt.xforms.Lock;
 import org.praekelt.xforms.Params;
 import org.praekelt.xforms.Persistence;
 import org.praekelt.xforms.SequencingException;
+import org.praekelt.xforms.Status;
+import org.praekelt.xforms.ValueException;
+import org.praekelt.xforms.XTypes;
 
 /**
  * The object that will contain the xform state
@@ -53,10 +56,14 @@ public class RosaFactory implements Serializable {
     private FormDef form;
     private FormEntryModel fem;
     private FormEntryController fec;
-    private Event currentEvent;
     private Date lastActivity;
     private final int stalenessWindow;
     private final Params origParams;
+    private Event curEvent;
+    private Object answer;
+    private int datatype;
+    private Object ix;
+    private Object q;
 
     /**
      *
@@ -242,10 +249,10 @@ public class RosaFactory implements Serializable {
         Params state = this.origParams;
         /*
          state.update({
-         'instance': self.output(),
-         'init_lang': self.get_lang(),
-         'cur_index': str(self.fem.getFormIndex()) if self.nav_mode != 'fao' else None,
-         'seq_id': self.seq_id,
+         'instance': this.output(),
+         'init_lang': this.get_lang(),
+         'cur_index': str(this.fem.getFormIndex()) if this.nav_mode != 'fao' else None,
+         'seq_id': this.seq_id,
          });
          //# prune entries with null value, so that defaults will take effect when the session is re-created
          state = dict((k, v) for k, v in state.iteritems() if v is not null);
@@ -255,11 +262,11 @@ public class RosaFactory implements Serializable {
 
     public void output() {
         /*
-         if self.cur_event['type'] != 'form-complete':
+         if this.cur_event['type'] != 'form-complete':
          #warn that not at end of form
          pass
 
-         instance_bytes = FormSerializer().serializeInstance(self.form.getInstance())
+         instance_bytes = FormSerializer().serializeInstance(this.form.getInstance())
          return unicode(''.join(chr(b) for b in instance_bytes.tolist()), 'utf-8')        
          */
     }
@@ -268,7 +275,7 @@ public class RosaFactory implements Serializable {
         /*
          form_ix = FormIndex.createBeginningOfFormIndex()
          tree = []
-         self._walk(form_ix, tree)
+         this._walk(form_ix, tree)
          return tree
          */
     }
@@ -277,8 +284,8 @@ public class RosaFactory implements Serializable {
         /*
          def _walk(self, parent_ix, siblings):
          def step(ix, descend):
-         next_ix = self.fem.incrementIndex(ix, descend)
-         self.fem.setQuestionIndex(next_ix)  # needed to trigger events in form engine
+         next_ix = this.fem.incrementIndex(ix, descend)
+         this.fem.setQuestionIndex(next_ix)  # needed to trigger events in form engine
          return next_ix 
         
          def ix_in_scope(form_ix):
@@ -291,27 +298,27 @@ public class RosaFactory implements Serializable {
 
          form_ix = step(parent_ix, True)
          while ix_in_scope(form_ix):
-         relevant = self.fem.isIndexRelevant(form_ix)
+         relevant = this.fem.isIndexRelevant(form_ix)
 
          if not relevant:
          form_ix = step(form_ix, False)
          continue
 
-         evt = self.__parse_event(form_ix)
+         evt = this.__parse_event(form_ix)
          evt['relevant'] = relevant
          if evt['type'] == 'sub-group':
          presentation_group = (evt['caption'] != None)
          if presentation_group:
          siblings.append(evt)
          evt['children'] = []
-         form_ix = self._walk(form_ix, evt['children'] if presentation_group else siblings)
+         form_ix = this._walk(form_ix, evt['children'] if presentation_group else siblings)
          elif evt['type'] == 'repeat-juncture':
          siblings.append(evt)
          evt['children'] = []
-         for i in range(0, self.fem.getForm().getNumRepetitions(form_ix)):
+         for i in range(0, this.fem.getForm().getNumRepetitions(form_ix)):
          subevt = {
          'type': 'sub-group',
-         'ix': self.fem.getForm().descendIntoRepeat(form_ix, i),
+         'ix': this.fem.getForm().descendIntoRepeat(form_ix, i),
          'caption': evt['repetitions'][i],
          'repeatable': True,
          'children': [],
@@ -320,11 +327,11 @@ public class RosaFactory implements Serializable {
          # kinda ghetto; we need to be able to track distinct repeat instances, even if their position
          # within the list of repetitions changes (such as by deleting a rep in the middle)
          # would be nice to have proper FormEntryAPI support for this
-         java_uid = self.form.getInstance().resolveReference(subevt['ix'].getReference()).hashCode()
+         java_uid = this.form.getInstance().resolveReference(subevt['ix'].getReference()).hashCode()
          subevt['uuid'] = hashlib.sha1(str(java_uid)).hexdigest()[:12]
 
          evt['children'].append(subevt)
-         self._walk(subevt['ix'], subevt['children'])
+         this._walk(subevt['ix'], subevt['children'])
          for key in ['repetitions', 'del-choice', 'del-header', 'done-choice']:
          del evt[key]
          form_ix = step(form_ix, True) # why True?
@@ -338,9 +345,14 @@ public class RosaFactory implements Serializable {
 
     }
 
+    /**
+     * Parse the current event
+     *
+     * @return
+     */
     private Event parseCurrentEvent() {
-        this.currentEvent = this.parseEvent(this.fem.getFormIndex());
-        return this.currentEvent;
+        this.curEvent = this.parseEvent(this.fem.getFormIndex());
+        return this.curEvent;
     }
 
     /**
@@ -389,18 +401,6 @@ public class RosaFactory implements Serializable {
         return event;
     }
 
-    public void getQuestionChoices() {
-    }
-
-    public void parseStyleInfo() {
-    }
-
-    public void parseQuestion() {
-    }
-
-    public void parseRepeatJuncture() {
-    }
-
     /**
      *
      * @return
@@ -419,63 +419,141 @@ public class RosaFactory implements Serializable {
         return this.parseCurrentEvent();
     }
 
-    public void answerQuestion() {
-        /*
-         answer, _ix=None):
-         ix = self.parse_ix(_ix)
-         event = self.cur_event if ix is None else self.__parse_event(ix)
+    /**
+     *
+     *
+     * @param answer
+     * @param ix
+     */
+    public Status answerQuestion(Object answer, FormIndex ix) throws ValueException {
+        ix = this.parseIx(ix);
+        Event event = this.curEvent;
 
-         if event['type'] != 'question':
-         raise ValueError('not currently on a question')
+        if (ix != null) {
+            this.parseEvent(ix);
+        }
 
-         datatype = event['datatype']
-         if datatype == 'unrecognized':
-         # don't commit answers to unrecognized questions, since we
-         # couldn't parse what was originally there. whereas for
-         # _unsupported_ questions, we're parsing and re-committing the
-         # answer verbatim
-         return {'status': 'success'}
+        if (0 != event.getType().compareToIgnoreCase("question")) {
+            throw new ValueException("not currently on a question");
+        }
 
-         def multians(a):
-         if hasattr(a, '__iter__'):
-         return a
-         else:
-         return str(a).split()
+        int datatype = event.getDataType();
+        if (datatype == Event.UNRECOGNISED) {
 
-         if answer == None or str(answer).strip() == '' or answer == []:
-         ans = None
-         elif datatype == 'int':
-         ans = IntegerData(int(answer))
-         elif datatype == 'longint':
-         ans = LongData(int(answer))
-         elif datatype == 'float':
-         ans = DecimalData(float(answer))
-         elif datatype == 'str' or datatype == 'info':
-         ans = StringData(str(answer))
-         elif datatype == 'date':
-         ans = DateData(to_jdate(datetime.strptime(str(answer), '%Y-%m-%d').date()))
-         elif datatype == 'time':
-         ans = TimeData(to_jtime(datetime.strptime(str(answer), '%H:%M').time()))
-         elif datatype == 'select':
-         ans = SelectOneData(event['choices'][int(answer) - 1].to_sel())
-         elif datatype == 'multiselect':
-         ans = SelectMultiData(to_vect(event['choices'][int(k) - 1].to_sel() for k in multians(answer)))
-         elif datatype == 'geo':
-         ans = GeoPointData(to_arr((float(x) for x in multians(answer)), 'd'))
+        }
 
-         result = self.fec.answerQuestion(*([ans] if ix is None else [ix, ans]))
-         if result == self.fec.ANSWER_REQUIRED_BUT_EMPTY:
-         return {'status': 'error', 'type': 'required'}
-         elif result == self.fec.ANSWER_CONSTRAINT_VIOLATED:
-         q = self.fem.getQuestionPrompt(*([] if ix is None else [ix]))
-         return {'status': 'error', 'type': 'constraint', 'reason': q.getConstraintText()}
-         elif result == self.fec.ANSWER_OK:
-         return {'status': 'success'}
+//         # don"t commit answers to unrecognized questions, since we
+//         # couldn"t parse what was originally there. whereas for
+//         # _unsupported_ questions, we"re parsing and re-committing the
+//         # answer verbatim
+        return new Status("success");
+    }
+
+    /**
+     *
+     * @param a
+     * @return
+     */
+    public Status multians(String[] a) {
+
+        //TODO: causes unreachable statement
+        /**
+         * if (hasattr(a, "__iter__")) { return a; } else { return
+         * str(a).split(" "); }
          */
+        Object ans;
+        if (answer == null || str(answer).trim() == "" /**
+                 * || answer == []
+                 */
+                ) {
+            ans = null;
+        } else if (datatype == XTypes.INT) {
+            ans = IntegerData(Integer.valueOf((String) answer));
+        } else if (datatype == XTypes.LONG) {
+            ans = LongData(Long.valueOf((String) answer));
+        } else if (datatype == XTypes.FLOAT) {
+            ans = DecimalData(Float.valueOf((String) answer));
+        } else if (datatype == XTypes.STRING | datatype == XTypes.INFO) {
+            ans = StringData(str((String[]) answer));
+        } else if (datatype == XTypes.DATE) {
+            //TODO: convert date to string
+//            ans = DateData(to_jdate(datetime.strptime(str(answer), "%Y-%m-%d").date()));
+        } else if (datatype == XTypes.TIME) {
+            //TODO: cast time
+//            ans = TimeData(to_jtime(datetime.strptime(str((String[]) answer), "%H:%M").time()));
+        } else if (datatype == XTypes.SELECT) {
+            //TODO: convert choice
+//            ans = SelectOneData(event["choices"][int(answer) - 1].to_sel());
+        } else if (datatype == XTypes.MULTISELECT) {
+            //TODO: convert multi
+//            ans = SelectMultiData(to_vect(event["choices"][int(k) - 1].to_sel() for k in multians(answer)));
+        } else if (datatype == XTypes.GEO) {
+            //TODO convert geo
+//            ans = GeoPointData(to_arr((float(x) for (x in multians(answer)), "d"));
+        }
 
+        if (ix == null) {
+            //result = this.fec.answerQuestion( * ([ans]));  
+        } else {
+            //result = this.fec.answerQuestion( * ([ix, ans]));  
+        }
+        int result = 0;
+
+        Status status = null;
+        
+        if (result == this.fec.ANSWER_REQUIRED_BUT_EMPTY) {
+
+            status = new Status("error", "required");
+        } else if (result == this.fec.ANSWER_CONSTRAINT_VIOLATED) {
+
+//            q = this.fem.getQuestionPrompt( * ([] if ix == null{}}[ix]));
+//            status = new Status("error", "constraint", q.getConstraintText());
+
+        } else if (result == this.fec.ANSWER_OK) {
+
+            status = new Status("success");
+        }
+        return status;
+    }
+
+    private boolean hasattr(String[] a, String __iter__) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private String str(String[] a) {
+        return "";
+    }
+
+    private void parseQuestion(Event event) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private void parseRepeatJuncture(Event event) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private FormIndex parseIx(FormIndex ix) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private Object IntegerData(Integer valueOf) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private Object LongData(Long valueOf) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private Object DecimalData(Float valueOf) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private Object StringData(String str) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     public void loadFile() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     public void getLoader() {
@@ -546,21 +624,55 @@ public class RosaFactory implements Serializable {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    public void getQuestionChoices() {
+    }
+
+    public void parseStyleInfo() {
+    }
+
+    public void parseQuestion() {
+    }
+
+    public void parseRepeatJuncture() {
+    }
+
     private FormIndex parseIx(int curIndex) {
         FormIndex fi = null;
         return fi;
     }
 
-    private void parseQuestion(Event event) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    private void parseRepeatJuncture(Event event) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
     private State dict(Params origParams) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private boolean hasattr(Object a, String __iter__) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    /**
+     * Safely cast an Object as a String
+     *
+     * @param a
+     * @return
+     */
+    private String str(Object a) {
+        String s = null;
+        try {
+            s = (String) a;
+        } catch (ClassCastException cce) {
+
+        }
+        return s;
+    }
+
+    /**
+     * To deal with strict typing
+     *
+     * @param a
+     * @return
+     */
+    private String str(String s) {
+        return s;
     }
 
 }
