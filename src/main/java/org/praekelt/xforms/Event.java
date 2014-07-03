@@ -1,5 +1,6 @@
 package org.praekelt.xforms;
 
+import java.util.ArrayList;
 import org.javarosa.core.model.FormIndex;
 
 /**
@@ -17,6 +18,23 @@ public class Event {
     private String imageText;
     private boolean repeatable;
     private boolean exists;
+    private ArrayList repetitions;
+
+    public Event(String subgroup, FormIndex descendIntoRepeat, Object get, boolean b, ArrayList arrayList) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public Event() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public ArrayList getRepetitions() {
+        return repetitions;
+    }
+
+    public void setRepetitions(ArrayList repetitions) {
+        this.repetitions = repetitions;
+    }
     
     private int dataType;
 
@@ -74,6 +92,30 @@ public class Event {
     
     public boolean isExists() {
         return this.exists;
+    }
+
+    public void setChildren(ArrayList arrayList) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public void setRelevant(boolean relevant) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public FormIndex getIx() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public Object getChildren() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public void addChild(Event subevt) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public void delete(String key) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     

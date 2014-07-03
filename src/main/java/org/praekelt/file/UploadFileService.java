@@ -25,7 +25,17 @@ import org.praekelt.tools.JedisFactory;
  */
 @Path("/xforms")
 public class UploadFileService {
+    
+    private final Logger logger;
 
+    /**
+     * 
+     */
+    public UploadFileService() {
+        super();
+        this.logger = Logger.getLogger(UploadFileService.class.getName());
+    }
+    
     @GET
     @Path("/status")
     @Produces("text/html")
@@ -77,7 +87,7 @@ public class UploadFileService {
             JedisFactory.getInstance().set(fileKey, out.toString());
 
         } catch (IOException ex) {
-            Logger.getLogger(UploadFileService.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -103,10 +113,8 @@ public class UploadFileService {
             out.flush();
             out.close();
         } catch (IOException e) {
-
             e.printStackTrace();
         }
-
     }
 
 }

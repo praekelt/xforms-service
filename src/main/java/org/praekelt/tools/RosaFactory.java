@@ -6,25 +6,15 @@ import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
-import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.javarosa.core.api.State;
-
-import org.javarosa.core.model.Constants;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
-import org.javarosa.core.model.data.DateData;
-import org.javarosa.core.model.data.DecimalData;
-import org.javarosa.core.model.data.GeoPointData;
-import org.javarosa.core.model.data.IntegerData;
-import org.javarosa.core.model.data.SelectMultiData;
-import org.javarosa.core.model.data.SelectOneData;
-import org.javarosa.core.model.data.StringData;
-import org.javarosa.core.model.data.TimeData;
-import org.javarosa.core.model.data.helper.Selection;
 import org.javarosa.core.util.UnregisteredLocaleException;
 import org.javarosa.form.api.FormEntryCaption;
 import org.javarosa.form.api.FormEntryController;
@@ -32,11 +22,13 @@ import org.javarosa.form.api.FormEntryModel;
 import org.javarosa.form.api.FormEntryPrompt;
 import org.javarosa.model.xform.XFormSerializingVisitor;
 import org.javarosa.xform.parse.XFormParser;
+import org.praekelt.xforms.CCInstances;
 import org.praekelt.xforms.Event;
 import org.praekelt.xforms.Lock;
 import org.praekelt.xforms.Params;
 import org.praekelt.xforms.Persistence;
 import org.praekelt.xforms.SequencingException;
+import org.praekelt.xforms.SerializationException;
 import org.praekelt.xforms.Status;
 import org.praekelt.xforms.ValueException;
 import org.praekelt.xforms.XTypes;
@@ -48,6 +40,8 @@ import org.praekelt.xforms.XTypes;
  */
 public class RosaFactory implements Serializable {
 
+    private Logger logger;
+    
     private boolean persist;
     private String uuid;
     private Lock lock;
@@ -64,6 +58,9 @@ public class RosaFactory implements Serializable {
     private int datatype;
     private Object ix;
     private Object q;
+    private String nav_mode;
+    private Object apiAuth;
+    private HashMap sessionData;
 
     /**
      *
@@ -80,16 +77,18 @@ public class RosaFactory implements Serializable {
      * @param persist
      * @param stalenessWindow
      */
-    public RosaFactory(String uuid, String navMode, int seqId, String xform,
-            String instance, String extensions, String sessionData,
+    public RosaFactory(String navMode, int seqId, String xform,
+            String instance, String extensions, HashMap sessionData,
             String apiAuth, String initLang, int curIndex, boolean persist, int stalenessWindow) {
 
-        this.uuid = uuid;
-        this.lock = new Lock();
+        this.logger = Logger.getLogger(RosaFactory.class.getName());
+        
+        this.uuid = this.getUID();
+        this.lock = Lock.getInstance();
         this.navMode = navMode;
         this.seqId = seqId;
+        this.sessionData = sessionData;
 
-//        this.form = this.loadForm(xform, instance, params.get('extensions', []), params.get('session_data', {}), params.get('api_auth'));
         this.form = this.loadForm(xform, instance, extensions, sessionData, apiAuth);
         this.fem = new FormEntryModel(this.form, FormEntryModel.REPEAT_STRUCTURE_NON_LINEAR);
         this.fec = new FormEntryController(this.fem);
@@ -118,12 +117,25 @@ public class RosaFactory implements Serializable {
     }
 
     /**
+     * Get a unique-ish ID
+     * 
+     * @return 
+     */
+    public String getUID() {
+        if (this.uuid == null) {
+            String timestamp = String.valueOf(new Date().getTime());
+            this.uuid = "session-" + timestamp + "-" + String.valueOf(Math.abs(1/Math.random()));
+        }
+        return this.uuid;
+    }
+    
+    /**
      * Get a RosaFactory object, deal with deserialization
      *
      * @return
      */
     public static RosaFactory getInstance() {
-        return new RosaFactory("", "", 0, "", "", "", "", "", "", 0, true, 1);
+        return new RosaFactory("", 0, "", "", "", new HashMap(), "", "", 0, true, 1);
     }
 
     /**
@@ -139,7 +151,7 @@ public class RosaFactory implements Serializable {
             byte[] ba = fs.serializeInstance(form.getInstance());
             s = new String(ba, "UTF-8");
         } catch (IOException ex) {
-            Logger.getLogger(RosaFactory.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         return s;
     }
@@ -150,7 +162,7 @@ public class RosaFactory implements Serializable {
      * @param obj
      * @return
      */
-    public String serialize() {
+    public String serialize() throws SerializationException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         ObjectOutputStream out = null;
         try {
@@ -159,12 +171,13 @@ public class RosaFactory implements Serializable {
             out.close();
             bout.close();
         } catch (IOException ex) {
-            Logger.getLogger(RosaFactory.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         } finally {
             try {
                 out.close();
             } catch (IOException ex) {
-                Logger.getLogger(RosaFactory.class.getName()).log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
+                throw new SerializationException("Serialization failed.", ex);
             }
         }
         return bout.toString();
@@ -180,7 +193,7 @@ public class RosaFactory implements Serializable {
      * @param apiAuth
      * @return
      */
-    public FormDef loadForm(String xform, String instance, String extensions, String sessionData, String apiAuth) {
+    public FormDef loadForm(String xform, String instance, String extensions, HashMap sessionData, String apiAuth) {
         return this.loadForm(xform, instance);
     }
 
@@ -204,16 +217,27 @@ public class RosaFactory implements Serializable {
             xfp = new XFormParser(sr);
             xfp.loadXmlInstance(form, sr);
         }
+        this.formInitialize(instance, new CCInstances(this.sessionData, this.apiAuth), form);        
         return form;
     }
 
+    /**
+     * 
+     * @param instance
+     * @param cci
+     * @param form 
+     */
+    private void formInitialize(String instance, CCInstances cci, FormDef form) {
+        form.initialize(false);
+    }
+    
     /**
      *
      * @return
      */
     public RosaFactory enter() throws SequencingException {
         if (this.navMode.equalsIgnoreCase("fao")) {
-            this.lock.acquire();
+            this.lock.acquire(this.getUID());
         } else {
             if (!this.lock.acquire(false)) {
                 throw new SequencingException();
@@ -229,10 +253,9 @@ public class RosaFactory implements Serializable {
      */
     public void exit() {
         if (this.persist) {
-            //# TODO should this be done async? we must dump state before releasing the lock, however
             Persistence.persist(this);
         }
-        this.lock.release();
+        this.lock.release(this.getUID());
     }
 
     /**
@@ -243,105 +266,58 @@ public class RosaFactory implements Serializable {
     }
 
     /**
+     * 
+     * @return 
+     */
+    public String getLang() {
+        return "";
+    }
+    
+    /**
      *
      */
     public State sessionState() {
         Params state = this.origParams;
-        /*
-         state.update({
-         'instance': this.output(),
-         'init_lang': this.get_lang(),
-         'cur_index': str(this.fem.getFormIndex()) if this.nav_mode != 'fao' else None,
-         'seq_id': this.seq_id,
-         });
+        
+         state.update(this.output(),
+         this.getLang(),
+         (this.nav_mode != "fao")?str(this.fem.getFormIndex())  : null,
+         this.seqId
+         );
          //# prune entries with null value, so that defaults will take effect when the session is re-created
-         state = dict((k, v) for k, v in state.iteritems() if v is not null);
-         */
+         // might not be necessary in Java
+//         state = dict((k, v) for k, v in state.iteritems() if v is not null);
+         
         return state;
     }
-
-    public void output() {
-        /*
-         if this.cur_event['type'] != 'form-complete':
-         #warn that not at end of form
-         pass
-
-         instance_bytes = FormSerializer().serializeInstance(this.form.getInstance())
-         return unicode(''.join(chr(b) for b in instance_bytes.tolist()), 'utf-8')        
-         */
+    
+/**
+ * 
+ * @return 
+ */
+    public String output() {
+        return "";
     }
 
     public void walk() {
-        /*
-         form_ix = FormIndex.createBeginningOfFormIndex()
-         tree = []
-         this._walk(form_ix, tree)
-         return tree
-         */
     }
 
     public void walk(int parentIx, int[] siblings) {
-        /*
-         def _walk(self, parent_ix, siblings):
-         def step(ix, descend):
-         next_ix = this.fem.incrementIndex(ix, descend)
-         this.fem.setQuestionIndex(next_ix)  # needed to trigger events in form engine
-         return next_ix 
-        
-         def ix_in_scope(form_ix):
-         if form_ix.isEndOfFormIndex():
-         return False
-         elif parent_ix.isBeginningOfFormIndex():
-         return True
-         else:
-         return FormIndex.isSubElement(parent_ix, form_ix)
 
-         form_ix = step(parent_ix, True)
-         while ix_in_scope(form_ix):
-         relevant = this.fem.isIndexRelevant(form_ix)
+    }
 
-         if not relevant:
-         form_ix = step(form_ix, False)
-         continue
+    public FormIndex step(FormIndex form_ix, boolean b) {
+        return form_ix;
+    }
 
-         evt = this.__parse_event(form_ix)
-         evt['relevant'] = relevant
-         if evt['type'] == 'sub-group':
-         presentation_group = (evt['caption'] != None)
-         if presentation_group:
-         siblings.append(evt)
-         evt['children'] = []
-         form_ix = this._walk(form_ix, evt['children'] if presentation_group else siblings)
-         elif evt['type'] == 'repeat-juncture':
-         siblings.append(evt)
-         evt['children'] = []
-         for i in range(0, this.fem.getForm().getNumRepetitions(form_ix)):
-         subevt = {
-         'type': 'sub-group',
-         'ix': this.fem.getForm().descendIntoRepeat(form_ix, i),
-         'caption': evt['repetitions'][i],
-         'repeatable': True,
-         'children': [],
-         }
+    /**
+     *
+     * @param form_ix
+     * @return
+     */
+    public boolean ixInScope(FormIndex form_ix) {
 
-         # kinda ghetto; we need to be able to track distinct repeat instances, even if their position
-         # within the list of repetitions changes (such as by deleting a rep in the middle)
-         # would be nice to have proper FormEntryAPI support for this
-         java_uid = this.form.getInstance().resolveReference(subevt['ix'].getReference()).hashCode()
-         subevt['uuid'] = hashlib.sha1(str(java_uid)).hexdigest()[:12]
-
-         evt['children'].append(subevt)
-         this._walk(subevt['ix'], subevt['children'])
-         for key in ['repetitions', 'del-choice', 'del-header', 'done-choice']:
-         del evt[key]
-         form_ix = step(form_ix, True) # why True?
-         else:
-         siblings.append(evt)
-         form_ix = step(form_ix, True) # why True?
-
-         return form_ix
-        
-         */
+        return false;
 
     }
 
@@ -361,8 +337,7 @@ public class RosaFactory implements Serializable {
      * @return
      */
     public Event parseEvent(FormIndex formIx) {
-        Event event = new Event(); //{'ix': form_ix};
-
+        Event event = new Event(); 
         event.setFi(formIx);
 
         int status = this.fem.getEvent(formIx);
@@ -383,8 +358,9 @@ public class RosaFactory implements Serializable {
             event.setCaption(prompt.getLongText());
             event.setCaptionAudio(prompt.getAudioText());
             event.setCaptionImage(prompt.getImageText());
-            //FormEntryPrompt.TEXT_FORM_VIDEO
-            //event.captionVideo(prompt.getSpecialFormQuestionText(FormEntryPrompt.TEXT_FORM_VIDEO));
+//            TEXT_FORM_VIDEO does not exist
+//            FormEntryPrompt.TEXT_FORM_VIDEO
+//            event.captionVideo(prompt.getSpecialFormQuestionText(FormEntryPrompt.TEXT_FORM_VIDEO));
             if (status == this.fec.EVENT_GROUP) {
 
                 event.setRepeatable(false);
@@ -393,7 +369,6 @@ public class RosaFactory implements Serializable {
                 event.setRepeatable(true);
                 event.setExists(true);
             } else if (status == this.fec.EVENT_PROMPT_NEW_REPEAT) {
-                //obsolete 
                 event.setRepeatable(true);
                 event.setExists(false);
             }
@@ -500,7 +475,7 @@ public class RosaFactory implements Serializable {
         int result = 0;
 
         Status status = null;
-        
+
         if (result == this.fec.ANSWER_REQUIRED_BUT_EMPTY) {
 
             status = new Status("error", "required");
@@ -508,7 +483,6 @@ public class RosaFactory implements Serializable {
 
 //            q = this.fem.getQuestionPrompt( * ([] if ix == null{}}[ix]));
 //            status = new Status("error", "constraint", q.getConstraintText());
-
         } else if (result == this.fec.ANSWER_OK) {
 
             status = new Status("success");
@@ -673,6 +647,10 @@ public class RosaFactory implements Serializable {
      */
     private String str(String s) {
         return s;
+    }
+
+    private FormIndex _walk(FormIndex form_ix, Object children) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

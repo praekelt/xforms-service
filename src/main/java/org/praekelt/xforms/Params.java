@@ -2,6 +2,7 @@ package org.praekelt.xforms;
 
 
 import com.google.gson.Gson;
+import java.util.HashMap;
 import org.javarosa.core.api.State;
 
 /**
@@ -11,7 +12,7 @@ import org.javarosa.core.api.State;
 public class Params implements State {
     public String xform;
     public String navMode;
-    public String sessionData;
+    public HashMap sessionData;
     public String apiAuth;
     public int stalenessWindow;
 
@@ -23,7 +24,7 @@ public class Params implements State {
      * @param apiAuth
      * @param stalenessWindow 
      */
-    public Params(String xform, String navMode, String sessionData, String apiAuth, int stalenessWindow) {
+    public Params(String xform, String navMode, HashMap sessionData, String apiAuth, int stalenessWindow) {
         this.xform = xform;
         this.navMode = navMode;
         this.sessionData = sessionData;
@@ -60,6 +61,10 @@ public class Params implements State {
 
     @Override
     public void start() {
+    }
+
+    public void update(String output, String lang, String string, int seqId) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
 }

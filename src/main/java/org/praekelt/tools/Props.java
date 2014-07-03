@@ -11,6 +11,12 @@ import java.util.logging.Logger;
  */
 public class Props {
 
+    Logger logger;
+    
+    public Props () {
+        this.logger = Logger.getLogger(Props.class.getName());
+    }
+    
     /**
      * Return the value from a property file
      *
@@ -24,7 +30,7 @@ public class Props {
             prop.load(getClass().getResourceAsStream("/config.properties"));
             value = prop.getProperty(key);
         } catch (IOException ex) {
-            Logger.getLogger(Props.class.getName()).log(Level.SEVERE, null, ex);
+            this.logger.log(Level.SEVERE, null, ex);
         }
         return value;
     }

@@ -19,9 +19,16 @@ public final class XTypes {
     public static int MULTISELECT = 8;
     public static int GEO = 9;
     
+    /**
+     * Compare strictly typed int to (String)int
+     * 
+     * @param value A String containing an integer number as text
+     * @param xtype Any integer that should be compared to value
+     * @return 
+     */
     public static boolean equals(String value, int xtype) {
-        //TODO: compare string value with valid xtype
-        return false;
+        boolean equal = value.compareToIgnoreCase(String.valueOf(xtype)) == 0;
+        return equal;
     }
     
 }
