@@ -1,19 +1,12 @@
 package org.praekelt.vumi;
 
 import com.google.gson.Gson;
-import com.sun.jersey.core.header.MediaTypes;
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;

@@ -2,101 +2,132 @@
 <html>
     <head>
         <title>API Dashboard</title>
-        <meta charset="UTF-8">
+        <meta charset="windows-1252">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="http://fonts.googleapis.com/css?family=Lato:300,400,700" rel="stylesheet" type="text/css">
+        <link rel="stylesheet" type="text/css" href="xforms.css">
         <style>
             body {text-align: center}
             #content {margin: 10px auto}
         </style>
     </head>
     <body>
-        <div id="content">
-            <table>
-                <thead>
-                    <tr><th>Input</th><th>Parameter</th><th>Output</th></tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><textarea id="input"></textarea></td>
-                        <td><textarea id="parameter"></textarea></td>
-                        <td><textarea id="output"></textarea></td>
-                    </tr>
-                    <tr><td>Create Session</td><td><input type="button" onclick="app.createSession()" value="Send" /></td></tr>
-                    <tr><td>Get Sessions</td><td><input type="button" onclick="app.getSessions()" value="Send" /></td></tr>
-                    <tr><td>Get A Session</td><td><input type="button" onclick="app.getSession()" value="Send" /></td></tr>
-                    <tr><td>Destroy Session</td><td><input type="button" onclick="app.destroySession()" value="Send" /></td></tr>
-
-                    <tr><td>Get Forms</td><td><input type="button" onclick="app.getForms()" value="Send" /></td></tr>
-
-                    <tr><td>Get Command</td><td><input type="button" onclick="app.getCommand()" value="Send" /></td></tr>
-                    <tr><td>Post Command</td><td><input type="button" onclick="app.postCommand()" value="Send" /></td></tr>
-                </tbody>
-            </table>
+        <div class="wrapper">
+            <h1>XForms</h1>
+            <div id="content">
+                <table>
+                    <thead>
+                        <tr><th>Input</th><th>Parameter</th><th>Output</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><textarea id="input"></textarea></td>
+                            <td><textarea id="parameter"></textarea></td>
+                            <td><textarea id="output"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="left">Create Session</td>
+                            <td></td>
+                            <td><input type="button" onclick="app.createSession()" value="Send" /></td>
+                        </tr>
+                        <tr>
+                            <td class="left">Get Sessions</td>
+                            <td></td>
+                            <td><input type="button" onclick="app.getSessions()" value="Send" /></td>
+                        </tr>
+                        <tr>
+                            <td class="left">Get A Session</td>
+                            <td><select><option>-- Session --</option></select></td>
+                            <td><input type="button" onclick="app.getSession()" value="Send" /></td>
+                        </tr>
+                        <tr>
+                            <td class="left">Destroy Session</td>
+                            <td><select><option>-- Session --</option></select></td>
+                            <td><input type="button" onclick="app.destroySession()" value="Send" /></td>
+                        </tr>
+                        <tr>
+                            <td class="left">Get Forms</td>
+                            <td></td>
+                            <td><input type="button" onclick="app.getForms()" value="Send" /></td>
+                        </tr>
+                        <tr>
+                            <td class="left">Get Command</td>
+                            <td></td>
+                            <td><input type="button" onclick="app.getCommand()" value="Send" /></td>
+                        </tr>
+                        <tr>
+                            <td class="left">Post Command</td>
+                            <td></td>
+                            <td><input type="button" onclick="app.postCommand()" value="Send" /></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
         <script src="js/jquery-2.1.1.min.js"></script>
         <script type="text/javascript">
-                        $(document).ready(
-                                function() {
-                                    window.app = {
-                                        getSessions: function() {
-                                            comms.doGet("/sessions.json", "");
-                                        },
-                                        getSession: function() {
-                                            comms.doGet("/session.json", $("#parameter").val());
-                                        },
-                                        getForms: function() {
-                                            comms.doGet("/forms.json", "");
-                                        },
-                                        getForm: function() {
-                                            comms.doGet("/form.json", $("#parameter").val());
-                                        },
-                                        createSession: function() {
-                                            comms.doPost("/sessions", "POST", "");
-                                        },
-                                        destroySession: function() {
-                                            comms.doPost("/session", "DELETE", $("#parameter").val());
-                                        },
-                                        getCommand: function() {
-                                        },
-                                        postCommand: function() {
-                                        }
-                                    };
-                                    window.comms = {
-                                        doGet: function(command, param) {
-                                            var path = comms.getPath() + command + param;
-                                            $("#input").val("GET " + path);
-                                            console.log(path);
-                                            $.ajax({url: path, data: param, success: comms.display, error: comms.display, dataType: "json"});
-                                        },
-                                        doPost: function(command, method, param) {
-                                            var path = comms.getPath() + command;
-                                            $("#input").val("POST \n" + path + "\n text/json \n" + param);
-                                            $.ajax(
-                                                    {url: path,
-                                                        type: method,
-                                                        data: param,
-                                                        contentType: "text/json",
-                                                        dataType: "json",
-                                                        success: comms.display,
-                                                        error: comms.display
-                                                    });
-                                        },
-                                        display: function(response) {
-                                            console.log(response);
-                                            $("#output").val(JSON.stringify(response));
-                                        },
-                                        getPath: function() {
-                                            var path = window.location.pathname;
-                                            var location = window.location.href;
-                                            location = location.replace(path, "");
-                                            return location + "/vumi/forms";
-                                        }
-                                    };
-                                    
-                                    
-                                    
-                                }
-                        )
+                            $(document).ready(
+                                    function() {
+                                        window.app = {
+                                            getSessions: function() {
+                                                comms.doGet("/sessions.json", "");
+                                            },
+                                            getSession: function() {
+                                                comms.doGet("/session.json", $("#parameter").val());
+                                            },
+                                            getForms: function() {
+                                                comms.doGet("/forms.json", "");
+                                            },
+                                            getForm: function() {
+                                                comms.doGet("/form.json", $("#parameter").val());
+                                            },
+                                            createSession: function() {
+                                                comms.doPost("/sessions", "POST", "");
+                                            },
+                                            destroySession: function() {
+                                                comms.doPost("/session", "DELETE", $("#parameter").val());
+                                            },
+                                            getCommand: function() {
+                                            },
+                                            postCommand: function() {
+                                            }
+                                        };
+                                        window.comms = {
+                                            doGet: function(command, param) {
+                                                var path = comms.getPath() + command + param;
+                                                $("#input").val("GET " + path);
+                                                console.log(path);
+                                                $.ajax({url: path, data: param, success: comms.display, error: comms.display, dataType: "json"});
+                                            },
+                                            doPost: function(command, method, param) {
+                                                var path = comms.getPath() + command;
+                                                $("#input").val("POST \n" + path + "\n text/json \n" + param);
+                                                $.ajax(
+                                                        {url: path,
+                                                            type: method,
+                                                            data: param,
+                                                            contentType: "text/json",
+                                                            dataType: "json",
+                                                            success: comms.display,
+                                                            error: comms.display
+                                                        });
+                                            },
+                                            display: function(response) {
+                                                console.log(response);
+                                                $("#output").val(JSON.stringify(response));
+                                            },
+                                            getPath: function() {
+                                                var path = window.location.pathname;
+                                                var location = window.location.href;
+                                                location = location.replace(path, "");
+                                                return location + "/vumi/forms";
+                                            }
+                                        };
+
+
+
+                                    }
+                            )
         </script>
     </body>
 </html>
