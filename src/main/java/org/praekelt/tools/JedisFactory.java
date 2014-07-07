@@ -17,11 +17,13 @@ public class JedisFactory {
 
     private JedisPool pool = null;
     static JedisFactory instance = null;
+    private final Logger logger;
 
     /**
      * Instantiate a factory class
      */
     public JedisFactory() {
+        this.logger = Logger.getLogger(JedisFactory.class.getName());
         Props p = new Props();
         String host = p.get("db.host"), password = p.get("db.password");
         Integer timeout = Props.getInt("db.timeout"), port = Props.getInt("db.port");
@@ -80,9 +82,9 @@ public class JedisFactory {
         try {
             value = jedis.get(key);
         } catch (NullPointerException ex) {
-            Logger.getLogger(JedisFactory.class.getName()).log(Level.SEVERE, null, "Could not connect to databse.");
+            logger.log(Level.SEVERE, null, "Could not connect to databse.");
         } catch (Exception ex) {
-            Logger.getLogger(JedisFactory.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         } finally {
             revert(jedis);
         }
@@ -133,9 +135,9 @@ public class JedisFactory {
         try {
             keys = jedis.keys(key);
         } catch (NullPointerException nex) {
-            Logger.getLogger(JedisFactory.class.getName()).log(Level.SEVERE, null, "Could not connect to database");
+            logger.log(Level.SEVERE, null, "Could not connect to database");
         } catch (Exception ex) {
-            Logger.getLogger(JedisFactory.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         } finally {
             revert(jedis);
         }

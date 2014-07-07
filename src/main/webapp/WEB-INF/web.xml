@@ -13,12 +13,12 @@
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
-
     <servlet-mapping>
         <servlet-name>jersey-servlet</servlet-name>
         <url-pattern>/file/*</url-pattern>
     </servlet-mapping>
 
+    <!--    
     <servlet>
         <servlet-name>jersey-forms</servlet-name>
         <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
@@ -28,11 +28,36 @@
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
-
     <servlet-mapping>
         <servlet-name>jersey-forms</servlet-name>
         <url-pattern>/forms/*</url-pattern>
     </servlet-mapping>
+    -->
+    
+    <servlet>
+        <servlet-name>jersey-vumi</servlet-name>
+        <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+        <init-param>
+            <param-name>com.sun.jersey.config.property.packages</param-name>
+            <param-value>org.praekelt.vumi</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>jersey-vumi</servlet-name>
+        <url-pattern>/vumi/*</url-pattern>
+    </servlet-mapping>
+<!--
+    <servlet-mapping>
+        <servlet-name>jersey-vumi</servlet-name>
+        <url-pattern>/forms/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>jersey-vumi</servlet-name>
+        <url-pattern>/file/*</url-pattern>
+    </servlet-mapping>
+-->
 
     <welcome-file-list>  
         <welcome-file>index.html</welcome-file>  

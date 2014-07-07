@@ -17,3 +17,8 @@ ul { margin: 0; list-style: none; padding: 0; }
 li { font-weight: 700; line-height: 24px; }
 a { color: #616872; }
 a:hover { text-decoration: none; }
+textarea {min-height: 100px; width: 95%}
+table{ width: 100%}
+th {width: 33%}
+
+.left {text-align: left}

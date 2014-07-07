@@ -76,6 +76,13 @@ public class Forms {
         return s;
     }
 
+    @GET
+    @Path("status")
+    @Produces("text/html")
+    public String getStatus() {
+        return "alive";
+    }
+    
     /**
      *
      *
