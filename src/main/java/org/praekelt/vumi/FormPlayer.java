@@ -4,10 +4,12 @@ import com.google.gson.Gson;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -68,18 +70,17 @@ public class FormPlayer {
     }
 
     /**
-     * Get all forms
+     * Create a new session
      * 
-     * @return A list of forms in JSON
+     * @return the new session id in JSON
      */
-    @GET
-    @Path("forms.json")
+    @Path("sessions")
+    @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public String jsonGetForms() {
-        Set<String> set = JedisFactory.getInstance().getKeys("*.xml");
-
-        Gson gson = new Gson();
-        return gson.toJson(set);
+    public Response newSessionJson() {
+        String id = RosaFactory.getUID();
+        JedisFactory.getInstance().set(id, "");
+        return Response.ok(new Gson().toJson(id)).build();
     }
 
     /**
@@ -91,29 +92,9 @@ public class FormPlayer {
     @GET
     @Path("session.json/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getSessionJson(String id) {
+    public String getSessionJson(@PathParam("id") String id) {
         JedisFactory.getInstance().get(id);
         return (new Gson()).toJson(id);
-    }
-
-    /**
-     * Create a new session
-     * 
-     * @return the new session id in JSON
-     */
-    @Path("sessions")
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response newSessionJson() {
-        RosaFactory xform = RosaFactory.getInstance();
-        String id = xform.getUID();
-        try {
-            JedisFactory.getInstance().set(id, xform.serialize());
-        } catch (SerializationException ex) {
-            logger.log(Level.SEVERE, null, ex);
-            return Response.serverError().build();
-        }
-        return Response.ok(new Gson().toJson(id)).build();
     }
 
     /**
@@ -126,10 +107,59 @@ public class FormPlayer {
     @Path("session.json/{id}")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public String destroySession(String key) {
+    public Response destroySession(String key) {
         JedisFactory.getInstance().delete(key);
-        return "";
+        return Response.ok("{}").build();
     }
 
+    /**
+     * Get all forms
+     * 
+     * @return A list of forms in JSON
+     */
+    @GET
+    @Path("forms.json")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String jsonGetForms() {
+        Set<String> set = JedisFactory.getInstance().getKeys("*.xml");
+        Gson gson = new Gson();
+        return gson.toJson(set);
+    }
 
+    /**
+     * Delete a key
+     * 
+     * @param formName
+     * 
+     * @return empty String
+     */
+    @Path("form.json/{formName}")
+    @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteForm(@PathParam("formName") String formName) {
+        JedisFactory.getInstance().delete(formName);
+        return Response.ok("{}").build();
+    }
+
+    /**
+     * Load a form into a session
+     * 
+     * @param formName
+     * @return 
+     */
+    @GET
+    @Path("/form.json/{formName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response jsonGetForm(@PathParam("formName") String formName) {
+        String xformStr = JedisFactory.getInstance().get(formName);
+        RosaFactory xform = RosaFactory.getInstance(xformStr);
+        String id = xform.getUID();
+        try {
+            JedisFactory.getInstance().set(id, xform.serializeForm());
+        } catch (SerializationException ex) {
+            logger.log(Level.SEVERE, null, ex);
+            return Response.serverError().build();
+        }
+        return Response.ok(new Gson().toJson(id)).build();
+    }
 }

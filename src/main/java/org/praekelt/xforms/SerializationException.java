@@ -13,5 +13,9 @@ public class SerializationException extends Exception {
     public SerializationException(String message, IOException ex) {
         super(message, ex);
     }
+
+    public SerializationException(String message) {
+        super(message);
+    }
     
 }

@@ -22,7 +22,7 @@
                     <tbody>
                         <tr>
                             <td><textarea id="input"></textarea></td>
-                            <td><textarea id="parameter"></textarea></td>
+                            <td></td>
                             <td><textarea id="output"></textarea></td>
                         </tr>
                         <tr>
@@ -37,18 +37,23 @@
                         </tr>
                         <tr>
                             <td class="left">Get A Session</td>
-                            <td><select><option>-- Session --</option></select></td>
+                            <td><select id="getsession"><option>-- Session --</option></select></td>
                             <td><input type="button" onclick="app.getSession()" value="Send" /></td>
                         </tr>
                         <tr>
                             <td class="left">Destroy Session</td>
-                            <td><select><option>-- Session --</option></select></td>
+                            <td><select id="destroysession"><option>-- Session --</option></select></td>
                             <td><input type="button" onclick="app.destroySession()" value="Send" /></td>
                         </tr>
                         <tr>
                             <td class="left">Get Forms</td>
                             <td></td>
                             <td><input type="button" onclick="app.getForms()" value="Send" /></td>
+                        </tr>
+                        <tr>
+                            <td class="left">Get Form</td>
+                            <td><select id="getform"><option>-- Forms --</option></select></td>
+                            <td><input type="button" onclick="app.getForm()" value="Send" /></td>
                         </tr>
                         <tr>
                             <td class="left">Get Command</td>
@@ -66,68 +71,107 @@
         </div>
         <script src="js/jquery-2.1.1.min.js"></script>
         <script type="text/javascript">
-                            $(document).ready(
-                                    function() {
-                                        window.app = {
-                                            getSessions: function() {
-                                                comms.doGet("/sessions.json", "");
-                                            },
-                                            getSession: function() {
-                                                comms.doGet("/session.json", $("#parameter").val());
-                                            },
-                                            getForms: function() {
-                                                comms.doGet("/forms.json", "");
-                                            },
-                                            getForm: function() {
-                                                comms.doGet("/form.json", $("#parameter").val());
-                                            },
-                                            createSession: function() {
-                                                comms.doPost("/sessions", "POST", "");
-                                            },
-                                            destroySession: function() {
-                                                comms.doPost("/session", "DELETE", $("#parameter").val());
-                                            },
-                                            getCommand: function() {
-                                            },
-                                            postCommand: function() {
-                                            }
-                                        };
-                                        window.comms = {
-                                            doGet: function(command, param) {
-                                                var path = comms.getPath() + command + param;
-                                                $("#input").val("GET " + path);
-                                                console.log(path);
-                                                $.ajax({url: path, data: param, success: comms.display, error: comms.display, dataType: "json"});
-                                            },
-                                            doPost: function(command, method, param) {
-                                                var path = comms.getPath() + command;
-                                                $("#input").val("POST \n" + path + "\n text/json \n" + param);
-                                                $.ajax(
-                                                        {url: path,
-                                                            type: method,
-                                                            data: param,
-                                                            contentType: "text/json",
-                                                            dataType: "json",
-                                                            success: comms.display,
-                                                            error: comms.display
-                                                        });
-                                            },
-                                            display: function(response) {
-                                                console.log(response);
-                                                $("#output").val(JSON.stringify(response));
-                                            },
-                                            getPath: function() {
-                                                var path = window.location.pathname;
-                                                var location = window.location.href;
-                                                location = location.replace(path, "");
-                                                return location + "/vumi/forms";
-                                            }
-                                        };
+            $(document).ready(
+                    function() {
+                        window.app = {
+                            getSessions: function() {
+                                var url = comms.getPath() + "/sessions.json";
+                                $("#input").val("GET \n" + url + "\n text/json \n");
+                                $.ajax({url: url, success: app.updateSessions, error: app.updateSessions, dataType: "json"});
+                            },
+                            getSession: function() {
+                                var url = comms.getPath() + "/session.json/" + $("#getsession").val();
+                                $("#input").val("GET \n" + url + "\n text/json \n");
+                                $.ajax({url: url, success: comms.display, error: comms.display});
+                            },
+                            getForms: function() {
+                                var url = comms.getPath() + "/forms.json";
+                                $("#input").val("GET \n" + url + "\n text/json \n");
+                                $.ajax({url: url, success: app.updateForms, error: app.updateForms, dataType: "json"});
+                            },
+                            getForm: function() {
+                                var url = comms.getPath() + "/form.json/" + $("#getform").val();
+                                $("#input").val("GET \n" + url + "\n text/json \n");
+                                $.ajax({url: url, success: comms.display, error: comms.display});
+                            },
+                            createSession: function() {
+                                var url = comms.getPath() + "/sessions";
+                                $("#input").val("POST \n" + url + "\n text/json \n");
+                                $.ajax({url: url, type: "POST", success: comms.display, error: comms.display});
+                            },
+                            destroySession: function() {
+                                comms.doPost("/session.json", "DELETE", $("#destroysession").val());
+                            },
+                            getCommand: function() {
+                            },
+                            postCommand: function() {
+                            },
+                            updateSessions: function(data) {
+                                window.app.updateList("getsession", data);
+                                window.app.updateList("destroysession", data);
+                            },
+                            updateForms: function(data) {
+                                window.app.updateList("getform", data);
+                            },
+                            updateList: function(id, data) {
+                                console.log(JSON.stringify(data));
 
+                                $('#' + id).html("");
 
+                                $('#' + id).append($('<option/>', {
+                                    text: "-- Select --"
+                                }));
 
+                                try {
+                                    for (var i = 0; i < data.length; i++) {
+                                        var list = data[i];
+                                        $('#' + id).append($('<option/>', {
+                                            value: list,
+                                            text: list
+                                        }));
                                     }
-                            )
+                                } catch (e) {
+                                    console.log(e);
+                                }
+
+                            }
+
+                        };
+                        window.comms = {
+                            doGet: function(command, param) {
+                                var path = comms.getPath() + command + "/" + param;
+                                $("#input").val("GET " + path);
+                                $.ajax({url: path, data: param, success: comms.display, error: comms.display, dataType: "json"});
+                            },
+                            doPost: function(command, method, param) {
+                                var path = comms.getPath() + command + "/" + param;
+                                $("#input").val("POST \n" + path + "\n text/json \n" + param);
+                                $.ajax(
+                                        {url: path,
+                                            type: method,
+                                            data: param,
+                                            contentType: "text/json",
+                                            dataType: "json",
+                                            success: comms.display,
+                                            error: comms.display
+                                        });
+                            },
+                            display: function(response) {
+                                $("#output").val(JSON.stringify(response));
+                            },
+                            getPath: function() {
+                                var path = window.location.pathname;
+                                var location = window.location.href;
+                                location = location.replace(path, "");
+                                return location + "/vumi/forms";
+                            }
+                        };
+
+
+
+                    }
+
+            );
         </script>
     </body>
 </html>

@@ -83,7 +83,7 @@ public class RosaFactory implements Serializable {
 
         this.logger = Logger.getLogger(RosaFactory.class.getName());
         
-        this.uuid = this.getUID();
+        this.uuid = RosaFactory.getUID();
         this.lock = Lock.getInstance();
         this.navMode = navMode;
         this.seqId = seqId;
@@ -119,32 +119,40 @@ public class RosaFactory implements Serializable {
     /**
      * Get a unique-ish ID
      * 
-     * @return 
+     * @return A unique id (not universally unique)
      */
-    public String getUID() {
-        if (this.uuid == null) {
-            String timestamp = String.valueOf(new Date().getTime());
-            this.uuid = "session-" + timestamp + "-" + String.valueOf(Math.abs(1/Math.random()));
-        }
-        return this.uuid;
+    public static final String getUID() {
+        String uuid = "";
+        String timestamp = String.valueOf(new Date().getTime());
+        uuid = "session-" + timestamp + "-" + String.valueOf(Math.abs(1/Math.random()));
+        return uuid;
     }
     
     /**
      * Get a RosaFactory object, deal with deserialization
      *
-     * @return
+     * @return An instance of RosaFactory
      */
     public static RosaFactory getInstance() {
         return new RosaFactory("", 0, "", "", "", new HashMap(), "", "", 0, true, 1);
     }
 
     /**
+     * 
+     * @param xform
+     * @return 
+     */
+    public static RosaFactory getInstance(String xform) {
+        return new RosaFactory("", 0, xform, null, "", new HashMap(), "", "", 0, true, 1);
+    }
+
+    /**
      * Serialize a form
      *
-     * @param form
-     * @return
+     * @param form The form to serialize
+     * @return A serialized version of the form
      */
-    public String serializeForm(FormDef form) {
+    public String serializeForm(FormDef form) throws SerializationException {
         String s = "";
         try {
             XFormSerializingVisitor fs = new XFormSerializingVisitor();
@@ -152,15 +160,28 @@ public class RosaFactory implements Serializable {
             s = new String(ba, "UTF-8");
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
+            throw new SerializationException("Serialization failed.", ex);
         }
         return s;
     }
 
     /**
+     * 
+     * @return A serialized (String) version of this.form
+     */
+    public String serializeForm() throws SerializationException {
+        if (this.form == null) {
+            throw new SerializationException("Form is null");
+        }
+        return this.serializeForm(this.form);
+    }
+    
+    /**
      * Serialize this object if it needs to be cached in Redis
      *
-     * @param obj
      * @return
+     * 
+     * @deprecated Use RosaFactory.serializeForm instead
      */
     public String serialize() throws SerializationException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -193,7 +214,7 @@ public class RosaFactory implements Serializable {
      * @param apiAuth
      * @return
      */
-    public FormDef loadForm(String xform, String instance, String extensions, HashMap sessionData, String apiAuth) {
+    public final FormDef loadForm(String xform, String instance, String extensions, HashMap sessionData, String apiAuth) {
         return this.loadForm(xform, instance);
     }
 

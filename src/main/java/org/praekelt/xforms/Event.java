@@ -19,13 +19,14 @@ public class Event {
     private boolean repeatable;
     private boolean exists;
     private ArrayList repetitions;
+    private ArrayList<Event> children;
+    private boolean relevant;
+    private FormIndex ix;
 
     public Event(String subgroup, FormIndex descendIntoRepeat, Object get, boolean b, ArrayList arrayList) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     public Event() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     public ArrayList getRepetitions() {
@@ -95,27 +96,28 @@ public class Event {
     }
 
     public void setChildren(ArrayList arrayList) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.children = arrayList;
     }
 
     public void setRelevant(boolean relevant) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.relevant = relevant;
     }
 
     public FormIndex getIx() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return this.ix;
     }
 
-    public Object getChildren() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public ArrayList getChildren() {
+        return this.children;
     }
 
     public void addChild(Event subevt) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        children.add(subevt);
     }
 
     public void delete(String key) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //TODO: looks like children should be a Hashtable
+        children.remove(key);
     }
 
     
