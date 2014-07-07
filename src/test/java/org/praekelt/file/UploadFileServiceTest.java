@@ -43,7 +43,7 @@ public class UploadFileServiceTest {
         System.out.println("uploadFile");
         InputStream uploadedInputStream = null;
         FormDataContentDisposition fileDetail = null;
-        UploadFileService instance = new UploadFileService();
+//        UploadFileService instance = new UploadFileService();
         Response expResult = null;
 //        Response result = instance.uploadFile(uploadedInputStream, fileDetail);
 //        assertEquals(expResult, result);

@@ -1,187 +1,110 @@
 package org.praekelt.tools;
 
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import redis.clients.jedis.Jedis;
+import io.dropwizard.lifecycle.Managed;
+import io.dropwizard.setup.Environment;
+import io.dropwizard.validation.MaxDuration;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+
+import org.hibernate.validator.constraints.NotEmpty;
+
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 
-/**
- * Methods to interact with Redis via Jedis
- *
- * @author Victor
- */
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+
 public class JedisFactory {
+	
+	@NotEmpty
+    private String host;
 
-    private JedisPool pool = null;
-    static JedisFactory instance = null;
-    private final Logger logger;
-
-    /**
-     * Instantiate a factory class
-     */
-    public JedisFactory() {
-        this.logger = Logger.getLogger(JedisFactory.class.getName());
-        Props p = new Props();
-        String host = p.get("db.host"), password = p.get("db.password");
-        Integer timeout = Props.getInt("db.timeout"), port = Props.getInt("db.port");
-        JedisPoolConfig poolConfig = new JedisPoolConfig();
-        poolConfig.setMaxTotal(Props.getInt("db.poolsize"));
-        pool = new JedisPool(poolConfig, host, port, timeout, password);
+    @Min(1)
+    @Max(65535)
+    private int port = 6379;
+    
+    @NotEmpty
+    private String password;
+    
+    @Min(100)
+    @Max(5000)
+    private int timeout = 100;
+    
+    @Min(1)
+    @Max(50)
+    private int poolsize = 5;
+    
+    @JsonProperty
+    public String getHost() {
+        return host;
     }
 
-    /**
-     * Getter for pool
-     *
-     * @return
-     */
-    public JedisPool getJedisPool() {
-        return pool;
+    @JsonProperty
+    public void setHost(String host) {
+        this.host = host;
     }
 
-    /**
-     * Lazy singleton constructor
-     *
-     * @return
-     */
-    public static JedisFactory getInstance() {
-        if (instance == null) {
-            synchronized (JedisFactory.class) {
-                instance = new JedisFactory();
+    @JsonProperty
+    public int getPort() {
+        return port;
+    }
+
+    @JsonProperty
+    public void setPort(int port) {
+        this.port = port;
+    }
+    
+    @JsonProperty
+    public String getPassword() {
+		return password;
+	}
+    
+    @JsonProperty
+    public void setPassword(String password) {
+		this.password = password;
+	}
+    
+    @JsonProperty
+	public int getTimeout() {
+		return timeout;
+	}
+
+    @JsonProperty
+	public void setTimeout(int timeout) {
+		this.timeout = timeout;
+	}
+    
+    @JsonProperty
+    public int getPoolsize(){
+    	return poolsize;
+    }
+    
+    @JsonProperty
+    public void setPoolsize(int poolsize) {
+    	this.poolsize = poolsize;
+    }
+    
+    public JedisClient build(Environment environment) {
+    	JedisPoolConfig poolConfig = new JedisPoolConfig();
+        poolConfig.setMaxTotal(getPoolsize());
+        final JedisPool pool = new JedisPool(
+        		poolConfig,
+        		getHost(), 
+        		getPort(), 
+        		getTimeout(),
+        		getPassword());
+        
+        environment.lifecycle().manage(new Managed() {
+            @Override
+            public void start() {
             }
-        }
-        return instance;
-    }
 
-    /**
-     * Set a value in Redis
-     *
-     * @param key
-     * @param value
-     */
-    public void set(String key, String value) {
-        Jedis jedis = this.borrow();
-        try {
-            jedis.set(key, value);
-        } finally {
-            revert(jedis);
-        }
-    }
-
-    /**
-     * Return a value from Redis
-     *
-     * @param key
-     * @return
-     */
-    public String get(String key) {
-        Jedis jedis = borrow();
-        String value = "";
-        try {
-            value = jedis.get(key);
-        } catch (NullPointerException ex) {
-            logger.log(Level.SEVERE, null, "Could not connect to databse.");
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, null, ex);
-        } finally {
-            revert(jedis);
-        }
-        return value;
-    }
-
-    /**
-     * Destroy the pool
-     *
-     * Unset the pool
-     */
-    public void destroy() {
-        pool.destroy();
-    }
-
-    /**
-     * Borrow a resource from the pool
-     *
-     * @return
-     */
-    public Jedis borrow() {
-        Jedis resource = null;
-        try {
-            resource = pool.getResource();
-        } catch (JedisConnectionException jdce) {
-        }
-        return resource;
-    }
-
-    /**
-     * Return a resource to the pool
-     *
-     * @param jedis
-     */
-    public void revert(Jedis jedis) {
-        pool.returnResource(jedis);
-    }
-
-    /**
-     * Get a Set of String keys from the database
-     *
-     * @param key
-     * @return
-     */
-    public Set<String> getKeys(String key) {
-        Set<String> keys = null;
-        Jedis jedis = borrow();
-        try {
-            keys = jedis.keys(key);
-        } catch (NullPointerException nex) {
-            logger.log(Level.SEVERE, null, "Could not connect to database");
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, null, ex);
-        } finally {
-            revert(jedis);
-        }
-        return keys;
-    }
-
-    /**
-     * Get all available keys "*" as a String Set
-     *
-     * @return
-     */
-    public Set<String> getKeys() {
-        return JedisFactory.getInstance().getKeys("*");
-    }
-
-    /**
-     *
-     */
-    public void deleteAll() {
-        Jedis jedis = borrow();
-        try {
-            Set<String> keys = jedis.keys("*");
-            for (String key : keys) {
-                jedis.del(key);
+            @Override
+            public void stop() {
+            	pool.destroy();
             }
-        } finally {
-            revert(jedis);
-        }
-    }
-
-    /**
-     * Remove a key from the database
-     *
-     * @param key
-     */
-    public void delete(String key) {
-        Jedis jedis = borrow();
-        if (jedis != null) {
-            try {
-                jedis.del(key);
-            } finally {
-                revert(jedis);
-            }
-        }
-    }
-
+        });
+        return new JedisClient(pool);
+    }   
 }

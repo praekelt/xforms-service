@@ -1,9 +1,11 @@
 package org.praekelt.vumi;
 
 import com.google.gson.Gson;
+
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -15,6 +17,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+
+import org.praekelt.tools.JedisClient;
 import org.praekelt.tools.JedisFactory;
 import org.praekelt.tools.RosaFactory;
 import org.praekelt.xforms.SerializationException;
@@ -32,11 +36,14 @@ public class FormPlayer {
     @Context
     private UriInfo context;
 
+	private JedisClient jedis;
+
     /**
      * Creates a new instance of FormPlayer
      */
-    public FormPlayer() {
-        logger = Logger.getLogger(FormPlayer.class.getName());
+    public FormPlayer(JedisClient jedis) {
+        this.jedis = jedis;
+		logger = Logger.getLogger(FormPlayer.class.getName());
     }
 
     /**
@@ -63,7 +70,7 @@ public class FormPlayer {
     @Path("sessions.json")
     @Produces(MediaType.APPLICATION_JSON)
     public String jsonGetSessions() {
-        Set<String> set = JedisFactory.getInstance().getKeys("session*");
+        Set<String> set = this.jedis.getKeys("session*");
 
         Gson gson = new Gson();
         return gson.toJson(set);
@@ -79,7 +86,7 @@ public class FormPlayer {
     @Produces(MediaType.APPLICATION_JSON)
     public Response newSessionJson() {
         String id = RosaFactory.getUID();
-        JedisFactory.getInstance().set(id, "");
+        this.jedis.set(id, "");
         return Response.ok(new Gson().toJson(id)).build();
     }
 
@@ -93,7 +100,7 @@ public class FormPlayer {
     @Path("session.json/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public String getSessionJson(@PathParam("id") String id) {
-        JedisFactory.getInstance().get(id);
+        this.jedis.get(id);
         return (new Gson()).toJson(id);
     }
 
@@ -108,7 +115,7 @@ public class FormPlayer {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public Response destroySession(String key) {
-        JedisFactory.getInstance().delete(key);
+        this.jedis.delete(key);
         return Response.ok("{}").build();
     }
 
@@ -121,7 +128,7 @@ public class FormPlayer {
     @Path("forms.json")
     @Produces(MediaType.APPLICATION_JSON)
     public String jsonGetForms() {
-        Set<String> set = JedisFactory.getInstance().getKeys("*.xml");
+        Set<String> set = this.jedis.getKeys("*.xml");
         Gson gson = new Gson();
         return gson.toJson(set);
     }
@@ -137,7 +144,7 @@ public class FormPlayer {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public Response deleteForm(@PathParam("formName") String formName) {
-        JedisFactory.getInstance().delete(formName);
+        this.jedis.delete(formName);
         return Response.ok("{}").build();
     }
 
@@ -151,11 +158,11 @@ public class FormPlayer {
     @Path("/form.json/{formName}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response jsonGetForm(@PathParam("formName") String formName) {
-        String xformStr = JedisFactory.getInstance().get(formName);
+        String xformStr = this.jedis.get(formName);
         RosaFactory xform = RosaFactory.getInstance(xformStr);
         String id = xform.getUID();
         try {
-            JedisFactory.getInstance().set(id, xform.serializeForm());
+            this.jedis.set(id, xform.serializeForm());
         } catch (SerializationException ex) {
             logger.log(Level.SEVERE, null, ex);
             return Response.serverError().build();
