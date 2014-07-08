@@ -3,7 +3,6 @@ package org.praekelt.service;
 import org.praekelt.Forms;
 import org.praekelt.resources.IndexResource;
 import org.praekelt.tools.JedisClient;
-import org.praekelt.tools.JedisFactory;
 import org.praekelt.vumi.FormPlayer;
 
 import io.dropwizard.Application;

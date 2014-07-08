@@ -6,7 +6,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -19,7 +18,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.praekelt.tools.JedisClient;
-import org.praekelt.tools.JedisFactory;
 import org.praekelt.tools.RosaFactory;
 import org.praekelt.xforms.SerializationException;
 

@@ -2,7 +2,6 @@ package org.praekelt.tools;
 
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;
-import io.dropwizard.validation.MaxDuration;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;

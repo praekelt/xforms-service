@@ -18,7 +18,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.praekelt.tools.JedisClient;
-import org.praekelt.tools.JedisFactory;
 import org.praekelt.tools.Props;
 
 /**
@@ -41,13 +40,13 @@ public class Forms {
 
     @Context
     private UriInfo context;
-	private JedisClient jedis;
+    private JedisClient jedis;
 
     /**
      * Creates a new instance of Forms
      */
     public Forms(JedisClient jedis) {
-		this.jedis = jedis;
+        this.jedis = jedis;
     }
 
     /**
