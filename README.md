@@ -7,8 +7,14 @@
     $ mvn clean package
 
 ### Run
+
+*From the command line*
+
     $ java -jar target/restforms-1.0-SNAPSHOT.jar server example_conf.yml
 
+*From an IDE*
+
+Run the `org.praekelt.service.RestformsService` class with the following arguments: `server example_conf.yml`
 
 
 ## Rest Endpoints
