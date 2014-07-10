@@ -2,10 +2,22 @@
 
 ----------
 
-##A RESTful XForms Processor Service##
+## A RESTful XForms Processor Service
+### Build
+    $ mvn clean package
+
+### Run
+
+*From the command line*
+
+    $ java -jar target/restforms-1.0-SNAPSHOT.jar server example_conf.yml
+
+*From an IDE*
+
+Run the `org.praekelt.service.RestformsService` class with the following arguments: `server example_conf.yml`
 
 
-### Rest Endpoints ###
+## Rest Endpoints
 
 - GET /forms
 - GET /form/{id}
@@ -13,7 +25,7 @@
 - GET /result/{id}
 - DELETE /form/{id}
 
-### Additional Rest Endpoints For ODK ###
+## Additional Rest Endpoints For ODK
 
 - GET /formList
 - GET /completed
@@ -21,13 +33,13 @@
 - HEAD /submission
 - POST /submission
 
-### Client ###
+## Client
 
 A JavaRosa client can be downloaded from
  
 [https://play.google.com/store/apps/details?id=org.odk.collect.android](https://play.google.com/store/apps/details?id=org.odk.collect.android "Open Data Kit on Google Play")
 
-### Getting Started ###
+## Getting Started
 
 Once installed configure the client to access
  

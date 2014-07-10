@@ -2,6 +2,7 @@ package org.praekelt;
 
 import java.util.Iterator;
 import java.util.Set;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -15,7 +16,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import org.praekelt.tools.JedisFactory;
+
+import org.praekelt.tools.JedisClient;
 import org.praekelt.tools.Props;
 
 /**
@@ -38,11 +40,13 @@ public class Forms {
 
     @Context
     private UriInfo context;
+    private JedisClient jedis;
 
     /**
      * Creates a new instance of Forms
      */
-    public Forms() {
+    public Forms(JedisClient jedis) {
+        this.jedis = jedis;
     }
 
     /**
@@ -93,7 +97,7 @@ public class Forms {
     @Produces("text/html")
     public String getHtmlList() {
 
-        Set<String> set = JedisFactory.getInstance().getKeys("*.xml");
+        Set<String> set = this.jedis.getKeys("*.xml");
 
         String s = getHeader();
         s += "<ul>";
@@ -118,7 +122,7 @@ public class Forms {
     @Path("form/{id}")
     @Produces("text/xml")
     public String getForm(@PathParam("id") String id) {
-        String form = JedisFactory.getInstance().get(id);
+        String form = this.jedis.get(id);
         return form;
     }
 
@@ -131,7 +135,7 @@ public class Forms {
     @DELETE
     @Path("form/{id}")
     public String deleteForm(@PathParam("id") String id) {
-        JedisFactory.getInstance().delete(id);
+        this.jedis.delete(id);
         return "done";
     }
 
@@ -146,7 +150,7 @@ public class Forms {
     @Path("delete/{id}")
     @Produces("text/plain")
     public String deleteResultForm(@PathParam("id") String id) {
-        JedisFactory.getInstance().delete(id);
+        this.jedis.delete(id);
         return "done";
     }
 
@@ -196,7 +200,7 @@ public class Forms {
     @Path("result/{id}")
     @Produces("text/plain")
     public String getResult(@PathParam("id") String id) {
-        String result = JedisFactory.getInstance().get(id);
+        String result = this.jedis.get(id);
         return result;
     }
 
@@ -207,7 +211,7 @@ public class Forms {
     public Response postResults(@QueryParam("deviceID") String name, String content) throws InterruptedException {
         name = "result:" + name + 1 / Math.random();
         try {
-            JedisFactory.getInstance().set(name, content);
+            this.jedis.set(name, content);
         } catch (NullPointerException npe) {
             Response.status(500).build();
         }
@@ -229,7 +233,7 @@ public class Forms {
      */
     private String getXmlList(String filter) {
         Props p = new Props();
-        Set<String> set = JedisFactory.getInstance().getKeys(filter);
+        Set<String> set = this.jedis.getKeys(filter);
         String s = "<forms>";
         if (set != null) {
             Iterator<String> iterator = set.iterator();
@@ -250,7 +254,7 @@ public class Forms {
      * @return an html String
      */
     private String getHtmlList(String filter, String prefix) {
-        Set<String> set = JedisFactory.getInstance().getKeys(filter);
+        Set<String> set = this.jedis.getKeys(filter);
         String s = getHeader();
         if (set != null) {
             s += "<ul>";

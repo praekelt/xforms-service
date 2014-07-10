@@ -2,6 +2,7 @@ package org.praekelt.file;
 
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -10,6 +11,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -17,7 +19,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.praekelt.tools.JedisFactory;
+
+import org.praekelt.tools.JedisClient;
 
 /**
  * REST Service to upload empty forms
@@ -27,12 +30,14 @@ import org.praekelt.tools.JedisFactory;
 public class UploadFileService {
     
     private final Logger logger;
+	private JedisClient jedis;
 
     /**
      * 
      */
-    public UploadFileService() {
+    public UploadFileService(JedisClient jedis) {
         super();
+		this.jedis = jedis;
         this.logger = Logger.getLogger(UploadFileService.class.getName());
     }
     
@@ -84,7 +89,7 @@ public class UploadFileService {
                 out.write(bytes, 0, read);
             }
             //System.out.println("File uploaded : " + out.toString());
-            JedisFactory.getInstance().set(fileKey, out.toString());
+            this.jedis.set(fileKey, out.toString());
 
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
