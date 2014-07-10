@@ -229,6 +229,8 @@ public class RosaFactory implements Serializable {
      * @return
      */
     public FormDef loadForm(String xform, String instance) {
+        FormDef form = null;
+        /*
         Reader xformReader = (Reader) new StringReader(xform);
         XFormParser xfp;
         xfp = new XFormParser(xformReader);
@@ -239,6 +241,7 @@ public class RosaFactory implements Serializable {
             xfp.loadXmlInstance(form, sr);
         }
         this.formInitialize(instance, new CCInstances(this.sessionData, this.apiAuth), form);        
+        */
         return form;
     }
 
