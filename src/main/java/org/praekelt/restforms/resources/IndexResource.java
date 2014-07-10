@@ -1,4 +1,4 @@
-package org.praekelt.resources;
+package org.praekelt.restforms.resources;
 
 import com.google.common.base.Optional;
 import com.codahale.metrics.annotation.Timed;
@@ -9,7 +9,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.praekelt.models.Form;
+import org.praekelt.restforms.api.Form;
 
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)

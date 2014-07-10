@@ -1,4 +1,4 @@
-package org.praekelt.xforms;
+package org.praekelt.restforms.core;
 
 import java.util.ArrayList;
 import java.util.List;

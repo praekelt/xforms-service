@@ -1,4 +1,4 @@
-package org.praekelt.xforms;
+package org.praekelt.restforms.core;
 
 import java.util.ArrayList;
 import org.javarosa.core.model.FormIndex;

@@ -1,4 +1,4 @@
-package org.praekelt.xforms;
+package org.praekelt.restforms.core;
 
 
 import com.google.gson.Gson;

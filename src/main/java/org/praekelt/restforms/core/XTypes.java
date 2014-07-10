@@ -1,5 +1,5 @@
 
-package org.praekelt.xforms;
+package org.praekelt.restforms.core;
 
 /**
  * Contains the valid data types and methods to validate them

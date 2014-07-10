@@ -1,4 +1,4 @@
-package org.praekelt;
+package org.praekelt.restforms.resources;
 
 import java.util.Iterator;
 import java.util.Set;
