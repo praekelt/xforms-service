@@ -1,5 +1,7 @@
 package org.praekelt.tools;
 
+import org.praekelt.xforms.KeyErrorException;
+import com.google.gson.Gson;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.javarosa.core.api.State;
+import org.javarosa.core.model.Constants;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.util.UnregisteredLocaleException;
@@ -41,7 +44,7 @@ import org.praekelt.xforms.XTypes;
 public class RosaFactory implements Serializable {
 
     private Logger logger;
-    
+
     private boolean persist;
     private String uuid;
     private Lock lock;
@@ -57,7 +60,7 @@ public class RosaFactory implements Serializable {
     private Object answer;
     private int datatype;
     private Object ix;
-    private Object q;
+    private Question q;
     private String nav_mode;
     private Object apiAuth;
     private HashMap sessionData;
@@ -82,7 +85,7 @@ public class RosaFactory implements Serializable {
             String apiAuth, String initLang, int curIndex, boolean persist, int stalenessWindow) {
 
         this.logger = Logger.getLogger(RosaFactory.class.getName());
-        
+
         this.uuid = RosaFactory.getUID();
         this.lock = Lock.getInstance();
         this.navMode = navMode;
@@ -118,16 +121,16 @@ public class RosaFactory implements Serializable {
 
     /**
      * Get a unique-ish ID
-     * 
+     *
      * @return A unique id (not universally unique)
      */
     public static final String getUID() {
         String uuid = "";
         String timestamp = String.valueOf(new Date().getTime());
-        uuid = "session-" + timestamp + "-" + String.valueOf(Math.abs(1/Math.random()));
+        uuid = "session-" + timestamp + "-" + String.valueOf(Math.abs(1 / Math.random()));
         return uuid;
     }
-    
+
     /**
      * Get a RosaFactory object, deal with deserialization
      *
@@ -138,9 +141,9 @@ public class RosaFactory implements Serializable {
     }
 
     /**
-     * 
+     *
      * @param xform
-     * @return 
+     * @return
      */
     public static RosaFactory getInstance(String xform) {
         return new RosaFactory("", 0, xform, null, "", new HashMap(), "", "", 0, true, 1);
@@ -166,7 +169,7 @@ public class RosaFactory implements Serializable {
     }
 
     /**
-     * 
+     *
      * @return A serialized (String) version of this.form
      */
     public String serializeForm() throws SerializationException {
@@ -175,12 +178,12 @@ public class RosaFactory implements Serializable {
         }
         return this.serializeForm(this.form);
     }
-    
+
     /**
      * Serialize this object if it needs to be cached in Redis
      *
      * @return
-     * 
+     *
      * @deprecated Use RosaFactory.serializeForm instead
      */
     public String serialize() throws SerializationException {
@@ -238,20 +241,20 @@ public class RosaFactory implements Serializable {
             xfp = new XFormParser(sr);
             xfp.loadXmlInstance(form, sr);
         }
-        this.formInitialize(instance, new CCInstances(this.sessionData, this.apiAuth), form);        
+        this.formInitialize(instance, new CCInstances(this.sessionData, this.apiAuth), form);
         return form;
     }
 
     /**
-     * 
+     *
      * @param instance
      * @param cci
-     * @param form 
+     * @param form
      */
     private void formInitialize(String instance, CCInstances cci, FormDef form) {
         form.initialize(false);
     }
-    
+
     /**
      *
      * @return
@@ -287,35 +290,35 @@ public class RosaFactory implements Serializable {
     }
 
     /**
-     * 
-     * @return 
+     *
+     * @return
      */
     public String getLang() {
         return "";
     }
-    
+
     /**
      *
      */
     public State sessionState() {
         Params state = this.origParams;
-        
-         state.update(this.output(),
-         this.getLang(),
-         (this.nav_mode != "fao")?str(this.fem.getFormIndex())  : null,
-         this.seqId
-         );
+
+        state.update(this.output(),
+                this.getLang(),
+                (this.nav_mode != "fao") ? str(this.fem.getFormIndex()) : null,
+                this.seqId
+        );
          //# prune entries with null value, so that defaults will take effect when the session is re-created
-         // might not be necessary in Java
+        // might not be necessary in Java
 //         state = dict((k, v) for k, v in state.iteritems() if v is not null);
-         
+
         return state;
     }
-    
-/**
- * 
- * @return 
- */
+
+    /**
+     *
+     * @return
+     */
     public String output() {
         return "";
     }
@@ -358,7 +361,7 @@ public class RosaFactory implements Serializable {
      * @return
      */
     public Event parseEvent(FormIndex formIx) {
-        Event event = new Event(); 
+        Event event = new Event();
         event.setFi(formIx);
 
         int status = this.fem.getEvent(formIx);
@@ -519,10 +522,79 @@ public class RosaFactory implements Serializable {
         return "";
     }
 
+    /**
+     *
+     * @param event
+     */
     private void parseQuestion(Event event) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+        this.fem.getQuestionPrompt(event.getByIx("ix"));
 
+        event.setByIx("caption", q.getLongText());
+        event.setByIx("caption_audio", q.getAudioText());
+        event.setByIx("caption_image", q.getImageText());
+        //this version javarosa does not have FormEntryPrompt.TEXT_FORM_VIDEO
+        //event("caption_video", q.getSpecialFormQuestionText(FormEntryPrompt.TEXT_FORM_VIDEO));
+        event.setByIx("help", q.getHelpText());
+        event.setByIx("style", this.parseStyleInfo(q.getAppearanceHint()));
+        event.setByIx("binding", q.getQuestion().getBind().getReference().toString());
+
+        if (q.getControlType() == Constants.CONTROL_TRIGGER) {
+            event.setByIx("datatype", "info");
+        } else {
+            try {
+                Gson gson = new Gson();
+
+                String json = "{"
+                        + Constants.DATATYPE_NULL + ": \"str\","
+                        + Constants.DATATYPE_TEXT + ": \"str\","
+                        + Constants.DATATYPE_INTEGER + ": \"int\","
+                        + Constants.DATATYPE_LONG + ": \"longint\", "
+                        + Constants.DATATYPE_DECIMAL + ": \"float\","
+                        + Constants.DATATYPE_DATE + ": \"date\","
+                        + Constants.DATATYPE_TIME + ": \"time\","
+                        + Constants.DATATYPE_CHOICE + ": \"select\","
+                        + Constants.DATATYPE_CHOICE_LIST + ": \"multiselect\","
+                        + Constants.DATATYPE_GEOPOINT + ": \"geo\","
+                        + //# not supported yet
+                        Constants.DATATYPE_DATE_TIME + ": \"datetime\","
+                        + Constants.DATATYPE_BARCODE + ": \"barcode\","
+                        + Constants.DATATYPE_BINARY + ": \"binary\","
+                        + "}";
+
+                Object obj[] = gson.fromJson(json, Object[].class);
+
+                event.setByIx("datatype", obj[q.getDataType()]);
+
+            } catch (KeyErrorException kee) {
+                event.setByIx("datatype", "unrecognized");
+            }
+            if (event.getDataType() == Event.SELECT || event.getDataType() == Event.MULTISELECT) {
+                event.setByIx("choices", this.getQuestionChoices(q));
+            }
+            event.setByIx("required", q.isRequired());
+
+            String value = q.getAnswerValue();
+            if (value == null) {
+                event.setByIx("answer", null);
+            } else if (event.getDataType() == Event.INT
+                    || event.getDataType() == Event.FLOAT
+                    || event.getDataType() == Event.STR
+                    || event.getDataType() == Event.LONGINT) {
+//                event.setByIx("answer", value.getValue());
+            } else if (event.getDataType() == Event.DATE) {
+//                event.setByIx("answer") = this.toPdate(value.getValue());
+            } else if (event.getDataType() == Event.TIME) {
+//                event.setByIx("answer") = this.toPdate(value.getValue());
+            } else if (event.getDataType() == Event.SELECT) {
+//                event.setByIx("answer") = choice(q, selection = value.getValue()).ordinal()
+            } else if (event.getDataType() == Event.MULTISELECT) {
+//                event.setByIx("answer") = [choice(q, selection = sel).ordinal() for sel in  value.getValue() {}];
+            } else if (event.getDataType() == Event.GEO) {
+//                event.setByIx("answer") = list(value.getValue())[:2];
+            }
+    }
+    }
+    
     private void parseRepeatJuncture(Event event) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -625,6 +697,10 @@ public class RosaFactory implements Serializable {
     public void parseStyleInfo() {
     }
 
+    public String parseStyleInfo(String s) {
+        return "";
+    }
+
     public void parseQuestion() {
     }
 
@@ -671,6 +747,10 @@ public class RosaFactory implements Serializable {
     }
 
     private FormIndex _walk(FormIndex form_ix, Object children) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private String getQuestionChoices(Question q) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
