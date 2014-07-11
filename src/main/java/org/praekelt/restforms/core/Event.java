@@ -10,6 +10,15 @@ import org.javarosa.core.model.FormIndex;
 public class Event {
     
     public static final int UNRECOGNISED = 0;
+    public static final int INT = 1;
+    public static final int FLOAT = 2;
+    public static final int STR = 3;
+    public static final int LONGINT = 4;
+    public static final int SELECT = 5;
+    public static final int MULTISELECT = 6;
+    public static int GEO = 7;
+    public static int DATE = 8;
+    public static int TIME = 9;
     
     String type;
     FormIndex fi;
@@ -118,6 +127,18 @@ public class Event {
     public void delete(String key) {
         //TODO: looks like children should be a Hashtable
         children.remove(key);
+    }
+
+    public FormIndex getByIx(String ix) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    public void setByIx(String ix, String obj) {
+    
+    }
+
+    public void setByIx(String ix, Object obj) throws KeyErrorException {
+    
     }
 
     
