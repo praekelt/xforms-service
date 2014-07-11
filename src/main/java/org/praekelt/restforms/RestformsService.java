@@ -1,9 +1,9 @@
-package org.praekelt.service;
+package org.praekelt.restforms;
 
-import org.praekelt.Forms;
-import org.praekelt.resources.IndexResource;
+import org.praekelt.restforms.resources.FormPlayer;
+import org.praekelt.restforms.resources.Forms;
+import org.praekelt.restforms.resources.IndexResource;
 import org.praekelt.tools.JedisClient;
-import org.praekelt.vumi.FormPlayer;
 
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;

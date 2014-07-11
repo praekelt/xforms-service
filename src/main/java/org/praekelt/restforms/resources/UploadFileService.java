@@ -1,4 +1,4 @@
-package org.praekelt.file;
+package org.praekelt.restforms.resources;
 
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;

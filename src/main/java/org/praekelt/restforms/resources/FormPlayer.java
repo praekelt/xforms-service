@@ -1,4 +1,4 @@
-package org.praekelt.vumi;
+package org.praekelt.restforms.resources;
 
 import com.google.gson.Gson;
 
@@ -17,9 +17,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.praekelt.restforms.core.SerializationException;
 import org.praekelt.tools.JedisClient;
 import org.praekelt.tools.RosaFactory;
-import org.praekelt.xforms.SerializationException;
 
 /**
  * REST Web Service
