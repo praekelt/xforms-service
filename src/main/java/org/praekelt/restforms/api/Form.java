@@ -1,4 +1,4 @@
-package org.praekelt.models;
+package org.praekelt.restforms.api;
 
 import java.util.UUID;
 

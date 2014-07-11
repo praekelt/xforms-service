@@ -1,5 +1,5 @@
 
-package org.praekelt.xforms;
+package org.praekelt.restforms.core;
 
 /**
  *

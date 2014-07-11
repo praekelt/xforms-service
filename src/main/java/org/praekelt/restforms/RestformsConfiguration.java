@@ -1,4 +1,4 @@
-package org.praekelt.service;
+package org.praekelt.restforms;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
