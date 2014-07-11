@@ -12,4 +12,6 @@ local.properties
 .settings/
 .loadpath
 target/
+.gradle
+build
 
