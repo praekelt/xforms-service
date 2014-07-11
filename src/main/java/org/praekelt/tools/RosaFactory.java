@@ -1,6 +1,6 @@
 package org.praekelt.tools;
 
-import org.praekelt.xforms.KeyErrorException;
+import org.praekelt.restforms.core.KeyErrorException;
 import com.google.gson.Gson;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -155,6 +155,7 @@ public class RosaFactory implements Serializable {
      *
      * @param form The form to serialize
      * @return A serialized version of the form
+     * @throws org.praekelt.restforms.core.SerializationException
      */
     public String serializeForm(FormDef form) throws SerializationException {
         String s = "";
@@ -172,6 +173,7 @@ public class RosaFactory implements Serializable {
     /**
      *
      * @return A serialized (String) version of this.form
+     * @throws org.praekelt.restforms.core.SerializationException
      */
     public String serializeForm() throws SerializationException {
         if (this.form == null) {
@@ -184,6 +186,7 @@ public class RosaFactory implements Serializable {
      * Serialize this object if it needs to be cached in Redis
      *
      * @return
+     * @throws org.praekelt.restforms.core.SerializationException
      *
      * @deprecated Use RosaFactory.serializeForm instead
      */
@@ -227,23 +230,19 @@ public class RosaFactory implements Serializable {
      *
      * @param xform
      * @param instance
-     * @param extensions
-     * @param sessionData
-     * @param apiAuth
      * @return
      */
     public FormDef loadForm(String xform, String instance) {
         Reader xformReader = (Reader) new StringReader(xform);
         XFormParser xfp;
         xfp = new XFormParser(xformReader);
-        FormDef form = xfp.parse();
+        FormDef xf = xfp.parse();
         if (instance != null) {
             StringReader sr = new StringReader(instance);
-            xfp = new XFormParser(sr);
-            xfp.loadXmlInstance(form, sr);
+            XFormParser.loadXmlInstance(xf, sr);
         }
-        this.formInitialize(instance, new CCInstances(this.sessionData, this.apiAuth), form);
-        return form;
+        this.formInitialize(instance, new CCInstances(this.sessionData, this.apiAuth), xf);
+        return xf;
     }
 
     /**
@@ -259,6 +258,7 @@ public class RosaFactory implements Serializable {
     /**
      *
      * @return
+     * @throws org.praekelt.restforms.core.SequencingException
      */
     public RosaFactory enter() throws SequencingException {
         if (this.navMode.equalsIgnoreCase("fao")) {
