@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,7 +61,7 @@ public class RosaFactory implements Serializable {
     private Event curEvent;
     private Object answer;
     private int datatype;
-    private Object ix;
+    private int ix;
     private Question q;
     private String nav_mode;
     private Object apiAuth;
@@ -257,8 +258,7 @@ public class RosaFactory implements Serializable {
 
     /**
      *
-     * @return
-     * @throws org.praekelt.restforms.core.SequencingException
+     * @return @throws org.praekelt.restforms.core.SequencingException
      */
     public RosaFactory enter() throws SequencingException {
         if (this.navMode.equalsIgnoreCase("fao")) {
@@ -309,7 +309,7 @@ public class RosaFactory implements Serializable {
                 (this.nav_mode != "fao") ? str(this.fem.getFormIndex()) : null,
                 this.seqId
         );
-         //# prune entries with null value, so that defaults will take effect when the session is re-created
+        //# prune entries with null value, so that defaults will take effect when the session is re-created
         // might not be necessary in Java
 //         state = dict((k, v) for k, v in state.iteritems() if v is not null);
 
@@ -376,7 +376,8 @@ public class RosaFactory implements Serializable {
             this.parseQuestion(event);
         } else if (status == this.fec.EVENT_REPEAT_JUNCTURE) {
             event.setType("repeat-juncture");
-            this.parseRepeatJuncture(event);
+            FormIndex[] fi = null;
+            this.parseRepeatJuncture();
         } else {
             event.setType("sub-group");
             FormEntryCaption prompt = this.fem.getCaptionPrompt(formIx);
@@ -468,11 +469,11 @@ public class RosaFactory implements Serializable {
                 ) {
             ans = null;
         } else if (datatype == XTypes.INT) {
-            ans = IntegerData(Integer.valueOf((String) answer));
+            ans = IntegerData(answer.toString());
         } else if (datatype == XTypes.LONG) {
-            ans = LongData(Long.valueOf((String) answer));
+            ans = LongData(answer.toString());
         } else if (datatype == XTypes.FLOAT) {
-            ans = DecimalData(Float.valueOf((String) answer));
+            ans = DecimalData(answer.toString());
         } else if (datatype == XTypes.STRING | datatype == XTypes.INFO) {
             ans = StringData(str((String[]) answer));
         } else if (datatype == XTypes.DATE) {
@@ -492,7 +493,7 @@ public class RosaFactory implements Serializable {
 //            ans = GeoPointData(to_arr((float(x) for (x in multians(answer)), "d"));
         }
 
-        if (ix == null) {
+        if (ix == 0) {
             //result = this.fec.answerQuestion( * ([ans]));  
         } else {
             //result = this.fec.answerQuestion( * ([ix, ans]));  
@@ -593,31 +594,39 @@ public class RosaFactory implements Serializable {
             } else if (event.getDataType() == Event.GEO) {
 //                event.setByIx("answer") = list(value.getValue())[:2];
             }
+        }
     }
-    }
-    
+
     private void parseRepeatJuncture(Event event) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        FormEntryCaption r = this.fem.getCaptionPrompt(event.getByIx("ix"));
+        FormEntryCaption.RepeatOptions ro = r.getRepeatOptions();
+        event.getSetByIx("main-header", ro.header);
+        event.getSetByIx("repetitions", list(r.getRepetitionsText()));
+
+        event.getSetByIx("add-choice", ro.add);
+        event.getSetByIx("del-choice", ro.delete);
+        event.getSetByIx("del-header", ro.delete_header);
+        event.getSetByIx("done-choice", ro.done);
     }
 
-    private FormIndex parseIx(FormIndex ix) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private FormIndex parseIx(String sIx) {
+        return indexFromStr(sIx, this.form);
     }
 
-    private Object IntegerData(Integer valueOf) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private FormIndex parseIx(FormIndex fix) {
+        return fix;
     }
 
-    private Object LongData(Long valueOf) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private int IntegerData(String sInt) {
+        return Integer.valueOf(sInt);
     }
 
-    private Object DecimalData(Float valueOf) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private Long LongData(String sLong) {
+        return Long.valueOf(sLong);
     }
 
-    private Object StringData(String str) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private Float DecimalData(String sDeci) {
+        return Float.valueOf(sDeci);
     }
 
     public void loadFile() {
@@ -705,20 +714,9 @@ public class RosaFactory implements Serializable {
     public void parseQuestion() {
     }
 
-    public void parseRepeatJuncture() {
-    }
-
     private FormIndex parseIx(int curIndex) {
         FormIndex fi = null;
         return fi;
-    }
-
-    private State dict(Params origParams) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    private boolean hasattr(Object a, String __iter__) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     /**
@@ -752,6 +750,30 @@ public class RosaFactory implements Serializable {
     }
 
     private String getQuestionChoices(Question q) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private String list(Vector<String> repetitionsText) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private FormIndex indexFromStr(String sIx, FormDef form) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private Object StringData(String str) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public void parseRepeatJuncture() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private State dict(Params origParams) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private boolean hasattr(Object a, String __iter__) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

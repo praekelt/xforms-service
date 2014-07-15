@@ -36,6 +36,7 @@ import org.praekelt.tools.Props;
  * @author Victor
  */
 @Path("/rest")
+@Produces(MediaType.APPLICATION_JSON)
 public class Forms {
 
     @Context
@@ -84,7 +85,7 @@ public class Forms {
     @Path("status")
     @Produces("text/html")
     public String getStatus() {
-        return "alive";
+        return "Forms alive";
     }
     
     /**

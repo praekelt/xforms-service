@@ -1,23 +1,23 @@
 package org.praekelt.tools;
 
+import static java.lang.System.exit;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
 public class JedisClient {
 
-	private static final Logger logger = Logger.getLogger(JedisFactory.class.getName());
-	private JedisPool pool;
+    private static final Logger logger = Logger.getLogger(JedisClient.class.getName());
+    private final JedisPool pool;
 
-	public JedisClient(JedisPool pool) {
-		this.pool = pool;
-	}
-	
-	/**
+    public JedisClient(JedisPool pool) {
+        this.pool = pool;
+    }
+
+    /**
      * Set a value in Redis
      *
      * @param key
@@ -25,6 +25,11 @@ public class JedisClient {
      */
     public void set(String key, String value) {
         Jedis jedis = this.borrow();
+        System.out.println("setting key: "+key + " value: " + value);
+        if (jedis == null) {
+            System.out.println("jedis is null");
+            exit(-1);
+        }
         try {
             jedis.set(key, value);
         } finally {
@@ -59,7 +64,7 @@ public class JedisClient {
      * Unset the pool
      */
     public void destroy() {
-        pool.destroy();
+        this.pool.destroy();
     }
 
     /**
@@ -70,8 +75,9 @@ public class JedisClient {
     public Jedis borrow() {
         Jedis resource = null;
         try {
-            resource = pool.getResource();
+            resource = this.pool.getResource();
         } catch (JedisConnectionException jdce) {
+            jdce.printStackTrace(System.err);
         }
         return resource;
     }
@@ -82,7 +88,7 @@ public class JedisClient {
      * @param jedis
      */
     public void revert(Jedis jedis) {
-        pool.returnResource(jedis);
+        this.pool.returnResource(jedis);
     }
 
     /**

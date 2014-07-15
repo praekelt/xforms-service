@@ -13,27 +13,26 @@ import redis.clients.jedis.JedisPoolConfig;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-
 public class JedisFactory {
-	
-	@NotEmpty
-    private String host;
+
+    @NotEmpty
+    private String host = "127.0.0.1";
 
     @Min(1)
     @Max(65535)
     private int port = 6379;
-    
+
     @NotEmpty
-    private String password;
-    
+    private String password = "";
+
     @Min(100)
     @Max(5000)
     private int timeout = 100;
-    
+
     @Min(1)
     @Max(50)
-    private int poolsize = 5;
-    
+    private int poolsize = 50;
+
     @JsonProperty
     public String getHost() {
         return host;
@@ -53,47 +52,46 @@ public class JedisFactory {
     public void setPort(int port) {
         this.port = port;
     }
-    
-    @JsonProperty
-    public String getPassword() {
-		return password;
-	}
-    
-    @JsonProperty
-    public void setPassword(String password) {
-		this.password = password;
-	}
-    
-    @JsonProperty
-	public int getTimeout() {
-		return timeout;
-	}
 
     @JsonProperty
-	public void setTimeout(int timeout) {
-		this.timeout = timeout;
-	}
-    
-    @JsonProperty
-    public int getPoolsize(){
-    	return poolsize;
+    public String getPassword() {
+        return password;
     }
-    
+
+    @JsonProperty
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    @JsonProperty
+    public int getTimeout() {
+        return timeout;
+    }
+
+    @JsonProperty
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
+    }
+
+    @JsonProperty
+    public int getPoolsize() {
+        return poolsize;
+    }
+
     @JsonProperty
     public void setPoolsize(int poolsize) {
-    	this.poolsize = poolsize;
+        this.poolsize = poolsize;
     }
-    
+
     public JedisClient build(Environment environment) {
-    	JedisPoolConfig poolConfig = new JedisPoolConfig();
+        JedisPoolConfig poolConfig = new JedisPoolConfig();
         poolConfig.setMaxTotal(getPoolsize());
         final JedisPool pool = new JedisPool(
-        		poolConfig,
-        		getHost(), 
-        		getPort(), 
-        		getTimeout(),
-        		getPassword());
-        
+                poolConfig,
+                getHost(),
+                getPort(),
+                getTimeout());
+
         environment.lifecycle().manage(new Managed() {
             @Override
             public void start() {
@@ -101,9 +99,9 @@ public class JedisFactory {
 
             @Override
             public void stop() {
-            	pool.destroy();
+                pool.destroy();
             }
         });
         return new JedisClient(pool);
-    }   
+    }
 }

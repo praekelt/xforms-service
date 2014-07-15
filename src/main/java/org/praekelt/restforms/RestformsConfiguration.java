@@ -9,9 +9,10 @@ import org.praekelt.tools.JedisFactory;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.dropwizard.Configuration;
- 
+
 public class RestformsConfiguration extends Configuration {
-	@NotEmpty
+
+    @NotEmpty
     private String template;
 
     @NotEmpty
@@ -36,7 +37,7 @@ public class RestformsConfiguration extends Configuration {
     public void setDefaultName(String name) {
         this.defaultName = name;
     }
-    
+
     @Valid
     @NotNull
     private JedisFactory jedisFactory = new JedisFactory();

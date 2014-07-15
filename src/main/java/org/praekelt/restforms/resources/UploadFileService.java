@@ -27,33 +27,42 @@ import org.praekelt.tools.JedisClient;
  *
  */
 @Path("/xforms")
+@Produces(MediaType.APPLICATION_JSON)
 public class UploadFileService {
-    
+
     private final Logger logger;
-	private JedisClient jedis;
+    private final JedisClient jedis;
 
     /**
-     * 
+     *
+     * @param jedis
      */
     public UploadFileService(JedisClient jedis) {
         super();
-		this.jedis = jedis;
+        this.jedis = jedis;
         this.logger = Logger.getLogger(UploadFileService.class.getName());
     }
-    
+
     @GET
     @Path("/status")
     @Produces("text/html")
     public String getStatus() {
-        return "alive";
+        return "Upload alive";
     }
-    
+
+    @GET
+    @Path("/upload")
+    @Produces("text/html")
+    public String uploadMsg() {
+        return "upload here";
+    }
+
     /**
      * Read uploaded file from the inputStream
-     * 
+     *
      * @param uploadedInputStream
      * @param fileDetail
-     * @return 
+     * @return
      */
     @POST
     @Path("/upload")
@@ -76,9 +85,9 @@ public class UploadFileService {
 
     /**
      * Save uploaded form to Redis
-     * 
+     *
      * @param uploadedInputStream
-     * @param fileKey 
+     * @param fileKey
      */
     private void writeToRedis(InputStream uploadedInputStream, String fileKey) {
         try {
@@ -98,9 +107,9 @@ public class UploadFileService {
 
     /**
      * Save uploaded file to disk
-     * 
+     *
      * @param uploadedInputStream
-     * @param uploadedFileLocation 
+     * @param uploadedFileLocation
      */
     private void writeToFile(InputStream uploadedInputStream,
             String uploadedFileLocation) {
