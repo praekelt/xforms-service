@@ -1,6 +1,5 @@
 package org.praekelt.tools;
 
-import org.praekelt.restforms.core.KeyErrorException;
 import com.google.gson.Gson;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -12,10 +11,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.javarosa.core.api.State;
 import org.javarosa.core.model.Constants;
 import org.javarosa.core.model.FormDef;
@@ -29,6 +28,7 @@ import org.javarosa.model.xform.XFormSerializingVisitor;
 import org.javarosa.xform.parse.XFormParser;
 import org.praekelt.restforms.core.CCInstances;
 import org.praekelt.restforms.core.Event;
+import org.praekelt.restforms.core.KeyErrorException;
 import org.praekelt.restforms.core.Lock;
 import org.praekelt.restforms.core.Params;
 import org.praekelt.restforms.core.Persistence;
@@ -67,6 +67,8 @@ public class RosaFactory implements Serializable {
     private Object apiAuth;
     private HashMap sessionData;
 
+    private Object globalState = null;
+
     /**
      *
      * @param uuid
@@ -84,7 +86,7 @@ public class RosaFactory implements Serializable {
      */
     public RosaFactory(String navMode, int seqId, String xform,
             String instance, String extensions, HashMap sessionData,
-            String apiAuth, String initLang, int curIndex, boolean persist, int stalenessWindow) {
+            String apiAuth, String initLang, int curIndex, boolean persist, int stalenessWindow) throws KeyErrorException {
 
         this.logger = Logger.getLogger(RosaFactory.class.getName());
 
@@ -138,7 +140,7 @@ public class RosaFactory implements Serializable {
      *
      * @return An instance of RosaFactory
      */
-    public static RosaFactory getInstance() {
+    public static RosaFactory getInstance() throws KeyErrorException {
         return new RosaFactory("", 0, "", "", "", new HashMap(), "", "", 0, true, 1);
     }
 
@@ -147,7 +149,7 @@ public class RosaFactory implements Serializable {
      * @param xform
      * @return
      */
-    public static RosaFactory getInstance(String xform) {
+    public static RosaFactory getInstance(String xform) throws KeyErrorException {
         return new RosaFactory("", 0, xform, null, "", new HashMap(), "", "", 0, true, 1);
     }
 
@@ -324,13 +326,6 @@ public class RosaFactory implements Serializable {
         return "";
     }
 
-    public void walk() {
-    }
-
-    public void walk(int parentIx, int[] siblings) {
-
-    }
-
     public FormIndex step(FormIndex form_ix, boolean b) {
         return form_ix;
     }
@@ -351,7 +346,7 @@ public class RosaFactory implements Serializable {
      *
      * @return
      */
-    private Event parseCurrentEvent() {
+    private Event parseCurrentEvent() throws KeyErrorException {
         this.curEvent = this.parseEvent(this.fem.getFormIndex());
         return this.curEvent;
     }
@@ -361,7 +356,7 @@ public class RosaFactory implements Serializable {
      * @param formIx
      * @return
      */
-    public Event parseEvent(FormIndex formIx) {
+    public Event parseEvent(FormIndex formIx) throws KeyErrorException {
         Event event = new Event();
         event.setFi(formIx);
 
@@ -377,7 +372,7 @@ public class RosaFactory implements Serializable {
         } else if (status == this.fec.EVENT_REPEAT_JUNCTURE) {
             event.setType("repeat-juncture");
             FormIndex[] fi = null;
-            this.parseRepeatJuncture();
+            this.parseRepeatJuncture(event);
         } else {
             event.setType("sub-group");
             FormEntryCaption prompt = this.fem.getCaptionPrompt(formIx);
@@ -406,7 +401,7 @@ public class RosaFactory implements Serializable {
      *
      * @return
      */
-    public Event nextEvent() {
+    public Event nextEvent() throws KeyErrorException {
         this.fec.stepToNextEvent();
         return this.parseCurrentEvent();
     }
@@ -415,7 +410,7 @@ public class RosaFactory implements Serializable {
      *
      * @return
      */
-    public Event backEvent() {
+    public Event backEvent() throws KeyErrorException {
         this.fec.stepToPreviousEvent();
         return this.parseCurrentEvent();
     }
@@ -426,7 +421,7 @@ public class RosaFactory implements Serializable {
      * @param answer
      * @param ix
      */
-    public Status answerQuestion(Object answer, FormIndex ix) throws ValueException {
+    public Status answerQuestion(Object answer, FormIndex ix) throws ValueException, KeyErrorException {
         ix = this.parseIx(ix);
         Event event = this.curEvent;
 
@@ -528,7 +523,7 @@ public class RosaFactory implements Serializable {
      *
      * @param event
      */
-    private void parseQuestion(Event event) {
+    private void parseQuestion(Event event) throws KeyErrorException {
         this.fem.getQuestionPrompt(event.getByIx("ix"));
 
         event.setByIx("caption", q.getLongText());
@@ -609,111 +604,6 @@ public class RosaFactory implements Serializable {
         event.getSetByIx("done-choice", ro.done);
     }
 
-    private FormIndex parseIx(String sIx) {
-        return indexFromStr(sIx, this.form);
-    }
-
-    private FormIndex parseIx(FormIndex fix) {
-        return fix;
-    }
-
-    private int IntegerData(String sInt) {
-        return Integer.valueOf(sInt);
-    }
-
-    private Long LongData(String sLong) {
-        return Long.valueOf(sLong);
-    }
-
-    private Float DecimalData(String sDeci) {
-        return Float.valueOf(sDeci);
-    }
-
-    public void loadFile() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void getLoader() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void initContext() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void openForm() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void editRepeat() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void newRepeat() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void deleteRepeat() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void newRepitition() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void skipNext() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void goBack() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void submitForm() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void setLocale() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void currentQuestion() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void heartbeat() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void prevEvent() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void saveForm() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void formCompletion() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void purge() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void getQuestionChoices() {
-    }
-
-    public void parseStyleInfo() {
-    }
-
-    public String parseStyleInfo(String s) {
-        return "";
-    }
-
-    public void parseQuestion() {
-    }
-
     private FormIndex parseIx(int curIndex) {
         FormIndex fi = null;
         return fi;
@@ -745,12 +635,294 @@ public class RosaFactory implements Serializable {
         return s;
     }
 
-    private FormIndex _walk(FormIndex form_ix, Object children) {
+    private FormIndex parseIx(String sIx) {
+        return indexFromStr(sIx, this.form);
+    }
+
+    private FormIndex parseIx(FormIndex fix) {
+        return fix;
+    }
+
+    private int IntegerData(String sInt) {
+        return Integer.valueOf(sInt);
+    }
+
+    private Long LongData(String sLong) {
+        return Long.valueOf(sLong);
+    }
+
+    private Float DecimalData(String sDeci) {
+        return Float.valueOf(sDeci);
+    }
+
+    /**
+     * @deprecated
+     */
+    public void loadFile() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    private String getQuestionChoices(Question q) {
+    /**
+     * @deprecated
+     */
+    public void getLoader() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    public Map<String, String> initContext() {
+        XFormSession xfsess = globalState.getSession(this.sessionId);
+        Map<String, String> evs = new HashMap<String, String>();
+        //evs.put("event", ev);
+        return evs;
+        
+        /*
+         """return the 'extra' response context needed when initializing a session"""
+         return {
+         'title': xfsess.form_title(),
+         'langs': xfsess.get_locales(),
+         }
+         */
+    }
+
+    public void openForm() {
+        /*
+         try:
+         xform_xml = get_loader(form_spec, **kwargs)()
+         instance_xml = get_loader(inst_spec, **kwargs)()
+         except Exception, e:
+         return {'error': str(e)}
+
+         xfsess = XFormSession(xform_xml, instance_xml, **kwargs)
+         global_state.new_session(xfsess)
+         with xfsess: # triggers persisting of the fresh session
+         extra = {'session_id': xfsess.uuid}
+         extra.update(init_context(xfsess))
+         return xfsess.response(extra)
+         */
+    }
+
+    public Map<String, String> editRepeat() {
+        XFormSession xfsess = globalState.getSession(this.sessionId);
+        String ev = xfsess.descendRepeat(ix);
+        Map<String, String> evs = new HashMap<String, String>();
+        evs.put("event", ev);
+        return evs;
+    }
+
+    public void newRepeat() {
+        /*
+         with global_state.get_session(session_id) as xfsess:
+         ev = xfsess.descend_repeat(_junc_ix=form_ix)
+         return xfsess.response({}, ev)
+         */
+    }
+
+    public void deleteRepeat() {
+        /*
+         with global_state.get_session(session_id) as xfsess:
+         ev = xfsess.delete_repeat(rep_ix, form_ix)
+         return xfsess.response({}, ev)
+         */
+    }
+
+    public void newRepitition() {
+        /*
+         with global_state.get_session(session_id) as xfsess:
+         #new repeat creation currently cannot fail, so just blindly proceed to the next event
+         xfsess.new_repetition()
+         return {'event': next_event(xfsess)}
+         */
+    }
+
+    public void skipNext() {
+        /*
+         with global_state.get_session(session_id) as xfsess:
+         return {'event': next_event(xfsess)}        
+         */
+    }
+
+    public void goBack() {
+        /*
+         with global_state.get_session(session_id) as xfsess:
+         (at_start, event) = prev_event(xfsess)
+         return {'event': event, 'at-start': at_start}*/
+    }
+
+    public void submitForm() {
+        /*
+         with global_state.get_session(session_id) as xfsess:
+         errors = dict(filter(lambda resp: resp[1]['status'] != 'success',
+         ((_ix, xfsess.answer_question(answer, _ix)) for _ix, answer in answers.iteritems())))
+
+         if errors or not prevalidated:
+         resp = {'status': 'validation-error', 'errors': errors}
+         else:
+         resp = form_completion(xfsess)
+         resp['status'] = 'success'
+
+         return xfsess.response(resp, no_next=True)        
+         */
+    }
+
+    public void setLocale() {
+        /*
+         with global_state.get_session(session_id) as xfsess:
+         ev = xfsess.set_locale(lang)
+         return xfsess.response({}, ev)
+         */
+    }
+
+    public void currentQuestion() {
+        /*
+         with global_state.get_session(session_id) as xfsess:
+         extra = {'lang': xfsess.get_lang()}
+         extra.update(init_context(xfsess))
+         return xfsess.response(extra, xfsess.cur_event)
+         */
+    }
+
+    public void heartbeat() {
+//        Object xfss = globalState.getSession(sessionId);
+//        return xfss;
+    }
+
+    public void prevEvent() {
+        /*
+         at_start, ev = False, xfsess.back_event()
+         if ev['type'] == 'form-start':
+         at_start, ev = True, xfsess.next_event()
+         return at_start, ev        
+         */
+    }
+
+    public void saveForm() {
+        /*
+         xfsess.finalize()
+         xml = xfsess.output()
+         if persist:
+         instance_id = global_state.save_instance(xml)
+         else:
+         instance_id = None
+         return (instance_id, xml)        
+         */
+    }
+
+    public void formCompletion() {
+        //   return dict(zip(('save-id', 'output'), save_form(xfsess)))
+    }
+
+    public void purge() {
+        /**
+         * resp = global_state.purge() resp.update({'status': 'ok'}) return resp
+         */
+    }
+
+    public void printTree() {
+        /*
+         import pprint
+         pp = pprint.PrettyPrinter(indent=2)
+         def print_tree(tree):
+         try:
+         pp.pprint(tree)
+         except UnicodeEncodeError:
+         print 'sorry, can\'t pretty-print unicode'
+         */
+    }
+
+    public String[] parseStyleInfo(String s) {
+        String[] info = null;
+        /*
+         info = {}
+
+         if rawstyle != None:
+         info['raw'] = rawstyle
+         try:
+         info.update([[p.strip() for p in f.split(':')][:2] for f in rawstyle.split(';') if f.strip()])
+         except ValueError:
+         pass
+         */
+        return info;
+
+    }
+
+    public void walk() {
+        /*
+         form_ix = FormIndex.createBeginningOfFormIndex()
+         tree = []
+         self._walk(form_ix, tree)
+         return tree
+         */
+    }
+
+    public void walk(int parentIx, int[] siblings) {
+        /*
+         def step(ix, descend):
+         next_ix = self.fem.incrementIndex(ix, descend)
+         self.fem.setQuestionIndex(next_ix)  # needed to trigger events in form engine
+         return next_ix
+
+         def ix_in_scope(form_ix):
+         if form_ix.isEndOfFormIndex():
+         return False
+         elif parent_ix.isBeginningOfFormIndex():
+         return True
+         else:
+         return FormIndex.isSubElement(parent_ix, form_ix)
+
+         form_ix = step(parent_ix, True)
+         while ix_in_scope(form_ix):
+         relevant = self.fem.isIndexRelevant(form_ix)
+
+         if not relevant:
+         form_ix = step(form_ix, False)
+         continue
+
+         evt = self.__parse_event(form_ix)
+         evt['relevant'] = relevant
+         if evt['type'] == 'sub-group':
+         presentation_group = (evt['caption'] != None)
+         if presentation_group:
+         siblings.append(evt)
+         evt['children'] = []
+         form_ix = self._walk(form_ix, evt['children'] if presentation_group else siblings)
+         elif evt['type'] == 'repeat-juncture':
+         siblings.append(evt)
+         evt['children'] = []
+         for i in range(0, self.fem.getForm().getNumRepetitions(form_ix)):
+         subevt = {
+         'type': 'sub-group',
+         'ix': self.fem.getForm().descendIntoRepeat(form_ix, i),
+         'caption': evt['repetitions'][i],
+         'repeatable': True,
+         'children': [],
+         }
+
+         # kinda ghetto; we need to be able to track distinct repeat instances, even if their position
+         # within the list of repetitions changes (such as by deleting a rep in the middle)
+         # would be nice to have proper FormEntryAPI support for this
+         java_uid = self.form.getInstance().resolveReference(subevt['ix'].getReference()).hashCode()
+         subevt['uuid'] = hashlib.sha1(str(java_uid)).hexdigest()[:12]
+
+         evt['children'].append(subevt)
+         self._walk(subevt['ix'], subevt['children'])
+         for key in ['repetitions', 'del-choice', 'del-header', 'done-choice']:
+         del evt[key]
+         form_ix = step(form_ix, True) # why True?
+         else:
+         siblings.append(evt)
+         form_ix = step(form_ix, True) # why True?
+
+         return form_ix
+         */
+    }
+
+    private String getQuestionChoices(Question q) {
+        //return [choice(q, ch) for ch in q.getSelectChoices()]
+        return "";
     }
 
     private String list(Vector<String> repetitionsText) {
@@ -762,10 +934,6 @@ public class RosaFactory implements Serializable {
     }
 
     private Object StringData(String str) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public void parseRepeatJuncture() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
