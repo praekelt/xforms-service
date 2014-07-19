@@ -66,8 +66,13 @@ public class RosaFactory implements Serializable {
     private String nav_mode;
     private Object apiAuth;
     private HashMap sessionData;
+    private int sessionId;
 
-    private Object globalState = null;
+    private GlobalStateMgr globalState = null;
+    private String ev;
+    private int formIx;
+    private int repIx;
+    private int instanceId;
 
     /**
      *
@@ -656,29 +661,35 @@ public class RosaFactory implements Serializable {
     }
 
     /**
-     * @deprecated
      */
     public void loadFile() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     /**
-     * @deprecated
      */
-    public void getLoader() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public HashMap getLoader(boolean spec, HashMap kwargs) {
+        if (!spec) {
+            return null;
+        }
+        Object type, val = spec;
+        HashMap hm = new HashMap();
+        hm.put("uid", this.loadFile(val));
+        hm.put("raw", val);
+        hm.put("url", queryFactory(kwargs.get("api_auth"), "raw"));
+        return hm;
     }
 
     /**
-     * 
-     * @return 
+     *
+     * @return
      */
-    public Map<String, String> initContext() {
-        XFormSession xfsess = globalState.getSession(this.sessionId);
+    public Map<String, String> initContext(XFormSession xfsess) {
+        xfsess = globalState.getSession(this.sessionId);
         Map<String, String> evs = new HashMap<String, String>();
-        //evs.put("event", ev);
+        evs.put("event", ev);
         return evs;
-        
+
         /*
          """return the 'extra' response context needed when initializing a session"""
          return {
@@ -688,21 +699,22 @@ public class RosaFactory implements Serializable {
          */
     }
 
-    public void openForm() {
-        /*
-         try:
-         xform_xml = get_loader(form_spec, **kwargs)()
-         instance_xml = get_loader(inst_spec, **kwargs)()
-         except Exception, e:
-         return {'error': str(e)}
+    public String openForm(boolean formSpec, boolean instSpec, HashMap kwargs) {
+        Object xformXml;
+        Object instanceXml;
+        try {
+            xformXml = this.getLoader(formSpec, kwargs);
+            instanceXml = this.getLoader(instSpec, kwargs);
+        } catch (Exception e) {
+            return e.getMessage();
 
-         xfsess = XFormSession(xform_xml, instance_xml, **kwargs)
-         global_state.new_session(xfsess)
-         with xfsess: # triggers persisting of the fresh session
-         extra = {'session_id': xfsess.uuid}
-         extra.update(init_context(xfsess))
-         return xfsess.response(extra)
-         */
+        }
+
+        XFormSession xfsess = new XFormSession(xformXml, instanceXml, kwargs);
+        this.globalState.newSession(xfsess);
+        Extra extra = new Extra("session_id", xfsess.uid);
+        extra.update(this.initContext(xfsess));
+        return xfsess.response(extra);
     }
 
     public Map<String, String> editRepeat() {
@@ -713,102 +725,94 @@ public class RosaFactory implements Serializable {
         return evs;
     }
 
-    public void newRepeat() {
-        /*
-         with global_state.get_session(session_id) as xfsess:
-         ev = xfsess.descend_repeat(_junc_ix=form_ix)
-         return xfsess.response({}, ev)
-         */
+    public Object newRepeat() {
+        XFormSession xfsess = this.globalState.getSession(sessionId);
+        ev = xfsess.descendRepeat(this.formIx);
+        return xfsess.response(null, ev);
     }
 
-    public void deleteRepeat() {
-        /*
-         with global_state.get_session(session_id) as xfsess:
-         ev = xfsess.delete_repeat(rep_ix, form_ix)
-         return xfsess.response({}, ev)
-         */
+    public Object deleteRepeat() {
+        XFormSession xfsess = globalState.getSession(sessionId);
+        ev = xfsess.deleteRepeat(this.repIx, this.formIx);
+        return xfsess.response(null, ev);
     }
 
     public void newRepitition() {
-        /*
-         with global_state.get_session(session_id) as xfsess:
-         #new repeat creation currently cannot fail, so just blindly proceed to the next event
-         xfsess.new_repetition()
-         return {'event': next_event(xfsess)}
-         */
+        XFormSession xfsess = globalState.getSession(sessionId);
+        xfsess.newRepetition();
+        Map<String, String> evs = new HashMap<String, String>();
+        evs.put("event", nextEvent(xfsess));
     }
 
     public void skipNext() {
-        /*
-         with global_state.get_session(session_id) as xfsess:
-         return {'event': next_event(xfsess)}        
-         */
+        XFormSession xfsess = globalState.getSession(sessionId);
+        Map<String, String> evs = new HashMap<String, String>();
+        evs.put("event", nextEvent(xfsess));
     }
 
     public void goBack() {
-        /*
-         with global_state.get_session(session_id) as xfsess:
-         (at_start, event) = prev_event(xfsess)
-         return {'event': event, 'at-start': at_start}*/
+        XFormSession xfsess = globalState.getSession(sessionId);
+//         (atStart, event) = prev_event(xfsess);
+        Map<String, String> evs = new HashMap<String, String>();
+        evs.put("event", nextEvent(xfsess));
     }
 
-    public void submitForm() {
-        /*
-         with global_state.get_session(session_id) as xfsess:
-         errors = dict(filter(lambda resp: resp[1]['status'] != 'success',
-         ((_ix, xfsess.answer_question(answer, _ix)) for _ix, answer in answers.iteritems())))
+    public Object submitForm() {
+        XFormSession xfsess = globalState.getSession(sessionId);
+        boolean errors = false;
+        boolean prevalidated = false;
+        Object resp = null;
+//         errors = dict(filter(lambda resp: resp[1]['status'] != 'success',
+//         ((_ix, xfsess.answer_question(answer, _ix)) for _ix, answer in answers.iteritems())))
 
-         if errors or not prevalidated:
-         resp = {'status': 'validation-error', 'errors': errors}
-         else:
-         resp = form_completion(xfsess)
-         resp['status'] = 'success'
+        if (errors || !prevalidated) {
+            //resp = {'status': 'validation-error', 'errors': errors};
+        } else {
+            resp = formCompletion(xfsess);
+            //resp['status'] = 'success';
+        }
 
-         return xfsess.response(resp, no_next=True)        
-         */
+        return xfsess.response(resp, true);
     }
 
-    public void setLocale() {
-        /*
-         with global_state.get_session(session_id) as xfsess:
-         ev = xfsess.set_locale(lang)
-         return xfsess.response({}, ev)
-         */
+    public Object setLocale(String lang) {
+        XFormSession xfsess = globalState.getSession(sessionId);
+        ev = xfsess.setLocale(lang);
+        return xfsess.response(null, ev);
     }
 
-    public void currentQuestion() {
-        /*
-         with global_state.get_session(session_id) as xfsess:
-         extra = {'lang': xfsess.get_lang()}
-         extra.update(init_context(xfsess))
-         return xfsess.response(extra, xfsess.cur_event)
-         */
+    /**
+     *
+     */
+    public Object currentQuestion() {
+        XFormSession xfsess = globalState.getSession(sessionId);
+        Extra extra = Extra.getInstance("lang", xfsess.getLang());
+        extra.update(initContext(xfsess));
+        return xfsess.response(extra, xfsess.curEvent);
     }
 
-    public void heartbeat() {
-//        Object xfss = globalState.getSession(sessionId);
-//        return xfss;
+    public Object heartbeat() {
+        Object xfss = globalState.getSession(sessionId);
+        return xfss;
     }
 
     public void prevEvent() {
-        /*
-         at_start, ev = False, xfsess.back_event()
-         if ev['type'] == 'form-start':
-         at_start, ev = True, xfsess.next_event()
-         return at_start, ev        
-         */
+//         atStart, ev = False, xfsess.back_event();
+//         if (ev['type'] == 'form-start'){
+//            atStart, ev = True, xfsess.next_event();
+//            }
+//        return atStart, ev;
     }
 
-    public void saveForm() {
-        /*
-         xfsess.finalize()
-         xml = xfsess.output()
-         if persist:
-         instance_id = global_state.save_instance(xml)
-         else:
-         instance_id = None
-         return (instance_id, xml)        
-         */
+    public Tuple saveForm(XFormSession xfsess) throws Throwable {
+        xfsess.fin();
+        Object xml = xfsess.output();
+        if (persist) {
+            this.instanceId = globalState.saveInstance(xml);
+        } else {
+            this.instanceId = 0;
+        }
+        return new Tuple(instanceId, xml);
     }
 
     public void formCompletion() {
@@ -817,7 +821,7 @@ public class RosaFactory implements Serializable {
 
     public void purge() {
         /**
-         * resp = global_state.purge() resp.update({'status': 'ok'}) return resp
+         * resp = globalState.purge() resp.update({'status': 'ok'}) return resp
          */
     }
 
@@ -937,11 +941,27 @@ public class RosaFactory implements Serializable {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    private State dict(Params origParams) {
+    private State dict(Params... origParams) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     private boolean hasattr(Object a, String __iter__) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private Object loadFile(Object val) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private Object queryFactory(Object get, String raw) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private String nextEvent(XFormSession xfsess) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private Object formCompletion(XFormSession xfsess) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
