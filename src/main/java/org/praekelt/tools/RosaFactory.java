@@ -450,6 +450,14 @@ public class RosaFactory implements Serializable {
         return new Status("success");
     }
 
+    private Object toJDate(DateTime dt) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    private Object toJTime(DateTime dt) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
     /**
      *
      * @param a
@@ -477,14 +485,11 @@ public class RosaFactory implements Serializable {
         } else if (datatype == XTypes.STRING | datatype == XTypes.INFO) {
             ans = StringData(str((String[]) answer));
         } else if (datatype == XTypes.DATE) {
-            //TODO: convert date to string
-//            ans = DateData(to_jdate(datetime.strptime(str(answer), "%Y-%m-%d").date()));
+            ans = DateData(this.toJDate(DateTime.strptime(str(answer), "%Y-%m-%d").date()));
         } else if (datatype == XTypes.TIME) {
-            //TODO: cast time
-//            ans = TimeData(to_jtime(datetime.strptime(str((String[]) answer), "%H:%M").time()));
+            ans = TimeData(this.toJTime(DateTime.strptime(str((String[]) answer), "%H:%M").time()));
         } else if (datatype == XTypes.SELECT) {
-            //TODO: convert choice
-//            ans = SelectOneData(event["choices"][int(answer) - 1].to_sel());
+//            ans = SelectOneData(event["choices"][int(answer) - 1].toSel());
         } else if (datatype == XTypes.MULTISELECT) {
             //TODO: convert multi
 //            ans = SelectMultiData(to_vect(event["choices"][int(k) - 1].to_sel() for k in multians(answer)));
@@ -962,6 +967,14 @@ public class RosaFactory implements Serializable {
     }
 
     private Object formCompletion(XFormSession xfsess) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private Object DateData(Object toJDate) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private Object TimeData(Object toJTime) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

@@ -16,6 +16,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import org.praekelt.restforms.core.KeyErrorException;
 
 import org.praekelt.restforms.core.SerializationException;
 import org.praekelt.tools.JedisClient;
@@ -155,7 +156,7 @@ public class FormPlayer {
     @GET
     @Path("/form.json/{formName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response jsonGetForm(@PathParam("formName") String formName) {
+    public Response jsonGetForm(@PathParam("formName") String formName) throws KeyErrorException {
         String xformStr = this.jedis.get(formName);
         RosaFactory xform = RosaFactory.getInstance(xformStr);
         String id = xform.getUID();

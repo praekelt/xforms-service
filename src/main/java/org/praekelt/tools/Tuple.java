@@ -13,4 +13,8 @@ public class Tuple extends ArrayList {
             this.add(elements[i]);
         }
     }
+    
+    public static Tuple make(Object... elements) {
+        return new Tuple(elements);
+    }
 }

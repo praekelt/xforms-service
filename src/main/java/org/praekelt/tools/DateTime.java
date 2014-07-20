@@ -4,17 +4,17 @@ package org.praekelt.tools;
  *
  * @author victorgeere
  */
-public class GlobalStateMgr {
+class DateTime {
 
-    XFormSession getSession(int sessionId) {
+    public static DateTime strptime(String str, String ymd) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
-    void newSession(XFormSession xfsess) {
+    
+    public DateTime date() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
-    int saveInstance(Object xml) {
+    
+    public DateTime time() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
