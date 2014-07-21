@@ -120,7 +120,7 @@ public class RosaFactory implements Serializable {
 
         this.stalenessWindow = 3600 * stalenessWindow;
 
-        this.persist = persist; //params.get('persist', settings.PERSIST_SESSIONS);
+        this.persist = persist; //params.get("persist", settings.PERSIST_SESSIONS);
 
         this.origParams = new Params(xform, navMode, sessionData, apiAuth, stalenessWindow);
 
@@ -453,11 +453,11 @@ public class RosaFactory implements Serializable {
     private Object toJDate(DateTime dt) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
     private Object toJTime(DateTime dt) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
     /**
      *
      * @param a
@@ -696,10 +696,10 @@ public class RosaFactory implements Serializable {
         return evs;
 
         /*
-         """return the 'extra' response context needed when initializing a session"""
+         """return the "extra" response context needed when initializing a session"""
          return {
-         'title': xfsess.form_title(),
-         'langs': xfsess.get_locales(),
+         "title": xfsess.form_title(),
+         "langs": xfsess.get_locales(),
          }
          */
     }
@@ -762,19 +762,19 @@ public class RosaFactory implements Serializable {
         evs.put("event", nextEvent(xfsess));
     }
 
-    public Object submitForm() {
+    public Object submitForm() throws Throwable {
         XFormSession xfsess = globalState.getSession(sessionId);
         boolean errors = false;
         boolean prevalidated = false;
         Object resp = null;
-//         errors = dict(filter(lambda resp: resp[1]['status'] != 'success',
+//         errors = dict(filter(lambda resp: resp[1]["status"] != "success",
 //         ((_ix, xfsess.answer_question(answer, _ix)) for _ix, answer in answers.iteritems())))
 
         if (errors || !prevalidated) {
-            //resp = {'status': 'validation-error', 'errors': errors};
+            //resp = {"status": "validation-error", "errors": errors};
         } else {
             resp = formCompletion(xfsess);
-            //resp['status'] = 'success';
+            //resp["status"] = "success";
         }
 
         return xfsess.response(resp, true);
@@ -803,7 +803,7 @@ public class RosaFactory implements Serializable {
 
     public void prevEvent() {
 //         atStart, ev = False, xfsess.back_event();
-//         if (ev['type'] == 'form-start'){
+//         if (ev["type"] == "form-start"){
 //            atStart, ev = True, xfsess.next_event();
 //            }
 //        return atStart, ev;
@@ -820,54 +820,51 @@ public class RosaFactory implements Serializable {
         return new Tuple(instanceId, xml);
     }
 
-    public void formCompletion() {
-        //   return dict(zip(('save-id', 'output'), save_form(xfsess)))
+    public State formCompletion(XFormSession xfsess) throws Throwable {
+        return dict(zip(Tuple.make("save-id", "output"), saveForm(xfsess)));
     }
 
-    public void purge() {
-        /**
-         * resp = globalState.purge() resp.update({'status': 'ok'}) return resp
-         */
+    public Response purge() {
+        Response resp = globalState.purge();
+
+        resp.update(PMap.make("status", "ok"));
+        return resp;
     }
 
-    public void printTree() {
-        /*
-         import pprint
-         pp = pprint.PrettyPrinter(indent=2)
-         def print_tree(tree):
-         try:
-         pp.pprint(tree)
-         except UnicodeEncodeError:
-         print 'sorry, can\'t pretty-print unicode'
-         */
+    public void printTree(Object tree) {
+        PPrint pp = PPrint.PrettyPrinter(2);
+        try {
+            pp.pprint(tree);
+        } catch (UnicodeEncodeError uee) {
+            System.err.println("sorry, can\"t pretty-print unicode");
+        }
     }
 
-    public String[] parseStyleInfo(String s) {
-        String[] info = null;
-        /*
-         info = {}
+    public String[] parseStyleInfo(String rawstyle) {
+        Dict dInfo = new Dict();
 
-         if rawstyle != None:
-         info['raw'] = rawstyle
-         try:
-         info.update([[p.strip() for p in f.split(':')][:2] for f in rawstyle.split(';') if f.strip()])
-         except ValueError:
-         pass
-         */
-        return info;
+        if (rawstyle != null) {
+            dInfo.put("raw", rawstyle);
+            try {
+                dInfo.update();
+//            info.update([[p.strip() for p in f.split(":")][:2] for f in rawstyle.split(";") if f.strip()])
+            } catch (ValueError ve) {
+                //pass
+            }
+            return dInfo.toStringArray();
 
+        }
+        return null;
     }
 
-    public void walk() {
-        /*
-         form_ix = FormIndex.createBeginningOfFormIndex()
-         tree = []
-         self._walk(form_ix, tree)
-         return tree
-         */
+    public int[] walk() {
+         FormIndex formIx = FormIndex.createBeginningOfFormIndex();
+         int[] tree = null;
+         this.walk(formIx, tree);
+         return tree;
     }
 
-    public void walk(int parentIx, int[] siblings) {
+    public void walk(FormIndex parentIx, int[] siblings) {
         /*
          def step(ix, descend):
          next_ix = self.fem.incrementIndex(ix, descend)
@@ -891,34 +888,34 @@ public class RosaFactory implements Serializable {
          continue
 
          evt = self.__parse_event(form_ix)
-         evt['relevant'] = relevant
-         if evt['type'] == 'sub-group':
-         presentation_group = (evt['caption'] != None)
+         evt["relevant"] = relevant
+         if evt["type"] == "sub-group":
+         presentation_group = (evt["caption"] != None)
          if presentation_group:
          siblings.append(evt)
-         evt['children'] = []
-         form_ix = self._walk(form_ix, evt['children'] if presentation_group else siblings)
-         elif evt['type'] == 'repeat-juncture':
+         evt["children"] = []
+         form_ix = self._walk(form_ix, evt["children"] if presentation_group else siblings)
+         elif evt["type"] == "repeat-juncture":
          siblings.append(evt)
-         evt['children'] = []
+         evt["children"] = []
          for i in range(0, self.fem.getForm().getNumRepetitions(form_ix)):
          subevt = {
-         'type': 'sub-group',
-         'ix': self.fem.getForm().descendIntoRepeat(form_ix, i),
-         'caption': evt['repetitions'][i],
-         'repeatable': True,
-         'children': [],
+         "type": "sub-group",
+         "ix": self.fem.getForm().descendIntoRepeat(form_ix, i),
+         "caption": evt["repetitions"][i],
+         "repeatable": True,
+         "children": [],
          }
 
          # kinda ghetto; we need to be able to track distinct repeat instances, even if their position
          # within the list of repetitions changes (such as by deleting a rep in the middle)
          # would be nice to have proper FormEntryAPI support for this
-         java_uid = self.form.getInstance().resolveReference(subevt['ix'].getReference()).hashCode()
-         subevt['uuid'] = hashlib.sha1(str(java_uid)).hexdigest()[:12]
+         java_uid = self.form.getInstance().resolveReference(subevt["ix"].getReference()).hashCode()
+         subevt["uuid"] = hashlib.sha1(str(java_uid)).hexdigest()[:12]
 
-         evt['children'].append(subevt)
-         self._walk(subevt['ix'], subevt['children'])
-         for key in ['repetitions', 'del-choice', 'del-header', 'done-choice']:
+         evt["children"].append(subevt)
+         self._walk(subevt["ix"], subevt["children"])
+         for key in ["repetitions", "del-choice", "del-header", "done-choice"]:
          del evt[key]
          form_ix = step(form_ix, True) # why True?
          else:
@@ -966,15 +963,15 @@ public class RosaFactory implements Serializable {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    private Object formCompletion(XFormSession xfsess) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
     private Object DateData(Object toJDate) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     private Object TimeData(Object toJTime) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private Params[] zip(Tuple make, Tuple saveForm) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
