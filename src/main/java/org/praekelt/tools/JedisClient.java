@@ -25,9 +25,8 @@ public class JedisClient {
      */
     public void set(String key, String value) {
         Jedis jedis = this.borrow();
-        System.out.println("setting key: "+key + " value: " + value);
         if (jedis == null) {
-            System.out.println("jedis is null");
+            logger.log(Level.SEVERE, null, new NullPointerException("Could not retrieve Redis connection."));
             exit(-1);
         }
         try {
@@ -49,7 +48,7 @@ public class JedisClient {
         try {
             value = jedis.get(key);
         } catch (NullPointerException ex) {
-            logger.log(Level.SEVERE, null, "Could not connect to databse.");
+            logger.log(Level.SEVERE, null, "Could not connect to database.");
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
         } finally {
@@ -77,7 +76,7 @@ public class JedisClient {
         try {
             resource = this.pool.getResource();
         } catch (JedisConnectionException jdce) {
-            jdce.printStackTrace(System.err);
+            logger.log(Level.SEVERE, null, jdce);
         }
         return resource;
     }

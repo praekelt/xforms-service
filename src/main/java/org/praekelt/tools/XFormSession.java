@@ -12,7 +12,6 @@ public class XFormSession {
     private Object lang;
 
     XFormSession(Object xformXml, Object instanceXml, HashMap kwargs) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     String descendRepeat(int ix) {

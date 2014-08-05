@@ -159,6 +159,7 @@ public class FormPlayer {
     public Response jsonGetForm(@PathParam("formName") String formName) throws KeyErrorException {
         String xformStr = this.jedis.get(formName);
         RosaFactory xform = RosaFactory.getInstance(xformStr);
+        /*
         String id = xform.getUID();
         try {
             this.jedis.set(id, xform.serializeForm());
@@ -167,5 +168,7 @@ public class FormPlayer {
             return Response.serverError().build();
         }
         return Response.ok(new Gson().toJson(id)).build();
+        */
+        return Response.ok(xformStr).build();
     }
 }

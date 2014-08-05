@@ -1,16 +1,12 @@
 package org.praekelt.tools;
 
 import com.google.gson.Gson;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -23,7 +19,6 @@ import org.javarosa.core.util.UnregisteredLocaleException;
 import org.javarosa.form.api.FormEntryCaption;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryModel;
-import org.javarosa.form.api.FormEntryPrompt;
 import org.javarosa.model.xform.XFormSerializingVisitor;
 import org.javarosa.xform.parse.XFormParser;
 import org.praekelt.restforms.core.CCInstances;
@@ -45,14 +40,14 @@ import org.praekelt.restforms.core.XTypes;
  */
 public class RosaFactory implements Serializable {
 
-    private Logger logger;
+    private static final Logger logger = Logger.getLogger(RosaFactory.class.getName());
 
     private boolean persist;
     private String uuid;
     private Lock lock;
     private String navMode;
     private int seqId;
-    private FormDef form;
+    private final FormDef form;
     private FormEntryModel fem;
     private FormEntryController fec;
     private Date lastActivity;
@@ -68,7 +63,7 @@ public class RosaFactory implements Serializable {
     private HashMap sessionData;
     private int sessionId;
 
-    private GlobalStateMgr globalState = null;
+    private final GlobalStateMgr globalState = null;
     private String ev;
     private int formIx;
     private int repIx;
@@ -76,7 +71,6 @@ public class RosaFactory implements Serializable {
 
     /**
      *
-     * @param uuid
      * @param navMode
      * @param seqId
      * @param xform
@@ -88,12 +82,11 @@ public class RosaFactory implements Serializable {
      * @param curIndex
      * @param persist
      * @param stalenessWindow
+     * @throws org.praekelt.restforms.core.KeyErrorException
      */
     public RosaFactory(String navMode, int seqId, String xform,
             String instance, String extensions, HashMap sessionData,
             String apiAuth, String initLang, int curIndex, boolean persist, int stalenessWindow) throws KeyErrorException {
-
-        this.logger = Logger.getLogger(RosaFactory.class.getName());
 
         this.uuid = RosaFactory.getUID();
         this.lock = Lock.getInstance();
@@ -128,15 +121,20 @@ public class RosaFactory implements Serializable {
 
     }
 
+    public RosaFactory(String xform) {
+        this.stalenessWindow = 3600;
+        this.origParams = new Params(xform, navMode, sessionData, "", stalenessWindow);
+        this.form = this.loadForm(xform, null);
+    }
+
     /**
      * Get a unique-ish ID
      *
      * @return A unique id (not universally unique)
      */
     public static final String getUID() {
-        String uuid = "";
         String timestamp = String.valueOf(new Date().getTime());
-        uuid = "session-" + timestamp + "-" + String.valueOf(Math.abs(1 / Math.random()));
+        String uuid = "session-" + timestamp + "-" + String.valueOf(Math.abs(1 / Math.random()));
         return uuid;
     }
 
@@ -144,6 +142,7 @@ public class RosaFactory implements Serializable {
      * Get a RosaFactory object, deal with deserialization
      *
      * @return An instance of RosaFactory
+     * @throws org.praekelt.restforms.core.KeyErrorException
      */
     public static RosaFactory getInstance() throws KeyErrorException {
         return new RosaFactory("", 0, "", "", "", new HashMap(), "", "", 0, true, 1);
@@ -153,9 +152,11 @@ public class RosaFactory implements Serializable {
      *
      * @param xform
      * @return
+     * @throws org.praekelt.restforms.core.KeyErrorException
      */
     public static RosaFactory getInstance(String xform) throws KeyErrorException {
-        return new RosaFactory("", 0, xform, null, "", new HashMap(), "", "", 0, true, 1);
+//        return new RosaFactory("", 0, xform, null, "", new HashMap(), "", "", 0, true, 1);
+        return new RosaFactory(xform);
     }
 
     /**
@@ -191,35 +192,6 @@ public class RosaFactory implements Serializable {
     }
 
     /**
-     * Serialize this object if it needs to be cached in Redis
-     *
-     * @return
-     * @throws org.praekelt.restforms.core.SerializationException
-     *
-     * @deprecated Use RosaFactory.serializeForm instead
-     */
-    public String serialize() throws SerializationException {
-        ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        ObjectOutputStream out = null;
-        try {
-            out = new ObjectOutputStream(bout);
-            out.writeObject(this);
-            out.close();
-            bout.close();
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                out.close();
-            } catch (IOException ex) {
-                logger.log(Level.SEVERE, null, ex);
-                throw new SerializationException("Serialization failed.", ex);
-            }
-        }
-        return bout.toString();
-    }
-
-    /**
      * Instantiate a form
      *
      * @param xform
@@ -240,7 +212,7 @@ public class RosaFactory implements Serializable {
      * @param instance
      * @return
      */
-    public FormDef loadForm(String xform, String instance) {
+    public final FormDef loadForm(String xform, String instance) {
         Reader xformReader = (Reader) new StringReader(xform);
         XFormParser xfp;
         xfp = new XFormParser(xformReader);
@@ -269,7 +241,7 @@ public class RosaFactory implements Serializable {
      */
     public RosaFactory enter() throws SequencingException {
         if (this.navMode.equalsIgnoreCase("fao")) {
-            this.lock.acquire(this.getUID());
+            this.lock.acquire(RosaFactory.getUID());
         } else {
             if (!this.lock.acquire(false)) {
                 throw new SequencingException();
@@ -287,13 +259,13 @@ public class RosaFactory implements Serializable {
         if (this.persist) {
             Persistence.persist(this);
         }
-        this.lock.release(this.getUID());
+        this.lock.release(RosaFactory.getUID());
     }
 
     /**
      * Set when the last activity took place
      */
-    public void updateLastActivity() {
+    public final void updateLastActivity() {
         this.lastActivity = new Date();//time.time();
     }
 
@@ -307,13 +279,14 @@ public class RosaFactory implements Serializable {
 
     /**
      *
+     * @return
      */
     public State sessionState() {
         Params state = this.origParams;
 
         state.update(this.output(),
                 this.getLang(),
-                (this.nav_mode != "fao") ? str(this.fem.getFormIndex()) : null,
+                (!this.nav_mode.equalsIgnoreCase("foa")) ? str(this.fem.getFormIndex()) : null,
                 this.seqId
         );
         //# prune entries with null value, so that defaults will take effect when the session is re-created
@@ -360,6 +333,7 @@ public class RosaFactory implements Serializable {
      *
      * @param formIx
      * @return
+     * @throws org.praekelt.restforms.core.KeyErrorException
      */
     public Event parseEvent(FormIndex formIx) throws KeyErrorException {
         Event event = new Event();
@@ -367,14 +341,14 @@ public class RosaFactory implements Serializable {
 
         int status = this.fem.getEvent(formIx);
 
-        if (status == this.fec.EVENT_BEGINNING_OF_FORM) {
+        if (status == FormEntryController.EVENT_BEGINNING_OF_FORM) {
             event.setType("form-start");
-        } else if (status == this.fec.EVENT_END_OF_FORM) {
+        } else if (status == FormEntryController.EVENT_END_OF_FORM) {
             event.setType("form-complete");
-        } else if (status == this.fec.EVENT_QUESTION) {
+        } else if (status == FormEntryController.EVENT_QUESTION) {
             event.setType("question");
             this.parseQuestion(event);
-        } else if (status == this.fec.EVENT_REPEAT_JUNCTURE) {
+        } else if (status == FormEntryController.EVENT_REPEAT_JUNCTURE) {
             event.setType("repeat-juncture");
             FormIndex[] fi = null;
             this.parseRepeatJuncture(event);
@@ -387,14 +361,14 @@ public class RosaFactory implements Serializable {
 //            TEXT_FORM_VIDEO does not exist
 //            FormEntryPrompt.TEXT_FORM_VIDEO
 //            event.captionVideo(prompt.getSpecialFormQuestionText(FormEntryPrompt.TEXT_FORM_VIDEO));
-            if (status == this.fec.EVENT_GROUP) {
+            if (status == FormEntryController.EVENT_GROUP) {
 
                 event.setRepeatable(false);
-            } else if (status == this.fec.EVENT_REPEAT) {
+            } else if (status == FormEntryController.EVENT_REPEAT) {
 
                 event.setRepeatable(true);
                 event.setExists(true);
-            } else if (status == this.fec.EVENT_PROMPT_NEW_REPEAT) {
+            } else if (status == FormEntryController.EVENT_PROMPT_NEW_REPEAT) {
                 event.setRepeatable(true);
                 event.setExists(false);
             }
@@ -404,7 +378,7 @@ public class RosaFactory implements Serializable {
 
     /**
      *
-     * @return
+     * @return @throws org.praekelt.restforms.core.KeyErrorException
      */
     public Event nextEvent() throws KeyErrorException {
         this.fec.stepToNextEvent();
@@ -413,7 +387,7 @@ public class RosaFactory implements Serializable {
 
     /**
      *
-     * @return
+     * @return @throws org.praekelt.restforms.core.KeyErrorException
      */
     public Event backEvent() throws KeyErrorException {
         this.fec.stepToPreviousEvent();
@@ -425,6 +399,9 @@ public class RosaFactory implements Serializable {
      *
      * @param answer
      * @param ix
+     * @return
+     * @throws org.praekelt.restforms.core.ValueException
+     * @throws org.praekelt.restforms.core.KeyErrorException
      */
     public Status answerQuestion(Object answer, FormIndex ix) throws ValueException, KeyErrorException {
         ix = this.parseIx(ix);
@@ -438,8 +415,8 @@ public class RosaFactory implements Serializable {
             throw new ValueException("not currently on a question");
         }
 
-        int datatype = event.getDataType();
-        if (datatype == Event.UNRECOGNISED) {
+        int dtype = event.getDataType();
+        if (dtype == Event.UNRECOGNISED) {
 
         }
 
@@ -471,7 +448,7 @@ public class RosaFactory implements Serializable {
          * str(a).split(" "); }
          */
         Object ans;
-        if (answer == null || str(answer).trim() == "" /**
+        if (answer == null || str(answer).trim().equalsIgnoreCase("") /**
                  * || answer == []
                  */
                 ) {
@@ -507,14 +484,14 @@ public class RosaFactory implements Serializable {
 
         Status status = null;
 
-        if (result == this.fec.ANSWER_REQUIRED_BUT_EMPTY) {
+        if (result == FormEntryController.ANSWER_REQUIRED_BUT_EMPTY) {
 
             status = new Status("error", "required");
-        } else if (result == this.fec.ANSWER_CONSTRAINT_VIOLATED) {
+        } else if (result == FormEntryController.ANSWER_CONSTRAINT_VIOLATED) {
 
 //            q = this.fem.getQuestionPrompt( * ([] if ix == null{}}[ix]));
 //            status = new Status("error", "constraint", q.getConstraintText());
-        } else if (result == this.fec.ANSWER_OK) {
+        } else if (result == FormEntryController.ANSWER_OK) {
 
             status = new Status("success");
         }
@@ -666,12 +643,9 @@ public class RosaFactory implements Serializable {
     }
 
     /**
-     */
-    public void loadFile() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    /**
+     * @param spec
+     * @param kwargs
+     * @return
      */
     public HashMap getLoader(boolean spec, HashMap kwargs) {
         if (!spec) {
@@ -687,6 +661,7 @@ public class RosaFactory implements Serializable {
 
     /**
      *
+     * @param xfsess
      * @return
      */
     public Map<String, String> initContext(XFormSession xfsess) {
@@ -724,9 +699,9 @@ public class RosaFactory implements Serializable {
 
     public Map<String, String> editRepeat() {
         XFormSession xfsess = globalState.getSession(this.sessionId);
-        String ev = xfsess.descendRepeat(ix);
+        String event = xfsess.descendRepeat(ix);
         Map<String, String> evs = new HashMap<String, String>();
-        evs.put("event", ev);
+        evs.put("event", event);
         return evs;
     }
 
@@ -788,6 +763,7 @@ public class RosaFactory implements Serializable {
 
     /**
      *
+     * @return
      */
     public Object currentQuestion() {
         XFormSession xfsess = globalState.getSession(sessionId);
@@ -824,6 +800,10 @@ public class RosaFactory implements Serializable {
         return dict(zip(Tuple.make("save-id", "output"), saveForm(xfsess)));
     }
 
+    /**
+     *
+     * @return
+     */
     public Response purge() {
         Response resp = globalState.purge();
 
@@ -858,10 +838,10 @@ public class RosaFactory implements Serializable {
     }
 
     public int[] walk() {
-         FormIndex formIx = FormIndex.createBeginningOfFormIndex();
-         int[] tree = null;
-         this.walk(formIx, tree);
-         return tree;
+        FormIndex formIx = FormIndex.createBeginningOfFormIndex();
+        int[] tree = null;
+        this.walk(formIx, tree);
+        return tree;
     }
 
     public void walk(FormIndex parentIx, int[] siblings) {
