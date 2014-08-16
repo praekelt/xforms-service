@@ -10,9 +10,9 @@ package org.praekelt.tools;
  *
  * @author victorgeere
  */
-class Response {
+public class Response {
 
-    void update(PMap make) {
+    public void update(PMap make) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     

@@ -8,7 +8,7 @@ import org.praekelt.restforms.resources.FormPlayer;
 import org.praekelt.restforms.resources.Forms;
 import org.praekelt.restforms.resources.IndexResource;
 import org.praekelt.restforms.resources.UploadFileService;
-import org.praekelt.tools.JedisClient;
+import org.praekelt.restforms.core.JedisClient;
 
 public class RestformsService extends Application<RestformsConfiguration> {
 

@@ -7,18 +7,18 @@ import java.util.HashMap;
  * @author victorgeere
  */
 public class XFormSession {
-    Object uid;
-    String curEvent;
+    public Object uid;
+    public String curEvent;
     private Object lang;
 
-    XFormSession(Object xformXml, Object instanceXml, HashMap kwargs) {
+    public XFormSession(Object xformXml, Object instanceXml, HashMap kwargs) {
     }
 
-    String descendRepeat(int ix) {
+    public String descendRepeat(int ix) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    String response(HashMap extra) {
+    public String response(HashMap extra) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -30,15 +30,15 @@ public class XFormSession {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    String deleteRepeat(int repIx, int formIx) {
+    public String deleteRepeat(int repIx, int formIx) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    void newRepetition() {
+    public void newRepetition() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    String setLocale(String lang) {
+    public String setLocale(String lang) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -49,11 +49,11 @@ public class XFormSession {
     /**
      * Can't call finalize explicitly
     */
-    void fin() {
+    public void fin() {
         
     }
 
-    Object output() {
+    public Object output() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     

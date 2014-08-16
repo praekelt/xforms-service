@@ -4,7 +4,7 @@ package org.praekelt.tools;
  *
  * @author victorgeere
  */
-class DateTime {
+public class DateTime {
 
     public static DateTime strptime(String str, String ymd) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

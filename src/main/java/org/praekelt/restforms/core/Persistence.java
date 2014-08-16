@@ -1,7 +1,5 @@
 package org.praekelt.restforms.core;
 
-import org.praekelt.tools.RosaFactory;
-
 /**
  *
  * @author victorgeere

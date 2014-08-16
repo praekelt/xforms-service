@@ -1,4 +1,4 @@
-package org.praekelt.tools;
+package org.praekelt.restforms.core;
 
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;

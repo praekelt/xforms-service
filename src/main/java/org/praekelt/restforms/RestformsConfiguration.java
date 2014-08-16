@@ -4,7 +4,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotEmpty;
-import org.praekelt.tools.JedisFactory;
+import org.praekelt.restforms.core.JedisFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

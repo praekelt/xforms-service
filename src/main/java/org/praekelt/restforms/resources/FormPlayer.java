@@ -19,8 +19,8 @@ import javax.ws.rs.core.UriInfo;
 import org.praekelt.restforms.core.KeyErrorException;
 
 import org.praekelt.restforms.core.SerializationException;
-import org.praekelt.tools.JedisClient;
-import org.praekelt.tools.RosaFactory;
+import org.praekelt.restforms.core.JedisClient;
+import org.praekelt.restforms.core.RosaFactory;
 
 /**
  * REST Web Service
@@ -66,7 +66,7 @@ public class FormPlayer {
      */
 
     @GET
-    @Path("sessions.json")
+    @Path("sessions")
     @Produces(MediaType.APPLICATION_JSON)
     public String jsonGetSessions() {
         Set<String> set = this.jedis.getKeys("session*");
@@ -96,13 +96,21 @@ public class FormPlayer {
      * @return the loaded id in JSON
      */
     @GET
-    @Path("session.json/{id}")
+    @Path("session/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public String getSessionJson(@PathParam("id") String id) {
         this.jedis.get(id);
         return (new Gson()).toJson(id);
     }
 
+    @POST
+    @Path("session/{action}/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String doAction(@PathParam("action") String action, @PathParam("id") String id) {
+        this.jedis.get(id);
+        return (new Gson()).toJson(id);
+    }
+    
     /**
      * Delete a key
      * 
@@ -110,7 +118,7 @@ public class FormPlayer {
      * 
      * @return empty String
      */
-    @Path("session.json/{id}")
+    @Path("session/{id}")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public Response destroySession(String key) {
@@ -124,7 +132,7 @@ public class FormPlayer {
      * @return A list of forms in JSON
      */
     @GET
-    @Path("forms.json")
+    @Path("forms")
     @Produces(MediaType.APPLICATION_JSON)
     public String jsonGetForms() {
         Set<String> set = this.jedis.getKeys("*.xml");
@@ -139,7 +147,7 @@ public class FormPlayer {
      * 
      * @return empty String
      */
-    @Path("form.json/{formName}")
+    @Path("form/{formName}")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public Response deleteForm(@PathParam("formName") String formName) {
@@ -154,7 +162,7 @@ public class FormPlayer {
      * @return 
      */
     @GET
-    @Path("/form.json/{formName}")
+    @Path("/form/{formName}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response jsonGetForm(@PathParam("formName") String formName) throws KeyErrorException {
         String xformStr = this.jedis.get(formName);

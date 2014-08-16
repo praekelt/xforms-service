@@ -56,14 +56,40 @@
                             <td><input type="button" onclick="app.getForm()" value="Send" /></td>
                         </tr>
                         <tr>
-                            <td class="left">Get Command</td>
-                            <td></td>
+                            <td class="left">Get State</td>
+                            <td>
+                            </td>
                             <td><input type="button" onclick="app.getCommand()" value="Send" /></td>
                         </tr>
                         <tr>
-                            <td class="left">Post Command</td>
-                            <td></td>
+                            <td class="left">Post Action</td>
+                            <td>
+                                <select id="action">
+                                    <option value="">-- Action --</option>
+                                    <option value="new-form">new-form</option>
+                                    <option value="edit-form">edit-form</option>
+                                    <option value="answer">answer</option>
+                                    <option value="add-repeat">add-repeat</option>
+                                    <option value="next">next</option>
+                                    <option value="back">back</option>
+                                    <option value="current">current</option>
+                                    <option value="heartbeat">heartbeat</option>
+                                    <option value="edit-repeat">edit-repeat</option>
+                                    <option value="new-repeat">new-repeat</option>
+                                    <option value="delete-repeat">delete-repeat</option>
+                                    <option value="submit-all">submit-all</option>
+                                    <option value="set-lang">set-lang</option>
+                                    <option value="purge-stale">purge-stale</option>
+                                    <option value="get-instance">get-instance</option>
+                                    <option value="unrecognized">unrecognized</option>
+                                </select>                                
+                            </td>
                             <td><input type="button" onclick="app.postCommand()" value="Send" /></td>
+                        </tr>
+                        <tr>
+                            <td><a href="index.html">Home</td>
+                            <td><a href="fileupload.html">Upload</td>
+                            <td></td>
                         </tr>
                     </tbody>
                 </table>
@@ -72,105 +98,102 @@
         <script src="js/jquery-2.1.1.min.js"></script>
         <script type="text/javascript">
             $(document).ready(
-                    function() {
-                        window.app = {
-                            getSessions: function() {
-                                var url = comms.getPath() + "/sessions.json";
-                                $("#input").val("GET \n" + url + "\n text/json \n");
-                                $.ajax({url: url, success: app.updateSessions, error: app.updateSessions, dataType: "json"});
-                            },
-                            getSession: function() {
-                                var url = comms.getPath() + "/session.json/" + $("#getsession").val();
-                                $("#input").val("GET \n" + url + "\n text/json \n");
-                                $.ajax({url: url, success: comms.display, error: comms.display});
-                            },
-                            getForms: function() {
-                                var url = comms.getPath() + "/forms.json";
-                                $("#input").val("GET \n" + url + "\n text/json \n");
-                                $.ajax({url: url, success: app.updateForms, error: app.updateForms, dataType: "json"});
-                            },
-                            getForm: function() {
-                                var url = comms.getPath() + "/form.json/" + $("#getform").val();
-                                $("#input").val("GET \n" + url + "\n text/json \n");
-                                $.ajax({url: url, success: comms.display, error: comms.display});
-                            },
-                            createSession: function() {
-                                var url = comms.getPath() + "/sessions";
-                                $("#input").val("POST \n" + url + "\n text/json \n");
-                                $.ajax({url: url, type: "POST", success: comms.display, error: comms.display});
-                            },
-                            destroySession: function() {
-                                comms.doPost("/session.json", "DELETE", $("#destroysession").val());
-                            },
-                            getCommand: function() {
-                            },
-                            postCommand: function() {
-                            },
-                            updateSessions: function(data) {
-                                window.app.updateList("getsession", data);
-                                window.app.updateList("destroysession", data);
-                            },
-                            updateForms: function(data) {
-                                window.app.updateList("getform", data);
-                            },
-                            updateList: function(id, data) {
-                                console.log(JSON.stringify(data));
+                function() {
+                    window.app = {
+                        getSessions: function() {
+                            var url = comms.getPath() + "/sessions";
+                            $("#input").val("GET \n" + url + "\n text/json \n");
+                            $.ajax({url: url, success: app.updateSessions, error: app.updateSessions, dataType: "json"});
+                        },
+                        getSession: function() {
+                            var url = comms.getPath() + "/session/" + $("#getsession").val();
+                            $("#input").val("GET \n" + url + "\n text/json \n");
+                            $.ajax({url: url, success: comms.display, error: comms.display});
+                        },
+                        getForms: function() {
+                            var url = comms.getPath() + "/forms";
+                            $("#input").val("GET \n" + url + "\n text/json \n");
+                            $.ajax({url: url, success: app.updateForms, error: app.updateForms, dataType: "json"});
+                        },
+                        getForm: function() {
+                            var url = comms.getPath() + "/form/" + $("#getform").val();
+                            $("#input").val("GET \n" + url + "\n text/json \n");
+                            $.ajax({url: url, success: comms.display, error: comms.display});
+                        },
+                        createSession: function() {
+                            var url = comms.getPath() + "/sessions";
+                            $("#input").val("POST \n" + url + "\n text/json \n");
+                            $.ajax({url: url, type: "POST", success: comms.display, error: comms.display});
+                        },
+                        destroySession: function() {
+                            comms.doPost("/session", "DELETE", $("#destroysession").val());
+                        },
+                        getCommand: function() {
+                        },
+                        postCommand: function() {
+                            comms.doPost("/session/" + $("#action").val(), "POST", $("#getsession").val());
+                        },
+                        updateSessions: function(data) {
+                            window.app.updateList("getsession", data);
+                            window.app.updateList("destroysession", data);
+                        },
+                        updateForms: function(data) {
+                            window.app.updateList("getform", data);
+                        },
+                        updateList: function(id, data) {
+                            console.log(JSON.stringify(data));
 
-                                $('#' + id).html("");
+                            $('#' + id).html("");
 
-                                $('#' + id).append($('<option/>', {
-                                    text: "-- Select --"
-                                }));
+                            $('#' + id).append($('<option/>', {
+                                text: "-- Select --"
+                            }));
 
-                                try {
-                                    for (var i = 0; i < data.length; i++) {
-                                        var list = data[i];
-                                        $('#' + id).append($('<option/>', {
-                                            value: list,
-                                            text: list
-                                        }));
-                                    }
-                                } catch (e) {
-                                    console.log(e);
+                            try {
+                                for (var i = 0; i < data.length; i++) {
+                                    var list = data[i];
+                                    $('#' + id).append($('<option/>', {
+                                        value: list,
+                                        text: list
+                                    }));
                                 }
-
+                            } catch (e) {
+                                console.log(e);
                             }
 
-                        };
-                        window.comms = {
-                            doGet: function(command, param) {
-                                var path = comms.getPath() + command + "/" + param;
-                                $("#input").val("GET " + path);
-                                $.ajax({url: path, data: param, success: comms.display, error: comms.display, dataType: "json"});
-                            },
-                            doPost: function(command, method, param) {
-                                var path = comms.getPath() + command + "/" + param;
-                                $("#input").val("POST \n" + path + "\n text/json \n" + param);
-                                $.ajax(
-                                        {url: path,
-                                            type: method,
-                                            data: param,
-                                            contentType: "text/json",
-                                            dataType: "json",
-                                            success: comms.display,
-                                            error: comms.display
-                                        });
-                            },
-                            display: function(response) {
-                                $("#output").val(JSON.stringify(response));
-                            },
-                            getPath: function() {
-                                var path = window.location.pathname;
-                                var location = window.location.href;
-                                location = location.replace(path, "");
-                                return location + "/forms";
-                            }
-                        };
+                        }
 
-
-
-                    }
-
+                    };
+                    window.comms = {
+                        doGet: function(command, param) {
+                            var path = comms.getPath() + command + "/" + param;
+                            $("#input").val("GET " + path);
+                            $.ajax({url: path, data: param, success: comms.display, error: comms.display, dataType: "json"});
+                        },
+                        doPost: function(command, method, param) {
+                            var path = comms.getPath() + command + "/" + param;
+                            $("#input").val("POST \n" + path + "\n text/json \n" + param);
+                            $.ajax(
+                                    {url: path,
+                                        type: method,
+                                        data: param,
+                                        contentType: "text/json",
+                                        dataType: "json",
+                                        success: comms.display,
+                                        error: comms.display
+                                    });
+                        },
+                        display: function(response) {
+                            $("#output").val(JSON.stringify(response));
+                        },
+                        getPath: function() {
+                            var path = window.location.pathname;
+                            var location = window.location.href;
+                            location = location.replace(path, "");
+                            return location + "/forms";
+                        }
+                    };
+                }
             );
         </script>
     </body>

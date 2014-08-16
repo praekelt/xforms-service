@@ -6,7 +6,7 @@ import org.javarosa.core.util.Map;
  *
  * @author victorgeere
  */
-class Dict extends Map {
+public class Dict extends Map {
 
     public Dict() {
     }
@@ -16,7 +16,7 @@ class Dict extends Map {
         return s;
     }
 
-    void update() throws ValueError {
+    public void update() throws ValueError {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

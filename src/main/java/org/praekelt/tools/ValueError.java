@@ -5,6 +5,6 @@ package org.praekelt.tools;
  *
  * @author victorgeere
  */
-class ValueError extends Exception {
+public class ValueError extends Exception {
     
 }

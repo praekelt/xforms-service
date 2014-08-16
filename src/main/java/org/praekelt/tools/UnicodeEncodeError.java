@@ -4,6 +4,6 @@ package org.praekelt.tools;
  *
  * @author victorgeere
  */
-class UnicodeEncodeError extends Exception {
+public class UnicodeEncodeError extends Exception {
     
 }

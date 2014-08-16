@@ -17,7 +17,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.praekelt.tools.JedisClient;
+import org.praekelt.restforms.core.JedisClient;
 import org.praekelt.tools.Props;
 
 /**

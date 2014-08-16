@@ -20,7 +20,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.praekelt.tools.JedisClient;
+import org.praekelt.restforms.core.JedisClient;
 
 /**
  * REST Service to upload empty forms
