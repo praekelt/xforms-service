@@ -3,7 +3,7 @@ package org.praekelt.restforms;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-import org.hibernate.validator.constraints.NotEmpty;
+//import org.hibernate.validator.constraints.NotEmpty;
 import org.praekelt.tools.JedisFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -11,10 +11,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
  
 public class RestformsConfiguration extends Configuration {
-	@NotEmpty
+    
+    @NotNull
     private String template;
 
-    @NotEmpty
+    @NotNull
     private String defaultName = "Stranger";
 
     @JsonProperty
