@@ -1,14 +1,15 @@
 package org.praekelt.restforms.api;
 
 import java.util.UUID;
+import javax.validation.constraints.NotNull;
 
-import org.hibernate.validator.constraints.NotBlank;
+//import org.hibernate.validator.constraints.NotBlank;
 
 public class Form {
 
     private String id = UUID.randomUUID().toString();
 
-    @NotBlank
+    @NotNull
     private String name;
 
     public Form() {

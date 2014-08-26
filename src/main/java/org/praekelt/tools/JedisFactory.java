@@ -6,24 +6,25 @@ import io.dropwizard.setup.Environment;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
-import org.hibernate.validator.constraints.NotEmpty;
+//import org.hibernate.validator.constraints.NotEmpty;
 
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import javax.validation.constraints.NotNull;
 
 
 public class JedisFactory {
 	
-	@NotEmpty
+    @NotNull
     private String host;
 
     @Min(1)
     @Max(65535)
     private int port = 6379;
     
-    @NotEmpty
+    @NotNull
     private String password;
     
     @Min(100)
@@ -86,7 +87,7 @@ public class JedisFactory {
     
     public JedisClient build(Environment environment) {
     	JedisPoolConfig poolConfig = new JedisPoolConfig();
-        poolConfig.setMaxTotal(getPoolsize());
+        
         final JedisPool pool = new JedisPool(
         		poolConfig,
         		getHost(), 

@@ -2,6 +2,7 @@ package org.praekelt.restforms.core;
 
 import java.util.ArrayList;
 import org.javarosa.core.model.FormIndex;
+import org.praekelt.xforms.KeyErrorException;
 
 /**
  *
