@@ -13,6 +13,16 @@
             <url>http://download.java.net/maven/2/</url>
             <layout>default</layout>
         </repository>
+        <repository>
+            <id>maven1-repository.java.net</id>
+            <name>Java.net Repository for Maven</name>
+            <url>http://download.java.net/maven/1/</url>
+            <layout>default</layout>
+        </repository>
+        <repository>
+            <id>our-repo</id>
+            <url>file://${project.basedir}/lib</url>
+        </repository>
     </repositories>
 
     <properties>
@@ -40,24 +50,15 @@
             <version>1.18.1</version>
         </dependency>
         <dependency>
-            <groupId>org.kxml2</groupId>
-            <artifactId>kxml</artifactId>
-            <version>latest</version>
+            <groupId>net.sf.kxml</groupId>
+            <artifactId>kxml2</artifactId>
+            <version>2.3.0</version>
         </dependency>
         <dependency>
             <groupId>me.regexp</groupId>
             <artifactId>regexp</artifactId>
             <version>latest</version>
         </dependency>
-        <!--
-        dimaji uses javarosa-libraries.jar. see further down
-        <dependency>
-            <groupId>org.javarosa</groupId>
-            <artifactId>javarosa</artifactId>
-            <version>latest</version>
-            <type>jar</type>
-        </dependency>
-        -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
@@ -83,11 +84,47 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <id>javarosa</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <groupId>org.javarosa</groupId>
+                            <artifactId>javarosa-libraries</artifactId>
+                            <version>latest</version>
+                            <packaging>jar</packaging>
+                            <file>${project.basedir}/lib/javarosa.jar</file>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>regexpme</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <groupId>me.regexp</groupId>
+                            <artifactId>regexp</artifactId>
+                            <version>latest</version>
+                            <packaging>jar</packaging>
+                            <file>${project.basedir}/lib/regexp-me.jar</file>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
                 </configuration>
+                <version>2.4</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
