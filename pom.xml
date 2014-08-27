@@ -107,41 +107,6 @@
     </dependencies>
     <build>
         <plugins>
-<!--            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>2.4</version>
-                <executions>
-                    <execution>
-                        <id>javarosa</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <configuration>
-                            <groupId>org.javarosa</groupId>
-                            <artifactId>javarosa-libraries</artifactId>
-                            <version>latest</version>
-                            <packaging>jar</packaging>
-                            <file>${project.basedir}/lib/javarosa.jar</file>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>regexpme</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <configuration>
-                            <groupId>me.regexp</groupId>
-                            <artifactId>regexp</artifactId>
-                            <version>latest</version>
-                            <packaging>jar</packaging>
-                            <file>${project.basedir}/lib/regexp-me.jar</file>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>-->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
