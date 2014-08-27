@@ -4,4 +4,18 @@ jdk:
     - openjdk7
     - openjdk6
 
+before_install:
+    - echo "before install"
+install:
+    - echo "during install"
+before_script:
+    - echo "before script"
+script:
+    - echo "during script"
+after_success:
+    - echo "after success"
+after_failure:
+    - echo "after failure"
+after_script:
+    - echo "after script"
 # do we need any before/after handlers?
