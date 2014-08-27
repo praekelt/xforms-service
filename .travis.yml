@@ -3,19 +3,7 @@ jdk:
     - oraclejdk7
     - openjdk7
     - openjdk6
-
 before_install:
-    - echo "before install"
-install:
-    - echo "during install"
-before_script:
-    - echo "before script"
-script:
-    - echo "during script"
-after_success:
-    - echo "after success"
-after_failure:
-    - echo "after failure"
-after_script:
-    - echo "after script"
+    - mvn install:install-file -Dfile=lib/javarosa.jar -DgroupId=org.javarosa -DartifactId=javarosa-libraries -Dversion=latest -Dpackaging=jar -DgeneratePom=true
+    - mvn install:install-file -Dfile=lib -DgroupId=me.regexp -DartifactId=regexp -Dversion=latest -Dpackaging=jar -DgeneratePom=true
 # do we need any before/after handlers?
