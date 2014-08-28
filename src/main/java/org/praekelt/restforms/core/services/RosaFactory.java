@@ -1,6 +1,6 @@
-package org.praekelt.tools;
+package org.praekelt.restforms.core.services;
 
-import org.praekelt.xforms.KeyErrorException;
+import org.praekelt.restforms.core.exceptions.KeyErrorException;
 import com.google.gson.Gson;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,15 +26,15 @@ import org.javarosa.form.api.FormEntryModel;
 import org.javarosa.form.api.FormEntryPrompt;
 import org.javarosa.model.xform.XFormSerializingVisitor;
 import org.javarosa.xform.parse.XFormParser;
-import org.praekelt.restforms.core.CCInstances;
+//import org.praekelt.restforms.core.CCInstances;
 import org.praekelt.restforms.core.Event;
 import org.praekelt.restforms.core.Lock;
 import org.praekelt.restforms.core.Params;
 import org.praekelt.restforms.core.Persistence;
-import org.praekelt.restforms.core.SequencingException;
-import org.praekelt.restforms.core.SerializationException;
+import org.praekelt.restforms.core.exceptions.SequencingException;
+import org.praekelt.restforms.core.exceptions.SerializationException;
 import org.praekelt.restforms.core.Status;
-import org.praekelt.restforms.core.ValueException;
+import org.praekelt.restforms.core.exceptions.ValueException;
 import org.praekelt.restforms.core.XTypes;
 
 /**
@@ -255,9 +255,9 @@ public class RosaFactory implements Serializable {
      * @param cci
      * @param form
      */
-    private void formInitialize(String instance, CCInstances cci, FormDef form) {
-        form.initialize(false);
-    }
+//    private void formInitialize(String instance, CCInstances cci, FormDef form) {
+//        form.initialize(false);
+//    }
 
     /**
      *

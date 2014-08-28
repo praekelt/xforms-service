@@ -1,4 +1,4 @@
-package org.praekelt.restforms.resources;
+package org.praekelt.restforms.core.resources;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -17,8 +17,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.praekelt.tools.JedisClient;
-import org.praekelt.tools.Props;
+import org.praekelt.restforms.core.services.JedisClient;
+import org.praekelt.restforms.core.services.Props;
 
 /**
  *

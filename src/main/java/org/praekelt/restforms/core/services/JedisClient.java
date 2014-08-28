@@ -1,23 +1,22 @@
-package org.praekelt.tools;
+package org.praekelt.restforms.core.services;
 
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
 public class JedisClient {
 
-	private static final Logger logger = Logger.getLogger(JedisFactory.class.getName());
-	private JedisPool pool;
+    private static final Logger logger = Logger.getLogger(JedisFactory.class.getName());
+    private JedisPool pool;
 
-	public JedisClient(JedisPool pool) {
-		this.pool = pool;
-	}
+    public JedisClient(JedisPool pool) {
+        this.pool = pool;
+    }
 	
-	/**
+    /**
      * Set a value in Redis
      *
      * @param key

@@ -1,16 +1,13 @@
-package org.praekelt.restforms;
+package org.praekelt.restforms.core;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-
-//import org.hibernate.validator.constraints.NotEmpty;
-import org.praekelt.tools.JedisFactory;
-
+import org.praekelt.restforms.core.services.JedisFactory;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.dropwizard.Configuration;
  
 public class RestformsConfiguration extends Configuration {
+    
+    private final JedisFactory jedisFactory = new JedisFactory();
     
     @NotNull
     private String template;
@@ -38,17 +35,8 @@ public class RestformsConfiguration extends Configuration {
         this.defaultName = name;
     }
     
-    @Valid
-    @NotNull
-    private JedisFactory jedisFactory = new JedisFactory();
-
     @JsonProperty("jedisFactory")
     public JedisFactory getJedisFactory() {
         return jedisFactory;
-    }
-
-    @JsonProperty("jedisFactory")
-    public void setJedisFactory(JedisFactory factory) {
-        this.jedisFactory = factory;
     }
 }

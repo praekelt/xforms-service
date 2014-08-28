@@ -1,5 +1,5 @@
 
-package org.praekelt.restforms.core;
+package org.praekelt.restforms.core.exceptions;
 
 /**
  *
