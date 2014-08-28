@@ -1,4 +1,4 @@
-package org.praekelt.tools;
+package org.praekelt.restforms.core.services;
 
 import java.io.IOException;
 import java.util.Properties;

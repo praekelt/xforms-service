@@ -1,5 +1,6 @@
 package org.praekelt.tools;
 
+import org.praekelt.restforms.core.services.Props;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

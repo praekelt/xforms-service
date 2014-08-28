@@ -1,6 +1,6 @@
 package org.praekelt.restforms.core;
 
-import org.praekelt.tools.RosaFactory;
+import org.praekelt.restforms.core.services.RosaFactory;
 
 /**
  *
