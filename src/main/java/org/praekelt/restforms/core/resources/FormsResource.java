@@ -1,6 +1,7 @@
 package org.praekelt.restforms.core.resources;
 
 import com.codahale.metrics.annotation.Timed;
+import com.fasterxml.jackson.core.JsonParser;
 import io.dropwizard.setup.Environment;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
