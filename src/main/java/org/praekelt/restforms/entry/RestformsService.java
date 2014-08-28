@@ -4,6 +4,7 @@ import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.praekelt.restforms.core.RestformsConfiguration;
+import org.praekelt.restforms.core.resources.AnswersResource;
 import org.praekelt.restforms.core.resources.FormsResource;
  
 public class RestformsService extends Application<RestformsConfiguration> {
@@ -19,6 +20,7 @@ public class RestformsService extends Application<RestformsConfiguration> {
     public void run(RestformsConfiguration cfg, Environment env) {
         
         (env.jersey()).register(new FormsResource(cfg, env));
+        (env.jersey()).register(new AnswersResource(cfg, env));
     }
     
 }
