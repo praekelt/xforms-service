@@ -1,13 +1,11 @@
 package org.praekelt.restforms.core.resources;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import io.dropwizard.setup.Environment;
 import java.lang.reflect.Type;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
-import org.praekelt.restforms.core.RestformsConfiguration;
 import org.praekelt.restforms.core.services.JedisClient;
+import static org.praekelt.restforms.entry.RestformsService.jedisClient;
 
 /**
  *
@@ -23,13 +21,11 @@ import org.praekelt.restforms.core.services.JedisClient;
 abstract class BaseResource {
     
     protected static Gson gson;
-    protected static ObjectMapper om;
-    protected static JedisClient jedisClient;
+    protected static JedisClient jedis;
     
-    protected BaseResource(RestformsConfiguration cfg, Environment env) {
-        om = (om == null) ? env.getObjectMapper() : om;
+    protected BaseResource() {
         gson = (gson == null) ? new Gson() : gson;
-        jedisClient = (jedisClient == null) ? cfg.getJedisFactory().build(env) : jedisClient;
+        jedis = (jedis == null) ? jedisClient : jedis;
     }
     
     protected String toJson(Object base, Type type) {
@@ -46,5 +42,22 @@ abstract class BaseResource {
     
     protected String implode(String[] array, char separator) {
         return StringUtils.join(array, separator);
+    }
+    
+    protected String fetchResource(String key) {
+        if (!key.isEmpty()) {
+            return jedis.get(key);
+        }
+        return null;
+    }
+    
+    protected String createResource(String json) {
+        String id = this.generateUUID();
+        
+        if (!json.isEmpty()) {
+            jedis.set(id, json);
+            return id;
+        }
+        return null;
     }
 }

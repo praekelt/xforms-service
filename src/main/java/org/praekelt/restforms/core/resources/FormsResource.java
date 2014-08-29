@@ -1,7 +1,6 @@
 package org.praekelt.restforms.core.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import io.dropwizard.setup.Environment;
 import java.util.Iterator;
 import java.util.Set;
 import javax.ws.rs.Consumes;
@@ -12,11 +11,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.praekelt.restforms.core.RestformsConfiguration;
 
 /**
  *
- * @author Victor Geere
  * @author ant cosentino
  */
 @Path("/forms")
@@ -28,15 +25,14 @@ public class FormsResource extends BaseResource {
         public FormsRepresentation() {}
     }
     
-    public FormsResource(RestformsConfiguration cfg, Environment env) {
-        super(cfg, env);
+    public FormsResource() {
+        super();
     }
     
     @Timed(name = "create()")
     @POST
     public Response create(String payload) {
-        String id = this.generateUUID();
-        jedisClient.set(id, payload);
+        String id = this.createResource(payload);
         String response = String.format("{\"%s\": %d, \"%s\": %s, \"%s\": \"%s\"}",
             "status", 201, "message", "success", "form", id
         );
@@ -55,7 +51,7 @@ public class FormsResource extends BaseResource {
                 "message",
                 "success",
                 "form",
-                jedisClient.get(formId)
+                this.fetchResource(formId)
             ))
             .build();
     }
@@ -64,11 +60,11 @@ public class FormsResource extends BaseResource {
     @GET
     public Response getAll() {
         String response;
-        Set<String> keys = jedisClient.getKeys();
+        Set<String> keys = jedis.getKeys();
         int keyCount = keys.size();
         
         if (keyCount > 0) {
-            Iterator i = jedisClient.getKeys().iterator();
+            Iterator i = jedis.getKeys().iterator();
             int key = 0;
             String[] forms = new String[keyCount];
             response = String.format(
@@ -78,12 +74,12 @@ public class FormsResource extends BaseResource {
             
             while (i.hasNext()) {
                 String current = i.next().toString();
-                String form = jedisClient.get(current);
+                String form = this.fetchResource(current);
                 forms[key++] = String.format("\"%s\": %s", current, form);
             }
             response += this.implode(forms, ',') + "}}";
             return Response.ok().entity(response).build();
         }
-        return Response.ok().entity("{ \"status\": 200, \"forms\": {} }").build();
+        return Response.ok().entity("{ \"status\": 200, \"count\": 0, \"forms\": {} }").build();
     }
 }
