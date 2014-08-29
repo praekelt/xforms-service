@@ -38,9 +38,7 @@ public class FormsResource extends BaseResource {
     public Response create(String payload) {
         String id = this.generateUUID();
         jedisClient.set(id, payload);
-        return Response
-                .status(Response.Status.CREATED)
-                .build();
+        return Response.status(Response.Status.CREATED).build();
     }
     
     @Timed(name = "getSingle()")
@@ -48,8 +46,16 @@ public class FormsResource extends BaseResource {
     @Path("{formId}")
     public Response getSingle(@PathParam("formId") String formId) {
         return Response
-                .status(Response.Status.OK)
-                .build();
+            .status(Response.Status.OK)
+            .entity(String.format(
+                "{\"%s\": 200, \"%s\": \"%s\", \"%s\": %s}",
+                "status",
+                "message",
+                "success",
+                "form",
+                jedisClient.get(formId)
+            ))
+            .build();
     }
     
     @Timed(name = "getAll()")
