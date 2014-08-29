@@ -1,11 +1,7 @@
 package org.praekelt.restforms.core.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.setup.Environment;
-import java.io.IOException;
-import java.util.Iterator;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -23,33 +19,37 @@ import org.praekelt.restforms.core.RestformsConfiguration;
 @Path("/answers")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class AnswersResource extends BaseResource {
+public class AnswersResource extends BaseResource implements BaseResource.Representable {
+    
+    private static class AnswersRepresentation {
+        public AnswersRepresentation() {}
+        
+        //an important note:
+        //
+        //any properties of this class should have
+        //a SerializedName annotation, even if it is
+        //identical to the property name. this will
+        //allow us to rename our properties even once
+        //we have decided upon a strict document format.
+    }
     
     public AnswersResource(RestformsConfiguration cfg, Environment env) {
         super(cfg, env);
     }
     
+    @Override
+    public String to(Object base) {
+        return gson.toJson(base, AnswersRepresentation.class);
+    }
+
+    @Override
+    public Object from(String json) {
+        return gson.fromJson(json, AnswersRepresentation.class);
+    }
+    
     @Timed(name = "create()")
     @POST
     public Response create(String payload) {
-        
-        try {
-            //jsonnode can represent an entire json document
-            //we retrieve an iterator and work our way across
-            //the parsed object, performing our work as we need to.
-            //we'll factor this logic out into a private method
-            //once we're sure of it's behaviour.
-            JsonNode parsedValue = objectMapper.readTree(payload);
-            
-            Iterator i = parsedValue.elements();
-            while (i.hasNext()) {
-                System.out.println(i.next().toString());
-            }
-            
-        } catch (IOException ioe) {
-            System.err.println("caught a json parsing exception");
-        }
-        
         return Response.status(Response.Status.CREATED).build();
     }
     

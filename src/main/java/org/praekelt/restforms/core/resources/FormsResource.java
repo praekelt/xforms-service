@@ -1,7 +1,6 @@
 package org.praekelt.restforms.core.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import com.fasterxml.jackson.core.JsonParser;
 import io.dropwizard.setup.Environment;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -21,10 +20,32 @@ import org.praekelt.restforms.core.RestformsConfiguration;
 @Path("/forms")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class FormsResource extends BaseResource {
-
+public class FormsResource extends BaseResource implements BaseResource.Representable {
+    
+    private static class FormsRepresentation {
+        public FormsRepresentation() {}
+        
+        //an important note:
+        //
+        //any properties of this class should have
+        //a SerializedName annotation, even if it is
+        //identical to the property name. this will
+        //allow us to rename our properties even once
+        //we have decided upon a strict document format.
+    }
+    
     public FormsResource(RestformsConfiguration cfg, Environment env) {
         super(cfg, env);
+    }
+    
+    @Override
+    public String to(Object base) {
+        return gson.toJson(base, FormsRepresentation.class);
+    }
+
+    @Override
+    public Object from(String json) {
+        return gson.fromJson(json, FormsRepresentation.class);
     }
     
     @Timed(name = "create()")
@@ -45,5 +66,4 @@ public class FormsResource extends BaseResource {
     public Response getAll() {
         return Response.status(Response.Status.OK).build();
     }
-
 }

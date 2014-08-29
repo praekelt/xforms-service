@@ -1,7 +1,6 @@
 package org.praekelt.restforms.core.resources;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import io.dropwizard.setup.Environment;
 import org.praekelt.restforms.core.RestformsConfiguration;
 import org.praekelt.restforms.core.services.JedisClient;
@@ -12,14 +11,18 @@ import org.praekelt.restforms.core.services.JedisClient;
  */
 public abstract class BaseResource {
     
-    protected static final JsonFactory jsonFactory = new JsonFactory();
-    protected static final ObjectMapper objectMapper = new ObjectMapper(jsonFactory);
-    private static JedisClient jedisClient;
+    protected static final Gson gson = new Gson();
+    protected static JedisClient jedisClient;
     
+    protected static interface Representable {
+        String to(Object base);
+        Object from(String json);
+    }
+        
     protected BaseResource(RestformsConfiguration cfg, Environment env) {
         
         if (jedisClient == null) {
-            BaseResource.jedisClient = cfg.getJedisFactory().build(env);
+            jedisClient = cfg.getJedisFactory().build(env);
         }
     }
 }
