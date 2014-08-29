@@ -12,7 +12,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.apache.commons.lang.StringUtils;
 import org.praekelt.restforms.core.RestformsConfiguration;
 
 /**
@@ -38,7 +37,10 @@ public class FormsResource extends BaseResource {
     public Response create(String payload) {
         String id = this.generateUUID();
         jedisClient.set(id, payload);
-        return Response.status(Response.Status.CREATED).build();
+        String response = String.format("{\"%s\": %d, \"%s\": %s, \"%s\": \"%s\"}",
+            "status", 201, "message", "success", "form", id
+        );
+        return Response.status(Response.Status.CREATED).entity(response).build();
     }
     
     @Timed(name = "getSingle()")
@@ -71,23 +73,17 @@ public class FormsResource extends BaseResource {
             String[] forms = new String[keyCount];
             response = String.format(
                 "{ \"%s\": 200, \"%s\": \"%s\", \"%s\": %d, \"%s\": {",
-                "status",
-                "message",
-                "success",
-                "count",
-                keyCount,
-                "forms"
+                "status", "message", "success", "count", keyCount, "forms"
             );
             
             while (i.hasNext()) {
                 String current = i.next().toString();
                 String form = jedisClient.get(current);
-                forms[key++] = "\"" + current + "\": " + form;
+                forms[key++] = String.format("\"%s\": %s", current, form);
             }
-            response += StringUtils.join(forms, ',') + "}}";
-            return Response.status(Response.Status.OK).entity(response).build();
+            response += this.implode(forms, ',') + "}}";
+            return Response.ok().entity(response).build();
         }
-        response = "{ \"status\": 200, \"forms\": {} }";
-        return Response.status(Response.Status.OK).entity(response).build();
+        return Response.ok().entity("{ \"status\": 200, \"forms\": {} }").build();
     }
 }
