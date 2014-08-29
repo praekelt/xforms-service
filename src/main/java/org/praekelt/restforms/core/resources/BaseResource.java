@@ -20,7 +20,7 @@ import org.praekelt.restforms.core.services.JedisClient;
  * 
  * @author ant cosentino
  */
-public abstract class BaseResource {
+abstract class BaseResource {
     
     protected static Gson gson;
     protected static ObjectMapper om;
