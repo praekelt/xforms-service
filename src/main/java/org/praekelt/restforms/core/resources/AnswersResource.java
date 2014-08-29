@@ -40,13 +40,31 @@ public class AnswersResource extends BaseResource {
     @Timed(name = "create()")
     @POST
     public Response create(String payload) {
+        //example:
+        
+        //use the payload to construct a pojo representing the json document provided in the http request
+        AnswersRepresentation ar = (AnswersRepresentation) this.fromJson(payload, AnswersRepresentation.class);
+        
+        //clean up/validate any data contained in the pojo
+        // if (dataIsDirty(ar)) {
+        //  reject
+        // } else {
+        //  store in db
+        // }
+        
         return Response.status(Response.Status.CREATED).build();
     }
     
     @Timed(name = "update(id)")
     @PUT
     @Path("{formId}")
-    public Response update(@PathParam("formId") int formId, String payload) {
+    public Response update(@PathParam("formId") String formId, String payload) {
+        //example:
+        
+        //same as above...
+        //we'd create a new answersrepresentation and append any data provided in the payload to it
+        //then validate and store in the db if successful
+        
         return Response.status(Response.Status.OK).build();
     }
 }

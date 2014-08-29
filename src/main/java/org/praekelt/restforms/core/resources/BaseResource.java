@@ -22,11 +22,11 @@ public abstract class BaseResource {
         }
     }
     
-    protected String to(Object base, Type type) {
+    protected String toJson(Object base, Type type) {
         return gson.toJson(base, type);
     }
     
-    protected Object from(String json, Type type) {
+    protected Object fromJson(String json, Type type) {
         return gson.fromJson(json, type);
     }
 }

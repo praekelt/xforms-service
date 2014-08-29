@@ -2,6 +2,7 @@ package org.praekelt.restforms.core.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.setup.Environment;
+import java.util.Set;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -41,19 +42,53 @@ public class FormsResource extends BaseResource {
     @Timed(name = "create()")
     @POST
     public Response create(String payload) {
+        
+        //example:
+        
+        //use the payload to construct a pojo representing the json document provided in the http request
+        FormsRepresentation fr = (FormsRepresentation) this.fromJson(payload, FormsRepresentation.class);
+        
+        //clean up/validate any data contained in the pojo
+        // if (dataIsDirty(ar)) {
+        //  reject
+        // } else {
+        //  store in db
+        // }
+        
         return Response.status(Response.Status.CREATED).build();
     }
     
     @Timed(name = "getSingle()")
     @GET
     @Path("{formId}")
-    public Response getSingle(@PathParam("formId") int formId) {
-        return Response.status(Response.Status.OK).build();
+    public Response getSingle(@PathParam("formId") String formId) {
+        
+        //example:
+        
+        //assuming jedis simply stores a json document...
+        return Response
+                .status(Response.Status.OK)
+                .entity(jedisClient.get(formId))
+                .build();
     }
     
     @Timed(name = "getAll()")
     @GET
     public Response getAll() {
-        return Response.status(Response.Status.OK).build();
+        
+        String response;
+        Set<String> keys = jedisClient.getKeys();
+        
+        if (keys.size() > 0) {
+            
+            response = "";
+            
+            for (String key : keys) {
+                response += jedisClient.get(key);
+            }
+            return Response.status(Response.Status.OK).entity(response).build();
+        }
+        response = "{ \"status\": 200, \"forms\": [] }";
+        return Response.status(Response.Status.OK).entity(response).build();
     }
 }
