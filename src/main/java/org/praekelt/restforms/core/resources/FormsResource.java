@@ -2,6 +2,7 @@ package org.praekelt.restforms.core.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.setup.Environment;
+import java.util.Iterator;
 import java.util.Set;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -11,6 +12,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.commons.lang.StringUtils;
 import org.praekelt.restforms.core.RestformsConfiguration;
 
 /**
@@ -25,14 +27,6 @@ public class FormsResource extends BaseResource {
     
     private static class FormsRepresentation {
         public FormsRepresentation() {}
-        
-        //an important note:
-        //
-        //any properties of this class should have
-        //a SerializedName annotation, even if it is
-        //identical to the property name. this will
-        //allow us to safely rename our properties
-        //once we have decided upon a strict document format.
     }
     
     public FormsResource(RestformsConfiguration cfg, Environment env) {
@@ -42,53 +36,52 @@ public class FormsResource extends BaseResource {
     @Timed(name = "create()")
     @POST
     public Response create(String payload) {
-        
-        //example:
-        
-        //use the payload to construct a pojo representing the json document provided in the http request
-        FormsRepresentation fr = (FormsRepresentation) this.fromJson(payload, FormsRepresentation.class);
-        
-        //clean up/validate any data contained in the pojo
-        // if (dataIsDirty(ar)) {
-        //  reject
-        // } else {
-        //  store in db
-        // }
-        
-        return Response.status(Response.Status.CREATED).build();
+        String id = this.generateUUID();
+        jedisClient.set(id, payload);
+        return Response
+                .status(Response.Status.CREATED)
+                .build();
     }
     
     @Timed(name = "getSingle()")
     @GET
     @Path("{formId}")
     public Response getSingle(@PathParam("formId") String formId) {
-        
-        //example:
-        
-        //assuming jedis simply stores a json document...
         return Response
                 .status(Response.Status.OK)
-                .entity(jedisClient.get(formId))
                 .build();
     }
     
     @Timed(name = "getAll()")
     @GET
     public Response getAll() {
-        
         String response;
         Set<String> keys = jedisClient.getKeys();
+        int keyCount = keys.size();
         
-        if (keys.size() > 0) {
+        if (keyCount > 0) {
+            Iterator i = jedisClient.getKeys().iterator();
+            int key = 0;
+            String[] forms = new String[keyCount];
+            response = String.format(
+                "{ \"%s\": 200, \"%s\": \"%s\", \"%s\": %d, \"%s\": {",
+                "status",
+                "message",
+                "success",
+                "count",
+                keyCount,
+                "forms"
+            );
             
-            response = "";
-            
-            for (String key : keys) {
-                response += jedisClient.get(key);
+            while (i.hasNext()) {
+                String current = i.next().toString();
+                String form = jedisClient.get(current);
+                forms[key++] = "\"" + current + "\": " + form;
             }
+            response += StringUtils.join(forms, ',') + "}}";
             return Response.status(Response.Status.OK).entity(response).build();
         }
-        response = "{ \"status\": 200, \"forms\": [] }";
+        response = "{ \"status\": 200, \"forms\": {} }";
         return Response.status(Response.Status.OK).entity(response).build();
     }
 }

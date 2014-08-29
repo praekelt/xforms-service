@@ -3,6 +3,7 @@ package org.praekelt.restforms.core.resources;
 import com.google.gson.Gson;
 import io.dropwizard.setup.Environment;
 import java.lang.reflect.Type;
+import java.util.UUID;
 import org.praekelt.restforms.core.RestformsConfiguration;
 import org.praekelt.restforms.core.services.JedisClient;
 
@@ -28,5 +29,9 @@ public abstract class BaseResource {
     
     protected Object fromJson(String json, Type type) {
         return gson.fromJson(json, type);
+    }
+    
+    protected String generateUUID() {
+        return UUID.randomUUID().toString();
     }
 }
