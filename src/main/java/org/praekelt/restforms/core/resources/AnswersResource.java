@@ -19,7 +19,7 @@ import org.praekelt.restforms.core.RestformsConfiguration;
 @Path("/answers")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class AnswersResource extends BaseResource implements BaseResource.Representable {
+public class AnswersResource extends BaseResource {
     
     private static class AnswersRepresentation {
         public AnswersRepresentation() {}
@@ -29,22 +29,12 @@ public class AnswersResource extends BaseResource implements BaseResource.Repres
         //any properties of this class should have
         //a SerializedName annotation, even if it is
         //identical to the property name. this will
-        //allow us to rename our properties even once
-        //we have decided upon a strict document format.
+        //allow us to safely rename our properties
+        //once we have decided upon a strict document format.
     }
     
     public AnswersResource(RestformsConfiguration cfg, Environment env) {
         super(cfg, env);
-    }
-    
-    @Override
-    public String to(Object base) {
-        return gson.toJson(base, AnswersRepresentation.class);
-    }
-
-    @Override
-    public Object from(String json) {
-        return gson.fromJson(json, AnswersRepresentation.class);
     }
     
     @Timed(name = "create()")
