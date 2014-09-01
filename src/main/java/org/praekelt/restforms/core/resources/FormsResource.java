@@ -22,6 +22,10 @@ import org.praekelt.restforms.core.services.JedisClient;
 @Produces(MediaType.APPLICATION_JSON)
 public class FormsResource extends BaseResource {
     
+    /**
+     * used to construct a json document containing
+     * all xforms stored within our redis instance.
+     */
     static class FormsRepresentation {
         
         private String uuid;
@@ -53,20 +57,30 @@ public class FormsResource extends BaseResource {
     @POST
     public Response create(String payload) {
         
-        String id = this.createResource(payload);
+        String id;
         
-        if (id != null) {
-            return Response.status(Response.Status.CREATED).entity(
+        if (!payload.isEmpty()) {
+            id = this.createResource(payload);
+        
+            if (id != null) {
+                return Response.status(Response.Status.CREATED).entity(
+                    String.format(
+                        "{\"%s\": %d, \"%s\": %s, \"%s\": \"%s\"}",
+                        "status", 201, "message", "Created xForm", "xForm", id
+                    )
+                ).build();
+            }
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
                 String.format(
-                    "{\"%s\": %d, \"%s\": %s, \"%s\": \"%s\"}",
-                    "status", 201, "message", "Created xForm", "xForm", id
+                    "{\"%s\": %d, \"%s\": %s",
+                    "status", 500, "message", "A Redis error occurred while attempting to save the provided xForm."
                 )
             ).build();
         }
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
+        return Response.status(Response.Status.BAD_REQUEST).entity(
             String.format(
                 "{\"%s\": %d, \"%s\": %s",
-                "status", 500, "message", "A Redis error occurred while attempting to save the provided xForm."
+                "status", 400, "message", "No request payload was provided."
             )
         ).build();
     }
@@ -94,7 +108,8 @@ public class FormsResource extends BaseResource {
     public Response getAll() {
         int key;
         Iterator i;
-        String forms[], current, response;
+        String forms[], current, form, response;
+        FormsRepresentation fr;
         Set<String> keys = jedis.getKeys();
         int keyCount = keys.size();
         
@@ -103,20 +118,24 @@ public class FormsResource extends BaseResource {
             key = 0;
             forms = new String[keyCount];
             response = String.format(
-                "{ \"%s\": %d, \"%s\": \"%s\", \"%s\": %d, \"%s\": {",
+                "{ \"%s\": %d, \"%s\": \"%s\", \"%s\": %d, \"%s\": [",
                 "status", 200, "message", "Success", "count", keyCount, "forms"
             );
             
             while (i.hasNext()) {
                 current = i.next().toString();
-                forms[key++] = String.format("\"%s\": \"%s\"", current, this.fetchResource(current));
+                form = this.fetchResource(current);
+                fr = (FormsRepresentation) this.fromJson(form, representationType);
+                fr.setUuid(current);
+                fr.setXml(form);
+                forms[key++] = this.toJson(fr, representationType);
             }
             
-            response += this.implode(forms, ',') + "} }";
+            response += this.implode(forms, ',') + "] }";
             return Response.ok().entity(response).build();
         }
         return Response.ok()
-            .entity("{ \"status\": 200, \"message\": \"Success\", \"count\": 0, \"forms\": {} }")
+            .entity("{ \"status\": 200, \"message\": \"Success\", \"count\": 0, \"forms\": [] }")
             .build();
     }
 }

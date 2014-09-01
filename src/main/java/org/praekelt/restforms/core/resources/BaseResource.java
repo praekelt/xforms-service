@@ -52,7 +52,11 @@ abstract class BaseResource {
     }
     
     protected String implode(String[] array, char separator) {
-        return StringUtils.join(array, separator);
+        
+        if (array.length > 0) {
+            return StringUtils.join(array, separator);
+        }
+        return null;
     }
     
     protected boolean verifyResource(String key) {
@@ -74,9 +78,10 @@ abstract class BaseResource {
     
     protected String createResource(String json) {
         
-        String id = this.generateUUID();
+        String id;
         
         if (!json.isEmpty()) {
+            id = this.generateUUID();
             jedis.set(id, json);
             return id;
         }
