@@ -18,8 +18,14 @@ import org.praekelt.restforms.core.services.JedisClient;
  * @author ant cosentino
  */
 @Path("/forms")
-@Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
+@Consumes({
+    MediaType.APPLICATION_JSON,
+    MediaType.APPLICATION_XML
+})
+@Produces({
+    MediaType.APPLICATION_JSON,
+    MediaType.APPLICATION_XML
+})
 public class FormsResource extends BaseResource {
     
     /**
@@ -55,6 +61,7 @@ public class FormsResource extends BaseResource {
     
     @Timed(name = "create()")
     @POST
+    @Consumes(MediaType.APPLICATION_XML)
     public Response create(String payload) {
         
         String id;
@@ -88,6 +95,7 @@ public class FormsResource extends BaseResource {
     @Timed(name = "getSingle()")
     @GET
     @Path("{formId}")
+    @Produces(MediaType.APPLICATION_XML)
     public Response getSingle(@PathParam("formId") String formId) {
         
         String xform = this.fetchResource(formId);

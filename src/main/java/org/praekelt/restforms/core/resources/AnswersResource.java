@@ -20,7 +20,10 @@ import org.praekelt.restforms.core.services.JedisClient;
  */
 @Path("/answers")
 @Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
+@Produces({
+    MediaType.APPLICATION_JSON,
+    MediaType.APPLICATION_XML
+})
 public class AnswersResource extends BaseResource {
     
     /**
@@ -196,6 +199,7 @@ public class AnswersResource extends BaseResource {
     @Timed(name = "getSingle()")
     @GET
     @Path("{answerId}")
+    @Produces(MediaType.APPLICATION_XML)
     public Response getSingle(@PathParam("answerId") String answerId) {
         
         String xform = this.fetchResource(answerId);
