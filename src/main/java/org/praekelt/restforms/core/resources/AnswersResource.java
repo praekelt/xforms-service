@@ -1,5 +1,6 @@
 package org.praekelt.restforms.core.resources;
 
+import com.codahale.metrics.annotation.Metered;
 import com.codahale.metrics.annotation.Timed;
 import java.util.List;
 import javax.ws.rs.Consumes;
@@ -81,7 +82,8 @@ public class AnswersResource extends BaseResource {
         this.representationType = AnswersRepresentation.class;
     }
     
-    @Timed(name = "create()")
+    @Timed(name = "create")
+    @Metered(name = "create")
     @POST
     public Response create(String payload) {
         
@@ -133,7 +135,8 @@ public class AnswersResource extends BaseResource {
         ).build();
     }
     
-    @Timed(name = "update(id)")
+    @Timed(name = "update")
+    @Metered(name = "update")
     @PUT
     @Path("{answerId}")
     public Response update(@PathParam("answerId") String answerId, String payload) {
@@ -196,7 +199,8 @@ public class AnswersResource extends BaseResource {
         ).build();
     }
     
-    @Timed(name = "getSingle()")
+    @Timed(name = "getSingle")
+    @Metered(name = "getSingle")
     @GET
     @Path("{answerId}")
     @Produces(MediaType.APPLICATION_XML)
