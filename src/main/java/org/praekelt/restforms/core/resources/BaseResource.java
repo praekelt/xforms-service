@@ -51,10 +51,6 @@ abstract class BaseResource {
         return gson.fromJson(json, type);
     }
     
-    protected String generateUUID() {
-        return UUID.randomUUID().toString();
-    }
-    
     protected String implode(String[] array, char separator) {
         return StringUtils.join(array, separator);
     }
@@ -76,5 +72,9 @@ abstract class BaseResource {
             return id;
         }
         return null;
+    }
+    
+    private String generateUUID() {
+        return UUID.randomUUID().toString();
     }
 }
