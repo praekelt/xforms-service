@@ -2,6 +2,7 @@ package org.praekelt.restforms.core.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -23,7 +24,9 @@ import org.praekelt.restforms.core.services.JedisClient;
 public class FormsResource extends BaseResource {
     
     private static class FormsRepresentation {
-        public FormsRepresentation() {}
+        
+        private String uuid;
+        private String xml;
     }
     
     public FormsResource(JedisClient jc) {
@@ -33,28 +36,46 @@ public class FormsResource extends BaseResource {
     @Timed(name = "create()")
     @POST
     public Response create(String payload) {
+        
         String id = this.createResource(payload);
-        String response = String.format("{\"%s\": %d, \"%s\": %s, \"%s\": \"%s\"}",
-            "status", 201, "message", "success", "form", id
-        );
-        return Response.status(Response.Status.CREATED).entity(response).build();
+        
+        if (id != null) {
+            return Response.status(Response.Status.CREATED).entity(
+                String.format(
+                    "{\"%s\": %d, \"%s\": %s, \"%s\": \"%s\"}",
+                    "status", 201, "message", "success", "form", id
+                )
+            ).build();
+        }
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
+            String.format(
+                "{\"%s\": %d, \"%s\": %s, \"%s\": \"%s\"}",
+                "status", 500, "message", "error creating form", "form", "{}"
+            )
+        ).build();
     }
     
     @Timed(name = "getSingle()")
     @GET
     @Path("{formId}")
     public Response getSingle(@PathParam("formId") String formId) {
-        return Response
-            .status(Response.Status.OK)
-            .entity(String.format(
-                "{\"%s\": 200, \"%s\": \"%s\", \"%s\": %s}",
-                "status",
-                "message",
-                "success",
-                "form",
-                this.fetchResource(formId)
-            ))
-            .build();
+        
+        String form = this.fetchResource(formId);
+        
+        if (form != null) {
+            return Response.ok(
+                String.format(
+                    "{\"%s\": %d, \"%s\": \"%s\", \"%s\": %s}",
+                    "status", 200, "message", "success", "form", form
+                )
+            ).build();
+        }
+        return Response.status(Response.Status.NOT_FOUND).entity(
+            String.format(
+                "{\"%s\": %d, \"%s\": \"%s\", \"%s\": %s}",
+                "status", 404, "message", "not found", "form", "{}"
+            )
+        ).build();
     }
     
     @Timed(name = "getAll()")
@@ -69,14 +90,13 @@ public class FormsResource extends BaseResource {
             int key = 0;
             String[] forms = new String[keyCount];
             response = String.format(
-                "{ \"%s\": 200, \"%s\": \"%s\", \"%s\": %d, \"%s\": {",
-                "status", "message", "success", "count", keyCount, "forms"
+                "{ \"%s\": %d, \"%s\": \"%s\", \"%s\": %d, \"%s\": {",
+                "status", 200, "message", "success", "count", keyCount, "forms"
             );
             
             while (i.hasNext()) {
                 String current = i.next().toString();
-                String form = this.fetchResource(current);
-                forms[key++] = String.format("\"%s\": %s", current, form);
+                forms[key++] = String.format("\"%s\": %s", current, this.fetchResource(current));
             }
             response += this.implode(forms, ',') + "}}";
             return Response.ok().entity(response).build();

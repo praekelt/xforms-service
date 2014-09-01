@@ -27,10 +27,26 @@ abstract class BaseResource {
         jedis = (jedis == null) ? jc : jedis;
     }
     
+    /**
+     * serialises the object as json
+     * 
+     * @param base an instance of the static inner class for the resource
+     * @param type class literal of static inner class for the resource
+     * @return string json representation of the object
+     */
     protected String toJson(Object base, Type type) {
         return gson.toJson(base, type);
     }
     
+    /**
+     * deserialises the object from a json string.
+     * it will be necessary to manually cast the
+     * returned object to the correct type.
+     * 
+     * @param json string representation of the object
+     * @param type class literal of static inner class for the resource
+     * @return object deserialised representation of the given json argument
+     */
     protected Object fromJson(String json, Type type) {
         return gson.fromJson(json, type);
     }
@@ -44,6 +60,7 @@ abstract class BaseResource {
     }
     
     protected String fetchResource(String key) {
+        
         if (!key.isEmpty()) {
             return jedis.get(key);
         }
@@ -51,6 +68,7 @@ abstract class BaseResource {
     }
     
     protected String createResource(String json) {
+        
         String id = this.generateUUID();
         
         if (!json.isEmpty()) {
