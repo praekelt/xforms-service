@@ -79,14 +79,14 @@ public class FormsResource extends BaseResource {
             }
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
                 String.format(
-                    "{\"%s\": %d, \"%s\": \"%s\"",
+                    "{\"%s\": %d, \"%s\": \"%s\"}",
                     "status", 500, "message", "A Redis error occurred while attempting to save the provided xForm."
                 )
             ).build();
         }
         return Response.status(Response.Status.BAD_REQUEST).entity(
             String.format(
-                "{\"%s\": %d, \"%s\": \"%s\"",
+                "{\"%s\": %d, \"%s\": \"%s\"}",
                 "status", 400, "message", "No request payload was provided."
             )
         ).build();
