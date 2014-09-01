@@ -18,9 +18,9 @@ import org.praekelt.restforms.core.services.JedisClient;
  * @author ant cosentino
  */
 abstract class BaseResource {
-    
     protected static Gson gson;
     protected static JedisClient jedis;
+    protected Type representationType;
     
     protected BaseResource(JedisClient jc) {
         gson = (gson == null) ? new Gson() : gson;
@@ -53,6 +53,15 @@ abstract class BaseResource {
     
     protected String implode(String[] array, char separator) {
         return StringUtils.join(array, separator);
+    }
+    
+    protected boolean verifyResource(String key) {
+        // this will be properly implemented in the
+        // jedis development branch. until then, this
+        // stub will always return false.
+        
+        //return jedis.exists(key);
+        return false;
     }
     
     protected String fetchResource(String key) {
