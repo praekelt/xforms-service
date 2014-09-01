@@ -133,7 +133,7 @@ public class FormsResource extends BaseResource {
             while (i.hasNext()) {
                 current = i.next().toString();
                 form = this.fetchResource(current);
-                fr = (FormsRepresentation) this.fromJson(form, representationType);
+                fr = new FormsRepresentation();
                 fr.setUuid(current);
                 fr.setXml(form);
                 forms[key++] = this.toJson(fr, representationType);
