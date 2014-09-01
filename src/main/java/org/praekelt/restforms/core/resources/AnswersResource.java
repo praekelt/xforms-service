@@ -43,7 +43,7 @@ public class AnswersResource extends BaseResource {
             this.answers = answers;
         }
         
-        public static class Answer {
+        static class Answer {
             private String ref;
             private String value;
 
