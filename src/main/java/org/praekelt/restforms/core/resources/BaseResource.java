@@ -5,7 +5,6 @@ import java.lang.reflect.Type;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
 import org.praekelt.restforms.core.services.JedisClient;
-import static org.praekelt.restforms.entry.RestformsService.jedisClient;
 
 /**
  *
@@ -23,9 +22,9 @@ abstract class BaseResource {
     protected static Gson gson;
     protected static JedisClient jedis;
     
-    protected BaseResource() {
+    protected BaseResource(JedisClient jc) {
         gson = (gson == null) ? new Gson() : gson;
-        jedis = (jedis == null) ? jedisClient : jedis;
+        jedis = (jedis == null) ? jc : jedis;
     }
     
     protected String toJson(Object base, Type type) {

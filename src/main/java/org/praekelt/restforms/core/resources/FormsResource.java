@@ -11,6 +11,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.praekelt.restforms.core.services.JedisClient;
 
 /**
  *
@@ -25,8 +26,8 @@ public class FormsResource extends BaseResource {
         public FormsRepresentation() {}
     }
     
-    public FormsResource() {
-        super();
+    public FormsResource(JedisClient jc) {
+        super(jc);
     }
     
     @Timed(name = "create()")
@@ -80,6 +81,8 @@ public class FormsResource extends BaseResource {
             response += this.implode(forms, ',') + "}}";
             return Response.ok().entity(response).build();
         }
-        return Response.ok().entity("{ \"status\": 200, \"count\": 0, \"forms\": {} }").build();
+        return Response.ok()
+            .entity("{ \"status\": 200, \"count\": 0, \"forms\": {} }")
+            .build();
     }
 }

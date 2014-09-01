@@ -10,8 +10,6 @@ import org.praekelt.restforms.core.services.JedisClient;
  
 public class RestformsService extends Application<RestformsConfiguration> {
     
-    public static JedisClient jedisClient;
-    
     public static void main(String[] args) throws Exception {
         new RestformsService().run(args);
     }
@@ -22,10 +20,10 @@ public class RestformsService extends Application<RestformsConfiguration> {
     @Override
     public void run(RestformsConfiguration cfg, Environment env) {
         
-        jedisClient = cfg.getJedisFactory().build(env);
+        final JedisClient jedisClient = cfg.getJedisFactory().build(env);
         
-        (env.jersey()).register(new FormsResource());
-        (env.jersey()).register(new AnswersResource());
+        (env.jersey()).register(new FormsResource(jedisClient));
+        (env.jersey()).register(new AnswersResource(jedisClient));
     }
     
 }
