@@ -106,28 +106,28 @@ public class AnswersResource extends BaseResource {
 
                     return Response.status(Response.Status.CREATED).entity(
                         String.format(
-                            "{\"%s\": %d, \"%s\": %s, \"%s\": \"%s\"}",
+                            "{\"%s\": %d, \"%s\": \"%s\", \"%s\": %s}",
                             "status", 201, "message", "Created completed xForm", "answer", "{}"
                         )
                     ).build();
                 }
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
                     String.format(
-                        "{\"%s\": %d, \"%s\": %s}",
+                        "{\"%s\": %d, \"%s\": \"%s\"}",
                         "status", 500, "message", "A Redis error occurred while attempting to retrieve the xForm template."
                     )
                 ).build();
             }
             return Response.status(Response.Status.BAD_REQUEST).entity(
                 String.format(
-                    "{\"%s\": %d, \"%s\": %s}",
+                    "{\"%s\": %d, \"%s\": \"%s\"}",
                     "status", 400, "message", "No xForm UUID was provided."
                 )
             ).build();
         }
         return Response.status(Response.Status.BAD_REQUEST).entity(
             String.format(
-                "{\"%s\": %d, \"%s\": %s}",
+                "{\"%s\": %d, \"%s\": \"%s\"}",
                 "status", 400, "message", "No request payload was provided."
             )
         ).build();
@@ -162,35 +162,35 @@ public class AnswersResource extends BaseResource {
 
                         return Response.ok(
                             String.format(
-                                "{\"%s\": %d, \"%s\": %s, \"%s\": \"%s\"}",
+                                "{\"%s\": %d, \"%s\": \"%s\", \"%s\": %s}",
                                 "status", 200, "message", "Updated answer", "answer", "{}"
                             )
                         ).build();
                     }
                     return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
                         String.format(
-                            "{\"%s\": %d, \"%s\": %s}",
+                            "{\"%s\": %d, \"%s\": \"%s\"}",
                             "status", 500, "message", "A Redis error occurred while attempting to retrieve the completed xForm."
                         )
                     ).build();
                 }
                 return Response.status(Response.Status.BAD_REQUEST).entity(
                     String.format(
-                        "{\"%s\": %d, \"%s\": %s}",
+                        "{\"%s\": %d, \"%s\": \"%s\"}",
                         "status", 400, "message", "No xForm UUID was provided."
                     )
                 ).build();
             }
             return Response.status(Response.Status.NOT_FOUND).entity(
                 String.format(
-                    "{\"%s\": %d, \"%s\": %s}",
+                    "{\"%s\": %d, \"%s\": \"%s\"}",
                     "status", 400, "message", "No completed xForm record found."
                 )
             ).build();
         }
         return Response.status(Response.Status.BAD_REQUEST).entity(
             String.format(
-                "{\"%s\": %d, \"%s\": %s}",
+                "{\"%s\": %d, \"%s\": \"%s\"}",
                 "status", 400, "message", "No request payload was provided."
             )
         ).build();
