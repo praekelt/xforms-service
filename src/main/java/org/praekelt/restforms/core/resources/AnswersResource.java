@@ -212,6 +212,6 @@ public class AnswersResource extends BaseResource {
                 "{\"%s\": %d, \"%s\": \"%s\"}",
                 "status", 404, "message", "Completed xForm not found."
             )
-        ).build();
+        ).type(MediaType.APPLICATION_JSON).build();
     }
 }
