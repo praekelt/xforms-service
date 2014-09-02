@@ -34,7 +34,7 @@ public class AnswersResource extends BaseResource {
      * used to construct a json document representing
      * answers provided for xform documents.
      */
-    public static class AnswersRepresentation {
+    public class AnswersRepresentation {
         
         @NotEmpty
         private String formUUID;
@@ -77,7 +77,7 @@ public class AnswersResource extends BaseResource {
          * used to populate the list contained in
          * this class's parent class.
          */
-        public static class Answer {
+        public class Answer {
             
             @NotEmpty
             private String ref;
