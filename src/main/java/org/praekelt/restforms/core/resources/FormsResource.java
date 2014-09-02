@@ -1,7 +1,8 @@
 package org.praekelt.restforms.core.resources;
 
-import com.codahale.metrics.annotation.Metered;
 import com.codahale.metrics.annotation.Timed;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Iterator;
 import java.util.Set;
 import javax.ws.rs.Consumes;
@@ -12,6 +13,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.praekelt.restforms.core.services.JedisClient;
 
 /**
@@ -33,23 +35,41 @@ public class FormsResource extends BaseResource {
      * used to construct a json document containing
      * all xforms stored within our redis instance.
      */
-    static class FormsRepresentation {
+    public class FormsRepresentation {
         
+        @NotEmpty
         private String uuid;
+        
+        @NotEmpty
         private String xml;
         
+        public FormsRepresentation() {}
+        
+        @JsonCreator
+        public FormsRepresentation(
+            @JsonProperty("uuid") String uuid,
+            @JsonProperty("xml") String xml
+        ) {
+            this.uuid = uuid;
+            this.xml = xml;
+        }
+        
+        @JsonProperty("uuid")
         public String getUuid() {
             return uuid;
         }
         
+        @JsonProperty("uuid")
         public void setUuid(String uuid) {
             this.uuid = uuid;
         }
         
+        @JsonProperty("xml")
         public String getXml() {
             return xml;
         }
         
+        @JsonProperty("xml")
         public void setXml(String xml) {
             this.xml = xml;
         }
@@ -61,7 +81,6 @@ public class FormsResource extends BaseResource {
     }
     
     @Timed(name = "create")
-    @Metered(name = "create")
     @POST
     @Consumes(MediaType.APPLICATION_XML)
     public Response create(String payload) {
@@ -95,7 +114,6 @@ public class FormsResource extends BaseResource {
     }
     
     @Timed(name = "getSingle")
-    @Metered(name = "getSingle")
     @GET
     @Path("{formId}")
     @Produces(MediaType.APPLICATION_XML)
@@ -115,7 +133,6 @@ public class FormsResource extends BaseResource {
     }
     
     @Timed(name = "getAll")
-    @Metered(name = "getAll")
     @GET
     public Response getAll() {
         int key;
