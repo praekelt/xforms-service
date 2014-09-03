@@ -34,15 +34,13 @@ public class AnswersResource extends BaseResource {
      * used to construct a json document representing
      * answers provided for xform documents.
      */
-    public class AnswersRepresentation {
+    public static class AnswersRepresentation {
         
         @NotEmpty
-        private String formUUID;
+        private final String formUUID;
         
         @NotEmpty
-        private List<Answer> answers;
-        
-        public AnswersRepresentation() {}
+        private final List<Answer> answers;
         
         @JsonCreator
         public AnswersRepresentation(
@@ -58,96 +56,120 @@ public class AnswersResource extends BaseResource {
             return formUUID;
         }
         
-        @JsonProperty("formUUID")
-        public void setFormUUID(String formUUID) {
-            this.formUUID = formUUID;
-        }
-        
         @JsonProperty("answers")
         public List<Answer> getAnswers() {
             return answers;
-        }
-        
-        @JsonProperty("answers")
-        public void setAnswers(List<Answer> answers) {
-            this.answers = answers;
         }
         
         /**
          * used to populate the list contained in
          * this class's parent class.
          */
-        public class Answer {
+        public static class Answer {
             
             @NotEmpty
-            private String ref;
+            private final String ref;
             
             @NotEmpty
-            private String value;
+            private final String value;
+            
+            @JsonCreator
+            public Answer(
+                @JsonProperty("ref") String ref,
+                @JsonProperty("value") String value
+            ) {
+                this.ref = ref;
+                this.value = value;
+            }
             
             @JsonProperty("ref")
             public String getRef() {
                 return ref;
             }
             
-            @JsonProperty("ref")
-            public void setRef(String ref) {
-                this.ref = ref;
-            }
-            
             @JsonProperty("value")
             public String getValue() {
                 return value;
             }
-            
-            @JsonProperty("value")
-            public void setValue(String value) {
-                this.value = value;
-            }
+        }
+    }
+    
+    public static class AnswersResponse extends BaseResponse {
+        
+        private String xForm;
+        
+        public AnswersResponse(int status, String message) {
+            super(status, message);
+        }
+        
+        public AnswersResponse(int status, String message, String xForm) {
+            super(status, message);
+            this.xForm = xForm;
+        }
+
+        public String getxForm() {
+            return xForm;
+        }
+
+        public void setxForm(String xForm) {
+            this.xForm = xForm;
         }
     }
     
     public AnswersResource(JedisClient jc) {
         super(jc);
-        this.representationType = AnswersRepresentation.class;
+        this.representation = AnswersRepresentation.class;
     }
     
     @Timed(name = "create")
     @POST
     public Response create(@Valid AnswersRepresentation ar) {
-        String formId, xform;
+        String formId, xform, answersId;
         List<Answer> answers;
         
         formId = ar.getFormUUID();
-
+        
         if (formId != null) {
             answers = ar.getAnswers();
             xform = this.fetchResource(formId);
-
+            
             if (xform != null) {
-
+                
+                // we'll just create a record in redis for now to
+                // allow us to test this thing.
+                
+                answersId = this.createResource(this.toJson(ar, representation));
+                
                 // this is where we'll invoke a method that processes
                 // the answers provided for a xform and then add them
                 // to our redis instance.
-
-                return Response.status(Response.Status.CREATED).entity(
-                    String.format(
-                        "{\"%s\": %d, \"%s\": \"%s\", \"%s\": %s}",
-                        "status", 201, "message", "Created completed xForm", "answer", "{}"
+                
+                if (answersId != null) {
+                    return Response.status(Response.Status.CREATED).entity(
+                        this.toJson(
+                            new AnswersResponse(201, "Created completed xForm.", answersId),
+                            AnswersResponse.class
+                        )
+                    ).build();
+                }
+                return Response.serverError().entity(
+                    this.toJson(
+                        new AnswersResponse(500, "A Redis error occurred while attempting to save the provided answers."),
+                        AnswersResponse.class
                     )
                 ).build();
             }
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
-                String.format(
-                    "{\"%s\": %d, \"%s\": \"%s\"}",
-                    "status", 500, "message", "A Redis error occurred while attempting to retrieve the xForm template."
+            return Response.status(Response.Status.NOT_FOUND).entity(
+                this.toJson(
+                    new AnswersResponse(404, "No xForm could be found with the provided UUID."),
+                    AnswersResponse.class
                 )
             ).build();
         }
         return Response.status(Response.Status.BAD_REQUEST).entity(
-            String.format(
-                "{\"%s\": %d, \"%s\": \"%s\"}",
-                "status", 400, "message", "No xForm UUID was provided."
+            this.toJson(
+                new AnswersResponse(400, "No xForm UUID was provided."),
+                AnswersResponse.class
             )
         ).build();
     }
@@ -155,51 +177,67 @@ public class AnswersResource extends BaseResource {
     @Timed(name = "update")
     @PUT
     @Path("{answerId}")
-    public Response update(@PathParam("answerId") String answerId, @Valid AnswersRepresentation ar) {
-        
-        String existing = this.fetchResource(answerId);
-        String formId, xform;
+    public Response update(
+        @PathParam("answerId") String answersId,
+        @Valid AnswersRepresentation ar
+    ) {
+        String existingAnswers, formId, xform;
         List<Answer> answers;
-
-        formId = ar.getFormUUID();
-
-        if (existing != null) {
-
+        boolean updated;
+        
+        // will eventually use this.verifyResource here
+        existingAnswers = this.fetchResource(answersId);
+        
+        if (existingAnswers != null) {
+            formId = ar.getFormUUID();
+            
             if (formId != null) {
-                answers = ar.getAnswers();
                 xform = this.fetchResource(formId);
 
                 if (xform != null) {
 
+                    // we'll just update the record in redis for now to
+                    // allow us to test this thing.
+                    updated = this.updateResource(answersId, this.toJson(ar, representation));
+                    
                     // this is where we'll invoke a method that processes
                     // the answers provided for a xform and then add them
                     // to our redis instance.
-
-                    return Response.ok(
-                        String.format(
-                            "{\"%s\": %d, \"%s\": \"%s\", \"%s\": %s}",
-                            "status", 200, "message", "Updated answer", "answer", "{}"
+                    answers = ar.getAnswers();
+                    
+                    if (updated) {
+                        return Response.ok(
+                            this.toJson(
+                                new AnswersResponse(200, "Updated xForm.", answersId),
+                                AnswersResponse.class
+                            )
+                        ).build();
+                    }
+                    return Response.serverError().entity(
+                        this.toJson(
+                            new AnswersResponse(500, "A Redis error occurred while attempting to update the specified record with the provided answers."),
+                            AnswersResponse.class
                         )
                     ).build();
                 }
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
-                    String.format(
-                        "{\"%s\": %d, \"%s\": \"%s\"}",
-                        "status", 500, "message", "A Redis error occurred while attempting to retrieve the completed xForm."
+                return Response.status(Response.Status.NOT_FOUND).entity(
+                    this.toJson(
+                        new AnswersResponse(500, "xForm not found."),
+                        AnswersResponse.class
                     )
                 ).build();
             }
             return Response.status(Response.Status.BAD_REQUEST).entity(
-                String.format(
-                    "{\"%s\": %d, \"%s\": \"%s\"}",
-                    "status", 400, "message", "No xForm UUID was provided."
+                this.toJson(
+                    new AnswersResponse(400, "No xForm UUID was provided."),
+                    AnswersResponse.class
                 )
             ).build();
         }
         return Response.status(Response.Status.NOT_FOUND).entity(
-            String.format(
-                "{\"%s\": %d, \"%s\": \"%s\"}",
-                "status", 400, "message", "No completed xForm record found."
+            this.toJson(
+                new AnswersResponse(404, "xForm answers found."),
+                AnswersResponse.class
             )
         ).build();
     }
@@ -207,18 +245,17 @@ public class AnswersResource extends BaseResource {
     @Timed(name = "getSingle")
     @GET
     @Path("{answerId}")
-    @Produces(MediaType.APPLICATION_XML)
     public Response getSingle(@PathParam("answerId") String answerId) {
         
         String xform = this.fetchResource(answerId);
         
         if (xform != null) {
-            return Response.ok(xform).build();
+            return Response.ok(xform).type(MediaType.APPLICATION_XML).build();
         }
         return Response.status(Response.Status.NOT_FOUND).entity(
-            String.format(
-                "{\"%s\": %d, \"%s\": \"%s\"}",
-                "status", 404, "message", "Completed xForm not found."
+            this.toJson(
+                new AnswersResponse(404, "No completed xForm record found."),
+                AnswersResponse.class
             )
         ).type(MediaType.APPLICATION_JSON).build();
     }

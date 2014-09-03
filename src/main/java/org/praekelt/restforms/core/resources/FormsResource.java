@@ -35,7 +35,7 @@ public class FormsResource extends BaseResource {
      * used to construct a json document containing
      * all xforms stored within our redis instance.
      */
-    public class FormsRepresentation {
+    public static class FormsRepresentation {
         
         @NotEmpty
         private String uuid;
@@ -43,6 +43,7 @@ public class FormsResource extends BaseResource {
         @NotEmpty
         private String xml;
         
+        @JsonCreator
         public FormsRepresentation() {}
         
         @JsonCreator
@@ -75,9 +76,57 @@ public class FormsResource extends BaseResource {
         }
     }
     
+    public static class FormsResponse extends BaseResponse {
+        
+        private FormsRepresentation[] xforms;
+        private String xform;
+        private Integer count;
+        
+        public FormsResponse(int status, String message) {
+            super(status, message);
+            this.count = null;
+        }
+        
+        public FormsResponse(int status, String message, String xform) {
+            super(status, message);
+            this.xform = xform;
+            this.count = null;
+        }
+        
+        public FormsResponse(int status, String message, int count, FormsRepresentation[] xforms) {
+            super(status, message);
+            this.count = count;
+            this.xforms = xforms;
+        }
+        
+        public FormsRepresentation[] getXforms() {
+            return xforms;
+        }
+
+        public void setXforms(FormsRepresentation[] xforms) {
+            this.setXforms(xforms);
+        }
+
+        public String getXform() {
+            return xform;
+        }
+
+        public void setXform(String xform) {
+            this.xform = xform;
+        }
+
+        public int getCount() {
+            return count;
+        }
+
+        public void setCount(int count) {
+            this.count = count;
+        }
+    }
+    
     public FormsResource(JedisClient jc) {
         super(jc);
-        this.representationType = FormsRepresentation.class;
+        this.representation = FormsRepresentation.class;
     }
     
     @Timed(name = "create")
@@ -85,30 +134,30 @@ public class FormsResource extends BaseResource {
     @Consumes(MediaType.APPLICATION_XML)
     public Response create(String payload) {
         
-        String id;
+        final String id;
         
         if (!payload.isEmpty()) {
             id = this.createResource(payload);
         
             if (id != null) {
                 return Response.status(Response.Status.CREATED).entity(
-                    String.format(
-                        "{\"%s\": %d, \"%s\": \"%s\", \"%s\": \"%s\"}",
-                        "status", 201, "message", "Created xForm", "xForm", id
+                    this.toJson(
+                        new FormsResponse(201, "Created xForm.", this.fetchResource(id)),
+                        FormsResponse.class
                     )
                 ).build();
             }
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(
-                String.format(
-                    "{\"%s\": %d, \"%s\": \"%s\"}",
-                    "status", 500, "message", "A Redis error occurred while attempting to save the provided xForm."
+            return Response.serverError().entity(
+                this.toJson(
+                    new FormsResponse(500, "A Redis error occurred while attempting to save the provided xForm."),
+                    FormsResponse.class
                 )
             ).build();
         }
         return Response.status(Response.Status.BAD_REQUEST).entity(
-            String.format(
-                "{\"%s\": %d, \"%s\": \"%s\"}",
-                "status", 400, "message", "No request payload was provided."
+            this.toJson(
+                new FormsResponse(400, "No request payload was provided."),
+                FormsResponse.class
             )
         ).build();
     }
@@ -116,40 +165,33 @@ public class FormsResource extends BaseResource {
     @Timed(name = "getSingle")
     @GET
     @Path("{formId}")
-    @Produces(MediaType.APPLICATION_XML)
     public Response getSingle(@PathParam("formId") String formId) {
-        
         String xform = this.fetchResource(formId);
         
         if (xform != null) {
-            return Response.ok(xform).build();
+            return Response.ok(xform).type(MediaType.APPLICATION_XML).build();
         }
         return Response.status(Response.Status.NOT_FOUND).entity(
-            String.format(
-                "{\"%s\": %d, \"%s\": \"%s\"}",
-                "status", 404, "message", "xForm not found"
-            )
+            this.toJson(new FormsResponse(404, "xForm not found.", null), FormsResponse.class)
         ).type(MediaType.APPLICATION_JSON).build();
     }
     
     @Timed(name = "getAll")
     @GET
+    @Produces(MediaType.APPLICATION_JSON)
     public Response getAll() {
         int key;
         Iterator i;
-        String forms[], current, form, response;
+        String current, form;
         FormsRepresentation fr;
+        
         Set<String> keys = jedis.getKeys();
         int keyCount = keys.size();
+        FormsRepresentation[] forms = new FormsRepresentation[keyCount];
         
         if (keyCount > 0) {
             i = jedis.getKeys().iterator();
             key = 0;
-            forms = new String[keyCount];
-            response = String.format(
-                "{ \"%s\": %d, \"%s\": \"%s\", \"%s\": %d, \"%s\": [",
-                "status", 200, "message", "Success", "count", keyCount, "forms"
-            );
             
             while (i.hasNext()) {
                 current = i.next().toString();
@@ -157,14 +199,11 @@ public class FormsResource extends BaseResource {
                 fr = new FormsRepresentation();
                 fr.setUuid(current);
                 fr.setXml(form);
-                forms[key++] = this.toJson(fr, representationType);
+                forms[key++] = fr;
             }
-            
-            response += this.implode(forms, ',') + "] }";
-            return Response.ok().entity(response).build();
         }
-        return Response.ok()
-            .entity("{ \"status\": 200, \"message\": \"Success\", \"count\": 0, \"forms\": [] }")
-            .build();
+        return Response.ok().entity(
+            this.toJson(new FormsResponse(200, "Success.", keyCount, forms), FormsResponse.class)
+        ).build();
     }
 }

@@ -20,7 +20,34 @@ import org.praekelt.restforms.core.services.JedisClient;
 abstract class BaseResource {
     protected static Gson gson;
     protected static JedisClient jedis;
-    protected Type representationType;
+    protected Type representation;
+    
+    protected static class BaseResponse {
+        
+        private int status;
+        private String message;
+        
+        public BaseResponse(int status, String message) {
+            this.status = status;
+            this.message = message;
+        }
+
+        public int getStatus() {
+            return status;
+        }
+
+        public void setStatus(int status) {
+            this.status = status;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+    }
     
     protected BaseResource(JedisClient jc) {
         gson = (gson == null) ? new Gson() : gson;
@@ -86,6 +113,16 @@ abstract class BaseResource {
             return id;
         }
         return null;
+    }
+    
+    protected boolean updateResource(String id, String json) {
+        // a good place to use this.verifyResource()
+        
+        if (!json.isEmpty() && !id.isEmpty()) {
+            jedis.set(id, json);
+            return true;
+        }
+        return false;
     }
     
     private String generateUUID() {
