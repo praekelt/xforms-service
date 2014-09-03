@@ -1,7 +1,7 @@
 package org.praekelt.restforms.core;
 
 import javax.validation.constraints.NotNull;
-import org.praekelt.restforms.core.services.JedisFactory;
+import org.praekelt.restforms.core.services.jedis.JedisFactory;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
  

@@ -6,7 +6,7 @@ import io.dropwizard.setup.Environment;
 import org.praekelt.restforms.core.RestformsConfiguration;
 import org.praekelt.restforms.core.resources.AnswersResource;
 import org.praekelt.restforms.core.resources.FormsResource;
-import org.praekelt.restforms.core.services.JedisClient;
+import org.praekelt.restforms.core.services.jedis.JedisClient;
  
 public class RestformsService extends Application<RestformsConfiguration> {
     

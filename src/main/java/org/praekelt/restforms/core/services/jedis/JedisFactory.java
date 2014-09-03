@@ -1,4 +1,4 @@
-package org.praekelt.restforms.core.services;
+package org.praekelt.restforms.core.services.jedis;
 
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;

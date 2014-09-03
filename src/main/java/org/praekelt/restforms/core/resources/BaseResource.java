@@ -2,9 +2,11 @@ package org.praekelt.restforms.core.resources;
 
 import com.google.gson.Gson;
 import java.lang.reflect.Type;
+import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
-import org.praekelt.restforms.core.services.JedisClient;
+import org.praekelt.restforms.core.exceptions.JedisException;
+import org.praekelt.restforms.core.services.jedis.JedisClient;
 
 /**
  *
@@ -87,30 +89,59 @@ abstract class BaseResource {
     }
     
     protected boolean verifyResource(String key) {
-        // this will be properly implemented in the
-        // jedis development branch. until then, this
-        // stub will always return false.
-        
-        //return jedis.exists(key);
+        try {
+            boolean exists;
+            
+            if (!key.isEmpty()) {
+                exists = jedis.exists(key);
+                return exists;
+            }
+        } catch (JedisException e) {
+            System.err.println(e.getMessage());
+        }
         return false;
     }
     
     protected String fetchResource(String key) {
         
-        if (!key.isEmpty()) {
-            return jedis.get(key);
+        try {
+            String resource;
+            
+            if (!key.isEmpty()) {
+                resource = jedis.get(key);
+                return resource;
+            }
+        } catch (JedisException e) {
+            System.err.println(e.getMessage());
+        }
+        return null;
+    }
+    
+    protected Set<String> fetchResources() {
+        
+        try {
+            Set<String> keys;
+            
+            keys = jedis.getKeys("*");
+            return keys;
+        } catch (JedisException e) {
+            System.err.println(e.getMessage());
         }
         return null;
     }
     
     protected String createResource(String json) {
         
-        String id;
-        
-        if (!json.isEmpty()) {
-            id = this.generateUUID();
-            jedis.set(id, json);
-            return id;
+        try {
+            String id;
+
+            if (!json.isEmpty()) {
+                id = this.generateUUID();
+                jedis.set(id, json);
+                return id;
+            }
+        } catch (JedisException e) {
+            System.err.println(e.getMessage());
         }
         return null;
     }
@@ -118,9 +149,14 @@ abstract class BaseResource {
     protected boolean updateResource(String id, String json) {
         // a good place to use this.verifyResource()
         
-        if (!json.isEmpty() && !id.isEmpty()) {
-            jedis.set(id, json);
-            return true;
+        try {
+            
+            if (!json.isEmpty() && !id.isEmpty()) {
+                jedis.set(id, json);
+                return true;
+            }
+        } catch (JedisException e) {
+            System.err.println(e.getMessage());
         }
         return false;
     }

@@ -14,7 +14,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.praekelt.restforms.core.services.JedisClient;
+import org.praekelt.restforms.core.services.jedis.JedisClient;
 
 /**
  *
@@ -183,27 +183,31 @@ public class FormsResource extends BaseResource {
         int key;
         Iterator i;
         String current, form;
-        FormsRepresentation fr;
         
-        Set<String> keys = jedis.getKeys();
-        int keyCount = keys.size();
-        FormsRepresentation[] forms = new FormsRepresentation[keyCount];
+        Set<String> keys = this.fetchResources();
         
-        if (keyCount > 0) {
-            i = jedis.getKeys().iterator();
-            key = 0;
-            
-            while (i.hasNext()) {
-                current = i.next().toString();
-                form = this.fetchResource(current);
-                fr = new FormsRepresentation();
-                fr.setUuid(current);
-                fr.setXml(form);
-                forms[key++] = fr;
+        if (keys != null) {
+            int keyCount = keys.size();
+            FormsRepresentation[] forms = new FormsRepresentation[keyCount];
+
+            if (keyCount > 0) {
+                i = keys.iterator();
+                key = 0;
+
+                while (i.hasNext()) {
+                    current = i.next().toString();
+                    form = this.fetchResource(current);
+                    forms[key++] = new FormsRepresentation();
+                    forms[key].setUuid(current);
+                    forms[key].setXml(form);
+                }
             }
+            return Response.ok().entity(
+                this.toJson(new FormsResponse(200, "Success.", keyCount, forms), FormsResponse.class)
+            ).build();
         }
-        return Response.ok().entity(
-            this.toJson(new FormsResponse(200, "Success.", keyCount, forms), FormsResponse.class)
+        return Response.serverError().entity(
+            this.toJson(new FormsResponse(500, "Failed to retrieve records from Redis instance."), FormsResponse.class)
         ).build();
     }
 }

@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.praekelt.restforms.core.resources.AnswersResource.AnswersRepresentation.Answer;
-import org.praekelt.restforms.core.services.JedisClient;
+import org.praekelt.restforms.core.services.jedis.JedisClient;
 
 /**
  *
