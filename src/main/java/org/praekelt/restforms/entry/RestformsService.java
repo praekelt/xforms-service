@@ -1,15 +1,14 @@
 package org.praekelt.restforms.entry;
 
-import org.praekelt.restforms.core.RestformsConfiguration;
-import org.praekelt.restforms.core.services.JedisClient;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import org.praekelt.restforms.core.resources.Forms;
+import org.praekelt.restforms.core.RestformsConfiguration;
+import org.praekelt.restforms.core.resources.AnswersResource;
+import org.praekelt.restforms.core.resources.FormsResource;
+import org.praekelt.restforms.core.services.JedisClient;
  
 public class RestformsService extends Application<RestformsConfiguration> {
-    
-    private static JedisClient jc;
     
     public static void main(String[] args) throws Exception {
         new RestformsService().run(args);
@@ -19,17 +18,12 @@ public class RestformsService extends Application<RestformsConfiguration> {
     public void initialize(Bootstrap<RestformsConfiguration> bootstrap) {}
 
     @Override
-    public void run(RestformsConfiguration configuration, Environment environment) {
+    public void run(RestformsConfiguration cfg, Environment env) {
         
-        /*
-            the forms resource is being registered simply
-            to allow the application to successfully
-            bootstrap. it will soon be replaced with a
-            new forms implementation.
-        */
+        final JedisClient jedisClient = cfg.getJedisFactory().build(env);
         
-        jc = configuration.getJedisFactory().build(environment);
-        environment.jersey().register(new Forms(jc));
+        (env.jersey()).register(new FormsResource(jedisClient));
+        (env.jersey()).register(new AnswersResource(jedisClient));
     }
     
 }

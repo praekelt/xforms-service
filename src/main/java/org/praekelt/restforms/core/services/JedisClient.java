@@ -10,7 +10,7 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 public class JedisClient {
 
     private static final Logger logger = Logger.getLogger(JedisFactory.class.getName());
-    private JedisPool pool;
+    private final JedisPool pool;
 
     public JedisClient(JedisPool pool) {
         this.pool = pool;
@@ -57,7 +57,7 @@ public class JedisClient {
      *
      * Unset the pool
      */
-    public void destroy() {
+    private void destroy() {
         pool.destroy();
     }
 
@@ -66,7 +66,7 @@ public class JedisClient {
      *
      * @return
      */
-    public Jedis borrow() {
+    private Jedis borrow() {
         Jedis resource = null;
         try {
             resource = pool.getResource();
@@ -80,7 +80,7 @@ public class JedisClient {
      *
      * @param jedis
      */
-    public void revert(Jedis jedis) {
+    private void revert(Jedis jedis) {
         pool.returnResource(jedis);
     }
 
