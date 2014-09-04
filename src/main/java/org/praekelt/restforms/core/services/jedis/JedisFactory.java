@@ -1,6 +1,5 @@
 package org.praekelt.restforms.core.services.jedis;
 
-import com.codahale.metrics.health.HealthCheck;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;
 import javax.validation.constraints.Max;
@@ -9,7 +8,6 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.praekelt.restforms.core.health.JedisHealthCheck;
 
 public class JedisFactory {
     
@@ -84,7 +82,7 @@ public class JedisFactory {
             	jedisPool.destroy();
             }
         });
-        env.healthChecks().register("JedisClient", new JedisHealthCheck(jedisClient));
+        env.healthChecks().register("JedisClient", new JedisClient.JedisHealthCheck(jedisClient));
         
         return jedisClient;
     }   

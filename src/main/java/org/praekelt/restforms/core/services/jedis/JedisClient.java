@@ -1,5 +1,6 @@
 package org.praekelt.restforms.core.services.jedis;
 
+import com.codahale.metrics.health.HealthCheck;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,8 +20,25 @@ public final class JedisClient {
 
     private static final Logger logger = Logger.getLogger(JedisFactory.class.getName());
     private final JedisPool pool;
+    
+    static class JedisHealthCheck extends HealthCheck {
+        
+        private final JedisClient jedisClient;
 
-    public JedisClient(JedisPool pool) {
+        public JedisHealthCheck(JedisClient jedisClient) {
+            this.jedisClient = jedisClient;
+        }
+        
+        @Override
+        protected Result check() throws Exception {
+            Jedis j = this.jedisClient.borrow();
+            boolean state = j.isConnected();
+            this.jedisClient.revert(j);
+            return state ? Result.healthy("A connection to Redis was established.") : Result.unhealthy("A connection to Redis was not established.");
+        }
+    }
+
+    JedisClient(JedisPool pool) {
         this.pool = pool;
     }
     
@@ -33,7 +51,7 @@ public final class JedisClient {
      * 
      * @return
      */
-    public Jedis borrow() {
+    private Jedis borrow() {
         Jedis resource = null;
         try {
             resource = pool.getResource();
@@ -51,7 +69,7 @@ public final class JedisClient {
      * 
      * @param jedis
      */
-    public void revert(Jedis jedis) {
+    private void revert(Jedis jedis) {
         pool.returnResource(jedis);
     }
     

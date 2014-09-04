@@ -2,9 +2,6 @@ package org.praekelt.restforms.core.resources;
 
 import com.google.gson.Gson;
 import java.lang.reflect.Type;
-import java.util.AbstractList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
