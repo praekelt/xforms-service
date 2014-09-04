@@ -118,6 +118,7 @@ public class AnswersResource extends BaseResource {
     
     public AnswersResource(JedisClient jc) {
         super(jc);
+        this.hashPool = "answers-";
         this.representation = AnswersRepresentation.class;
     }
     
@@ -131,14 +132,14 @@ public class AnswersResource extends BaseResource {
         
         if (formId != null) {
             answers = ar.getAnswers();
-            xform = this.fetchResource(formId);
+            xform = "";//FormsResource.fetchFormValue(formId);
             
             if (xform != null) {
                 
                 // we'll just create a record in redis for now to
                 // allow us to test this thing.
                 
-                answersId = this.createResource(this.toJson(ar, representation));
+                answersId = "";//this.createResource(this.toJson(ar, representation));
                 
                 // this is where we'll invoke a method that processes
                 // the answers provided for a xform and then add them
@@ -186,19 +187,19 @@ public class AnswersResource extends BaseResource {
         boolean updated;
         
         // will eventually use this.verifyResource here
-        existingAnswers = this.fetchResource(answersId);
+        existingAnswers = "";//this.fetchResource(answersId);
         
         if (existingAnswers != null) {
             formId = ar.getFormUUID();
             
             if (formId != null) {
-                xform = this.fetchResource(formId);
+                xform = "";//this.fetchResource(formId);
 
                 if (xform != null) {
 
                     // we'll just update the record in redis for now to
                     // allow us to test this thing.
-                    updated = this.updateResource(answersId, this.toJson(ar, representation));
+                    updated = false;//this.updateResource(answersId, this.toJson(ar, representation));
                     
                     // this is where we'll invoke a method that processes
                     // the answers provided for a xform and then add them
@@ -247,7 +248,7 @@ public class AnswersResource extends BaseResource {
     @Path("{answerId}")
     public Response getSingle(@PathParam("answerId") String answerId) {
         
-        String xform = this.fetchResource(answerId);
+        String xform = "";//this.fetchResource(answerId);
         
         if (xform != null) {
             return Response.ok(xform).type(MediaType.APPLICATION_XML).build();

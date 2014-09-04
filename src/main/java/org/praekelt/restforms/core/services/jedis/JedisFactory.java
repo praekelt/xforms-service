@@ -1,5 +1,6 @@
 package org.praekelt.restforms.core.services.jedis;
 
+import com.codahale.metrics.health.HealthCheck;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;
 import javax.validation.constraints.Max;
@@ -7,7 +8,8 @@ import javax.validation.constraints.Min;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.praekelt.restforms.core.health.JedisHealthCheck;
 
 public class JedisFactory {
     
@@ -15,14 +17,14 @@ public class JedisFactory {
     private static JedisPoolConfig poolConfig;
     private static JedisClient jedisClient;
         
-    @NotNull
+    @NotEmpty
     private String host;
 
     @Min(1)
     @Max(65535)
     private int port = 6379;
     
-    @NotNull
+    @NotEmpty
     private String password;
     
     @Min(100)
@@ -58,7 +60,7 @@ public class JedisFactory {
     	this.poolsize = poolsize;
     }
         
-    public JedisClient build(Environment environment) {
+    public JedisClient build(Environment env) {
         
         poolConfig = new JedisPoolConfig();
         poolConfig.setMaxTotal(this.poolsize);
@@ -73,7 +75,7 @@ public class JedisFactory {
         
         jedisClient = new JedisClient(jedisPool);
         
-        environment.lifecycle().manage(new Managed() {
+        env.lifecycle().manage(new Managed() {
             @Override
             public void start() {}
 
@@ -82,6 +84,7 @@ public class JedisFactory {
             	jedisPool.destroy();
             }
         });
+        env.healthChecks().register("JedisClient", new JedisHealthCheck(jedisClient));
         
         return jedisClient;
     }   

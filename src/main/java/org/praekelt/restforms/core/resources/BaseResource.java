@@ -2,6 +2,10 @@ package org.praekelt.restforms.core.resources;
 
 import com.google.gson.Gson;
 import java.lang.reflect.Type;
+import java.util.AbstractList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
@@ -22,6 +26,7 @@ import org.praekelt.restforms.core.services.jedis.JedisClient;
 abstract class BaseResource {
     protected static Gson gson;
     protected static JedisClient jedis;
+    protected String hashPool;
     protected Type representation;
     
     protected static class BaseResponse {
@@ -90,11 +95,9 @@ abstract class BaseResource {
     
     protected boolean verifyResource(String key) {
         try {
-            boolean exists;
             
             if (!key.isEmpty()) {
-                exists = jedis.exists(key);
-                return exists;
+                return jedis.keyExists(key);
             }
         } catch (JedisException e) {
             System.err.println(e.getMessage());
@@ -102,14 +105,11 @@ abstract class BaseResource {
         return false;
     }
     
-    protected String fetchResource(String key) {
+    protected Map<String, String> fetchResource(String key) {
         
         try {
-            String resource;
-            
             if (!key.isEmpty()) {
-                resource = jedis.get(key);
-                return resource;
+                return jedis.hashGetFieldsAndValues(key);
             }
         } catch (JedisException e) {
             System.err.println(e.getMessage());
@@ -117,27 +117,27 @@ abstract class BaseResource {
         return null;
     }
     
-    protected Set<String> fetchResources() {
+    protected Set<String> fetchKeysByType(String type) {
         
-        try {
-            Set<String> keys;
-            
-            keys = jedis.getKeys("*");
-            return keys;
-        } catch (JedisException e) {
-            System.err.println(e.getMessage());
+        if (!type.isEmpty()) {
+            try {
+                return jedis.keysByPattern(type);
+            } catch (JedisException e) {
+                System.err.println(e.getMessage());
+            }
         }
         return null;
     }
     
-    protected String createResource(String json) {
+    protected String createResource(String hashPool, String type, String json) {
         
         try {
             String id;
 
-            if (!json.isEmpty()) {
-                id = this.generateUUID();
-                jedis.set(id, json);
+            if (!hashPool.isEmpty() && !json.isEmpty() && !type.isEmpty()) {
+                id = hashPool + this.generateUUID();
+                jedis.hashSetFieldValue(id, type, json);
+                jedis.keyExpire(id, 3600);
                 return id;
             }
         } catch (JedisException e) {
@@ -146,13 +146,12 @@ abstract class BaseResource {
         return null;
     }
     
-    protected boolean updateResource(String id, String json) {
-        // a good place to use this.verifyResource()
+    protected boolean updateResource(String id, String type, String json) {
         
         try {
             
-            if (!json.isEmpty() && !id.isEmpty()) {
-                jedis.set(id, json);
+            if ((!id.isEmpty() && !type.isEmpty() && !json.isEmpty()) && this.verifyResource(id)) {
+                jedis.hashSetFieldValue(id, type, json);
                 return true;
             }
         } catch (JedisException e) {

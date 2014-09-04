@@ -4,6 +4,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -14,6 +15,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.praekelt.restforms.core.exceptions.JedisException;
 import org.praekelt.restforms.core.services.jedis.JedisClient;
 
 /**
@@ -126,6 +128,7 @@ public class FormsResource extends BaseResource {
     
     public FormsResource(JedisClient jc) {
         super(jc);
+        this.hashPool = "forms-";
         this.representation = FormsRepresentation.class;
     }
     
@@ -137,12 +140,12 @@ public class FormsResource extends BaseResource {
         final String id;
         
         if (!payload.isEmpty()) {
-            id = this.createResource(payload);
+            id = this.createForm(payload);
         
             if (id != null) {
                 return Response.status(Response.Status.CREATED).entity(
                     this.toJson(
-                        new FormsResponse(201, "Created xForm.", this.fetchResource(id)),
+                        new FormsResponse(201, "Created xForm.", id),
                         FormsResponse.class
                     )
                 ).build();
@@ -166,7 +169,7 @@ public class FormsResource extends BaseResource {
     @GET
     @Path("{formId}")
     public Response getSingle(@PathParam("formId") String formId) {
-        String xform = this.fetchResource(formId);
+        String xform = this.fetchFormValue(formId);
         
         if (xform != null) {
             return Response.ok(xform).type(MediaType.APPLICATION_XML).build();
@@ -184,7 +187,7 @@ public class FormsResource extends BaseResource {
         Iterator i;
         String current, form;
         
-        Set<String> keys = this.fetchResources();
+        Set<String> keys = this.fetchKeysByType("forms");
         
         if (keys != null) {
             int keyCount = keys.size();
@@ -196,7 +199,7 @@ public class FormsResource extends BaseResource {
 
                 while (i.hasNext()) {
                     current = i.next().toString();
-                    form = this.fetchResource(current);
+                    form = this.fetchFormValue(current);
                     forms[key++] = new FormsRepresentation();
                     forms[key].setUuid(current);
                     forms[key].setXml(form);
@@ -209,5 +212,60 @@ public class FormsResource extends BaseResource {
         return Response.serverError().entity(
             this.toJson(new FormsResponse(500, "Failed to retrieve records from Redis instance."), FormsResponse.class)
         ).build();
+    }
+    
+    /**
+     * 
+     * @param id
+     * @return 
+     */
+    public boolean formExists(String id) {
+        return this.verifyResource(this.hashPool + id);
+    }
+    
+    /**
+     * 
+     * @param xml
+     * @return 
+     */
+    public String createForm(String xml) {
+        return this.createResource(this.hashPool, "form", xml);
+    }
+    
+    /**
+     * 
+     * @param id
+     * @param xml
+     * @return 
+     */
+    public boolean updateForm(String id, String xml) {
+        return this.updateResource(this.hashPool + id, "form", xml);
+    }
+    
+    /**
+     * 
+     * @param id
+     * @return 
+     */
+    public Map<String, String> fetchFormMap(String id) {
+        return this.fetchResource(this.hashPool + id);
+    }
+    
+    /**
+     * 
+     * @param id
+     * @return 
+     */
+    public String fetchFormValue(String id) {
+        
+        if (!id.isEmpty() && this.formExists(id)) {
+
+            try {
+                return jedis.hashGetFieldValue(this.hashPool + id, "form");
+            } catch (JedisException e) {
+                System.err.println(e.getMessage());
+            }
+        }
+        return null;
     }
 }

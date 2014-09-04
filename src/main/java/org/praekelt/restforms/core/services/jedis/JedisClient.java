@@ -1,5 +1,7 @@
 package org.praekelt.restforms.core.services.jedis;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import org.praekelt.restforms.core.exceptions.JedisException;
@@ -9,10 +11,11 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**
  * 
+ * @author victor geere
  * @author ant cosentino
  * @author simon kelly
  */
-public class JedisClient {
+public final class JedisClient {
 
     private static final Logger logger = Logger.getLogger(JedisFactory.class.getName());
     private final JedisPool pool;
@@ -23,10 +26,14 @@ public class JedisClient {
     
     /**
      * Borrow a resource from the pool
-     *
+     * 
+     * unfortunately, we have to make this method
+     * public in order to implement a healthcheck
+     * for the redis instance...
+     * 
      * @return
      */
-    private Jedis borrow() {
+    public Jedis borrow() {
         Jedis resource = null;
         try {
             resource = pool.getResource();
@@ -37,21 +44,25 @@ public class JedisClient {
 
     /**
      * Return a resource to the pool
-     *
+     * 
+     * unfortunately, we have to make this method
+     * public in order to implement a healthcheck
+     * for the redis instance...
+     * 
      * @param jedis
      */
-    private void revert(Jedis jedis) {
+    public void revert(Jedis jedis) {
         pool.returnResource(jedis);
     }
     
     /**
      * 
-     * @param <T>
+     * @param dynamic type
      * @param action
-     * @return
+     * @return dynamic type
      * @throws JedisException 
      */
-    private <T> T execute(RedisAction<T> action) throws JedisException {
+    private <T> T execute(JedisAction<T> action) throws JedisException {
         Jedis jedis = this.borrow();
         
         try {
@@ -68,6 +79,68 @@ public class JedisClient {
         }
     }
     
+    // <editor-fold defaultstate="collapsed" desc="redis key methods">
+    public boolean keyPersist(final String key) throws JedisException {
+        return this.execute(new JedisAction<Boolean>() {
+            @Override
+            public Boolean execute(Jedis jedis) throws Exception {
+                return jedis.persist(key) == 1;
+            }
+        });
+    }
+    
+    public boolean keyExpire(final String key, final int seconds) throws JedisException {
+        return this.execute(new JedisAction<Boolean>() {
+            @Override
+            public Boolean execute(Jedis jedis) throws Exception {
+                return jedis.expire(key, seconds) == 1;
+            }
+        });
+    }
+    
+    public boolean keyRename(final String oldKey, final String newKey) throws JedisException {
+        return this.execute(new JedisAction<Boolean>() {
+            @Override
+            public Boolean execute(Jedis jedis) throws Exception {
+                return jedis.rename(oldKey, newKey).equals("OK");
+            }
+        });
+    }
+    
+    /**
+     * 
+     * Returns the remaining time to live of a key that has a timeout.
+     * This introspection capability allows a Redis client to check 
+     * how many seconds a given key will continue to be part of the dataset.
+     * In Redis 2.6 or older the command returns -1 if the key does not 
+     * exist or if the key exist but has no associated expire.
+     * 
+     * Starting with Redis 2.8 the return value in case of error changed:
+     *  - The command returns -2 if the key does not exist.
+     *  - The command returns -1 if the key exists but has no associated expire.
+     * 
+     * @param key
+     * @return
+     * @throws JedisException 
+     */
+    public long keyTimeToLive(final String key) throws JedisException {
+        return this.execute(new JedisAction<Long>() {
+            @Override
+            public Long execute(Jedis jedis) throws Exception {
+                return jedis.ttl(key);
+            }
+        });
+    }
+    
+    public String keyType(final String key) throws JedisException {
+        return this.execute(new JedisAction<String>() {
+            @Override
+            public String execute(Jedis jedis) throws Exception {
+                return jedis.type(key);
+            }
+        });
+    }
+    
     /**
      * Return a value from Redis
      *
@@ -75,21 +148,8 @@ public class JedisClient {
      * @return
      * @throws org.praekelt.restforms.core.exceptions.JedisException
      */
-    public String get(final String key) throws JedisException {
-//        Jedis jedis = borrow();
-//        String value = "";
-//        try {
-//            value = jedis.get(key);
-//        } catch (NullPointerException ex) {
-//            logger.log(Level.SEVERE, null, "Could not connect to databse.");
-//        } catch (Exception ex) {
-//            logger.log(Level.SEVERE, null, ex);
-//        } finally {
-//            revert(jedis);
-//        }
-//        return value;
-        
-        return this.execute(new RedisAction<String>() {
+    public String keyGet(final String key) throws JedisException {
+        return this.execute(new JedisAction<String>() {
             
             @Override
             public String execute(Jedis jedis) throws Exception {
@@ -99,63 +159,41 @@ public class JedisClient {
     }
     
     /**
-     * Get a Set of String keys from the database
+     * Get a Set of String keysByPattern from the database
      *
-     * @param key
+     * @param pattern
      * @return
      * @throws org.praekelt.restforms.core.exceptions.JedisException
      */
-    public Set<String> getKeys(final String key) throws JedisException {
-//        Set<String> keys = null;
-//        Jedis jedis = borrow();
-//        try {
-//            keys = jedis.keys(key);
-//        } catch (NullPointerException nex) {
-//            logger.log(Level.SEVERE, null, "Could not connect to database");
-//        } catch (Exception ex) {
-//            logger.log(Level.SEVERE, null, ex);
-//        } finally {
-//            revert(jedis);
-//        }
-//        return keys;
-        return this.execute(new RedisAction<Set<String>>() {
-
+    public Set<String> keysByPattern(final String pattern) throws JedisException {
+        return this.execute(new JedisAction<Set<String>>() {
             @Override
             public Set<String> execute(Jedis jedis) throws Exception {
-                return jedis.keys(key);
+                return jedis.keys(pattern);
             }
         });
     }
 
     /**
-     * Get all available keys "*" as a String Set
+     * Get all available keysByPattern "*" as a String Set
      *
      * @return
      * @throws org.praekelt.restforms.core.exceptions.JedisException
      */
-    public Set<String> getKeys() throws JedisException {
-        return this.getKeys("*");
+    public Set<String> keyGetAll() throws JedisException {
+        return this.keysByPattern("*");
     }
     
     /**
-     * nuke all keys within the instance
+     * nuke all keysByPattern within the instance
      * 
      * @throws JedisException 
      */
-    public void deleteAll() throws JedisException {
-//        Jedis jedis = borrow();
-//        try {
-//            Set<String> keys = jedis.keys("*");
-//            for (String key : keys) {
-//                jedis.del(key);
-//            }
-//        } finally {
-//            revert(jedis);
-//        }
+    public void keyDeleteAll() throws JedisException {
         
-        final String[] keys = (String[]) this.getKeys().toArray();
+        final String[] keys = (String[]) this.keyGetAll().toArray();
         
-        this.execute(new RedisAction<Void>() {
+        this.execute(new JedisAction<Void>() {
             @Override
             public Void execute(Jedis jedis) {
                 jedis.del(keys);
@@ -170,17 +208,9 @@ public class JedisClient {
      * @param key
      * @throws org.praekelt.restforms.core.exceptions.JedisException
      */
-    public void delete(final String key) throws JedisException {
-//        Jedis jedis = borrow();
-//        if (jedis != null) {
-//            try {
-//                jedis.del(key);
-//            } finally {
-//                revert(jedis);
-//            }
-//        }
+    public void keyDelete(final String key) throws JedisException {
         
-        this.execute(new RedisAction<Void>() {
+        this.execute(new JedisAction<Void>() {
 
             @Override
             public Void execute(Jedis jedis) throws Exception {
@@ -196,23 +226,9 @@ public class JedisClient {
      * @param value
      * @throws JedisException 
      */
-    public void set(final String key, final String value) throws JedisException {
+    public void keySet(final String key, final String value) throws JedisException {
         
-        //    /**
-        //     * Set a value in Redis
-        //     *
-        //     * @param key
-        //     * @param value
-        //     */
-        //    public void set(String key, String value) {
-        //        Jedis jedis = this.borrow();
-        //        try {
-        //            jedis.set(key, value);
-        //        } finally {
-        //            revert(jedis);
-        //        }
-        //    }
-        this.execute(new RedisAction<Void>() {
+        this.execute(new JedisAction<Void>() {
             
             @Override
             public Void execute(Jedis jedis) throws Exception {
@@ -222,12 +238,134 @@ public class JedisClient {
         });
     }
     
-    public boolean exists(final String key) throws JedisException {
-        return this.execute(new RedisAction<Boolean>() {
+    public boolean keyExists(final String key) throws JedisException {
+        
+        return this.execute(new JedisAction<Boolean>() {
             @Override
             public Boolean execute(Jedis jedis) throws Exception {
                 return jedis.exists(key);
             }
         });
     }
+    // </editor-fold>
+    
+    // <editor-fold defaultstate="collapsed" desc="redis hash methods">
+    public long hashDeleteFields(final String key, final String... fields) throws JedisException {
+        return this.execute(new JedisAction<Long>() {
+            @Override
+            public Long execute(Jedis jedis) throws Exception {
+                return jedis.hdel(key, fields);
+            }
+        });
+    }
+    
+    public boolean hashFieldExists(final String key, final String field) throws JedisException {
+        return this.execute(new JedisAction<Boolean>() {
+            @Override
+            public Boolean execute(Jedis jedis) throws Exception {
+                return jedis.hexists(key, field);
+            }
+        });
+    }
+    
+    public String hashGetFieldValue(final String key, final String field) throws JedisException {
+        return this.execute(new JedisAction<String>() {
+            @Override
+            public String execute(Jedis jedis) throws Exception {
+                return jedis.hget(key, field);
+            }
+        });
+    }
+    
+    public Map<String, String> hashGetFieldsAndValues(final String key) throws JedisException {
+        return this.execute(new JedisAction<Map<String, String>>() {
+            @Override
+            public Map<String, String> execute(Jedis jedis) throws Exception {
+                return jedis.hgetAll(key);
+            }
+        });
+    }
+    
+    public long hashIncrementValueBy(final String key, final String field, final long value) throws JedisException {
+        return this.execute(new JedisAction<Long>() {
+            @Override
+            public Long execute(Jedis jedis) throws Exception {
+                return jedis.hincrBy(key, field, value);
+            }
+        });
+    }
+    
+    public double hashIncrementValueByFloat(final String key, final String field, final double value) throws JedisException {
+        return this.execute(new JedisAction<Double>() {
+            @Override
+            public Double execute(Jedis jedis) throws Exception {
+                return jedis.hincrByFloat(key, field, value);
+            }
+        });
+    }
+    
+    public Set<String> hashGetFields(final String key) throws JedisException {
+        return this.execute(new JedisAction<Set<String>>() {
+            @Override
+            public Set<String> execute(Jedis jedis) throws Exception {
+                return jedis.hkeys(key);
+            }
+        });
+    }
+    
+    public long hashLength(final String key) throws JedisException {
+        return this.execute(new JedisAction<Long>() {
+            @Override
+            public Long execute(Jedis jedis) throws Exception {
+                return jedis.hlen(key);
+            }
+        });
+    }
+    
+    public List<String> hashGetFieldValues(final String key, final String... fields) throws JedisException {
+        return this.execute(new JedisAction<List<String>>() {
+            @Override
+            public List<String> execute(Jedis jedis) throws Exception {
+                return jedis.hmget(key, fields);
+            }
+        });
+    }
+    
+    public void hashSetFieldsAndValues(final String key, final Map<String, String> map) throws JedisException {
+        this.execute(new JedisAction<Void>() {
+            @Override
+            public Void execute(Jedis jedis) throws Exception {
+                jedis.hmset(key, map);
+                return null;
+            }
+        });
+    }
+    
+    public long hashSetFieldValue(final String key, final String field, final String value) throws JedisException {
+        return this.execute(new JedisAction<Long>() {
+            @Override
+            public Long execute(Jedis jedis) throws Exception {
+                return jedis.hset(key, field, value);
+            }
+        });
+    }
+    
+    public long hashSetFieldValueIfNotExists(final String key, final String field, final String value) throws JedisException {
+        return this.execute(new JedisAction<Long>() {
+            @Override
+            public Long execute(Jedis jedis) throws Exception {
+                return jedis.hsetnx(key, field, value);
+            }
+        });
+    }
+    
+    public List<String> hashGetValues(final String key) throws JedisException {
+        return this.execute(new JedisAction<List<String>>() {
+            @Override
+            public List<String> execute(Jedis jedis) throws Exception {
+                return jedis.hvals(key);
+            }
+        });
+    }
+    // </editor-fold>
 }
