@@ -4,8 +4,7 @@ jdk:
     - openjdk7
     - openjdk6
 before_install:
-    # is redis running?
-    - sudo service redis-server status
+    - sudo service redis-server restart
     - mvn install:install-file -Dfile=lib/javarosa.jar -DgroupId=org.javarosa -DartifactId=javarosa-libraries -Dversion=latest -Dpackaging=jar -DgeneratePom=true
     - mvn install:install-file -Dfile=lib/regexp-me.jar -DgroupId=me.regexp -DartifactId=regexp -Dversion=latest -Dpackaging=jar -DgeneratePom=true
 # do we need any before/after handlers?
