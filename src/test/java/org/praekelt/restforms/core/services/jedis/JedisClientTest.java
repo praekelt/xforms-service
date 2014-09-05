@@ -26,24 +26,13 @@ public class JedisClientTest {
     
     @BeforeClass
     public static void setUpClass() {
-//        JedisFactory jedisFactory = new JedisFactory();
-//        jedisFactory.setHost("127.0.0.1");
-//        jedisFactory.setPoolSize(5);
-//        jedisFactory.setPort(6379);
-//        jedisFactory.setTimeout(500);
-//        jedisClient = jedisFactory.build();
-        
-        JedisPoolConfig poolConfig = new JedisPoolConfig();
-        poolConfig.setMaxTotal(5);
-        
-        JedisPool jedisPool = new JedisPool(
-            poolConfig,
-            "localhost",
-            6379,
-            100,
-            ""
-        );
-        jedisClient = new JedisClient(jedisPool);
+        JedisFactory jedisFactory = new JedisFactory();
+        jedisFactory.setHost("127.0.0.1");
+        jedisFactory.setPassword("abcd");
+        jedisFactory.setPoolSize(5);
+        jedisFactory.setPort(6379);
+        jedisFactory.setTimeout(500);
+        jedisClient = jedisFactory.build();
     }
     
     @AfterClass

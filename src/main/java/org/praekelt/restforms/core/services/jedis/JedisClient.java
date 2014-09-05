@@ -46,12 +46,7 @@ public final class JedisClient {
      * @return
      */
     private Jedis borrow() {
-        try {
-            return pool.getResource();
-        } catch (JedisConnectionException jce) {
-            System.err.println(jce.getMessage());
-        }
-        return null;
+        return pool.getResource();
     }
 
     /**
