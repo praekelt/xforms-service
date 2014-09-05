@@ -9,7 +9,7 @@ import redis.clients.jedis.JedisPoolConfig;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;
 
-public class JedisFactory {
+public final class JedisFactory {
     
     private static JedisPool jedisPool;
     private static JedisPoolConfig poolConfig;

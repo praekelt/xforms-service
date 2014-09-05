@@ -4,11 +4,9 @@ import com.codahale.metrics.health.HealthCheck;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 import org.praekelt.restforms.core.exceptions.JedisException;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**
  * 
@@ -24,7 +22,7 @@ public final class JedisClient {
         this.pool = pool;
     }
     
-    static class JedisHealthCheck extends HealthCheck {
+    static final class JedisHealthCheck extends HealthCheck {
         
         private final JedisClient jedisClient;
 
