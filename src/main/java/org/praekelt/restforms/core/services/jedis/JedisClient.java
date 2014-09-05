@@ -33,7 +33,7 @@ public final class JedisClient {
         protected Result check() throws Exception {
             Jedis j = this.jedisClient.borrow();
             boolean state = j.isConnected();
-            this.jedisClient.revert(j);
+            this.jedisClient.yield(j);
             return state ? Result.healthy("A connection to Redis was established.") : Result.unhealthy("A connection to Redis was not established.");
         }
     }
@@ -45,31 +45,18 @@ public final class JedisClient {
     /**
      * Borrow a resource from the pool
      * 
-     * unfortunately, we have to make this method
-     * public in order to implement a healthcheck
-     * for the redis instance...
-     * 
      * @return
      */
     private Jedis borrow() {
-        Jedis resource = null;
-        try {
-            resource = pool.getResource();
-        } catch (JedisConnectionException jdce) {
-        }
-        return resource;
+        return pool.getResource();
     }
 
     /**
      * Return a resource to the pool
      * 
-     * unfortunately, we have to make this method
-     * public in order to implement a healthcheck
-     * for the redis instance...
-     * 
      * @param jedis
      */
-    private void revert(Jedis jedis) {
+    private void yield(Jedis jedis) {
         pool.returnResource(jedis);
     }
     
@@ -93,7 +80,7 @@ public final class JedisClient {
                 throw new JedisException(ee);
             }
         } finally {
-            this.revert(jedis);
+            this.yield(jedis);
         }
     }
     
