@@ -22,7 +22,7 @@ public final class JedisClient {
         this.pool = pool;
     }
     
-    static final class JedisHealthCheck extends HealthCheck {
+    public static final class JedisHealthCheck extends HealthCheck {
         
         private final JedisClient jedisClient;
 
@@ -189,17 +189,22 @@ public final class JedisClient {
     /**
      * nuke all keysByPattern within the instance
      * 
+     * @return 
      * @throws JedisException 
      */
-    public void keyDeleteAll() throws JedisException {
+    public long keyDeleteAll() throws JedisException {
         
-        final String[] keys = (String[]) this.keyGetAll().toArray();
+        final Object[] keys = this.keyGetAll().toArray();
         
-        this.execute(new JedisAction<Void>() {
+        return this.execute(new JedisAction<Long>() {
             @Override
-            public Void execute(Jedis jedis) {
-                jedis.del(keys);
-                return null;
+            public Long execute(Jedis jedis) {
+                long l = 0L;
+                
+                for (Object key : keys) {
+                    l += jedis.del(key.toString());
+                }
+                return l;
             }
         });
     }
@@ -208,16 +213,14 @@ public final class JedisClient {
      * Remove a key from the database
      *
      * @param key
+     * @return 
      * @throws org.praekelt.restforms.core.exceptions.JedisException
      */
-    public void keyDelete(final String key) throws JedisException {
-        
-        this.execute(new JedisAction<Void>() {
-
+    public long keyDelete(final String key) throws JedisException {
+        return this.execute(new JedisAction<Long>() {
             @Override
-            public Void execute(Jedis jedis) throws Exception {
-                jedis.del(key);
-                return null;
+            public Long execute(Jedis jedis) throws Exception {
+                return jedis.del(key);
             }
         });
     }
@@ -226,16 +229,14 @@ public final class JedisClient {
      * 
      * @param key
      * @param value
+     * @return 
      * @throws JedisException 
      */
-    public void keySet(final String key, final String value) throws JedisException {
-        
-        this.execute(new JedisAction<Void>() {
-            
+    public boolean keySet(final String key, final String value) throws JedisException {
+        return this.execute(new JedisAction<Boolean>() {
             @Override
-            public Void execute(Jedis jedis) throws Exception {
-                jedis.set(key, value);
-                return null;
+            public Boolean execute(Jedis jedis) throws Exception {
+                return jedis.set(key, value).equals("OK");
             }
         });
     }
@@ -297,15 +298,6 @@ public final class JedisClient {
         });
     }
     
-    public double hashIncrementValueByFloat(final String key, final String field, final double value) throws JedisException {
-        return this.execute(new JedisAction<Double>() {
-            @Override
-            public Double execute(Jedis jedis) throws Exception {
-                return jedis.hincrByFloat(key, field, value);
-            }
-        });
-    }
-    
     public Set<String> hashGetFields(final String key) throws JedisException {
         return this.execute(new JedisAction<Set<String>>() {
             @Override
@@ -333,30 +325,30 @@ public final class JedisClient {
         });
     }
     
-    public void hashSetFieldsAndValues(final String key, final Map<String, String> map) throws JedisException {
-        this.execute(new JedisAction<Void>() {
+    public boolean hashSetFieldsAndValues(final String key, final Map<String, String> map) throws JedisException {
+        return this.execute(new JedisAction<Boolean>() {
             @Override
-            public Void execute(Jedis jedis) throws Exception {
-                jedis.hmset(key, map);
-                return null;
+            public Boolean execute(Jedis jedis) throws Exception {
+                return jedis.hmset(key, map).equals("OK");
             }
         });
     }
     
-    public long hashSetFieldValue(final String key, final String field, final String value) throws JedisException {
-        return this.execute(new JedisAction<Long>() {
+    public boolean hashSetFieldValue(final String key, final String field, final String value) throws JedisException {
+        return this.execute(new JedisAction<Boolean>() {
             @Override
-            public Long execute(Jedis jedis) throws Exception {
-                return jedis.hset(key, field, value);
+            public Boolean execute(Jedis jedis) throws Exception {
+                long set = jedis.hset(key, field, value);
+                return set == 1 || set == 0;
             }
         });
     }
     
-    public long hashSetFieldValueIfNotExists(final String key, final String field, final String value) throws JedisException {
-        return this.execute(new JedisAction<Long>() {
+    public boolean hashSetFieldValueIfNotExists(final String key, final String field, final String value) throws JedisException {
+        return this.execute(new JedisAction<Boolean>() {
             @Override
-            public Long execute(Jedis jedis) throws Exception {
-                return jedis.hsetnx(key, field, value);
+            public Boolean execute(Jedis jedis) throws Exception {
+                return jedis.hsetnx(key, field, value) == 1;
             }
         });
     }

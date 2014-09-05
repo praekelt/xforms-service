@@ -1,7 +1,5 @@
 package org.praekelt.restforms.core.services.jedis;
 
-import io.dropwizard.lifecycle.Managed;
-import io.dropwizard.setup.Environment;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import redis.clients.jedis.JedisPool;
@@ -13,7 +11,10 @@ public final class JedisFactory {
     
     private static JedisPool jedisPool;
     private static JedisPoolConfig poolConfig;
-    private static JedisClient jedisClient;
+    
+    public static JedisPool getJedisPool() {
+        return jedisPool;
+    }
         
     @NotEmpty
     private String host;
@@ -57,33 +58,45 @@ public final class JedisFactory {
     public void setPoolSize(int poolSize) {
     	this.poolSize = poolSize;
     }
+    
+    @JsonProperty
+    public String getHost() {
+        return host;
+    }
+
+    @JsonProperty
+    public int getPort() {
+        return port;
+    }
+
+    @JsonProperty
+    public String getPassword() {
+        return password;
+    }
+
+    @JsonProperty
+    public int getTimeout() {
+        return timeout;
+    }
+    
+    @JsonProperty
+    public int getPoolSize() {
+        return poolSize;
+    }
         
-    public JedisClient build(Environment env) {
+    public JedisClient build() {
         
         poolConfig = new JedisPoolConfig();
-        poolConfig.setMaxTotal(this.poolSize);
+        poolConfig.setMaxTotal(this.getPoolSize());
         
         jedisPool = new JedisPool(
             poolConfig,
-            this.host,
-            this.port,
-            this.timeout,
-            this.password
+            this.getHost(),
+            this.getPort(),
+            this.getTimeout(),
+            this.getPassword()
         );
         
-        jedisClient = new JedisClient(jedisPool);
-        
-        env.lifecycle().manage(new Managed() {
-            @Override
-            public void start() {}
-
-            @Override
-            public void stop() {
-            	jedisPool.destroy();
-            }
-        });
-        env.healthChecks().register("JedisClient", new JedisClient.JedisHealthCheck(jedisClient));
-        
-        return jedisClient;
+        return new JedisClient(getJedisPool());
     }
 }
