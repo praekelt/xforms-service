@@ -24,10 +24,9 @@ public class JedisClientTest {
     public JedisClientTest() {
         jedisFactory = new JedisFactory();
         jedisFactory.setHost("localhost");
-        jedisFactory.setPassword("abcd");
         jedisFactory.setPoolSize(5);
         jedisFactory.setPort(6379);
-        jedisFactory.setTimeout(100);
+        jedisFactory.setTimeout(500);
         jedisClient = jedisFactory.build();
     }
     
