@@ -17,9 +17,12 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
  * @author simon kelly
  */
 public final class JedisClient {
-
-    private static final Logger logger = Logger.getLogger(JedisFactory.class.getName());
+    
     private final JedisPool pool;
+    
+    JedisClient(JedisPool pool) {
+        this.pool = pool;
+    }
     
     static class JedisHealthCheck extends HealthCheck {
         
@@ -31,15 +34,11 @@ public final class JedisClient {
         
         @Override
         protected Result check() throws Exception {
-            Jedis j = this.jedisClient.borrow();
+            Jedis j = jedisClient.borrow();
             boolean state = j.isConnected();
-            this.jedisClient.yield(j);
+            jedisClient.yield(j);
             return state ? Result.healthy("A connection to Redis was established.") : Result.unhealthy("A connection to Redis was not established.");
         }
-    }
-
-    JedisClient(JedisPool pool) {
-        this.pool = pool;
     }
     
     /**

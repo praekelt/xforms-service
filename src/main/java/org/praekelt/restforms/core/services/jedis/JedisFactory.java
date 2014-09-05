@@ -85,5 +85,5 @@ public class JedisFactory {
         env.healthChecks().register("JedisClient", new JedisClient.JedisHealthCheck(jedisClient));
         
         return jedisClient;
-    }   
+    }
 }
