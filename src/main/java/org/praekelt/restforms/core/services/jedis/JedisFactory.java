@@ -31,7 +31,7 @@ public class JedisFactory {
     
     @Min(1)
     @Max(50)
-    private int poolsize = 5;
+    private int poolSize = 5;
     
     @JsonProperty
     public void setHost(String host) {
@@ -54,14 +54,14 @@ public class JedisFactory {
     }
     
     @JsonProperty
-    public void setPoolsize(int poolsize) {
-    	this.poolsize = poolsize;
+    public void setPoolSize(int poolSize) {
+    	this.poolSize = poolSize;
     }
         
     public JedisClient build(Environment env) {
         
         poolConfig = new JedisPoolConfig();
-        poolConfig.setMaxTotal(this.poolsize);
+        poolConfig.setMaxTotal(this.poolSize);
         
         jedisPool = new JedisPool(
             poolConfig,
