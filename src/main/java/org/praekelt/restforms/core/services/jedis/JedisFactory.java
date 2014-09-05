@@ -11,6 +11,7 @@ public final class JedisFactory {
     
     private static JedisPool jedisPool;
     private static JedisPoolConfig poolConfig;
+    private static JedisClient jedisClient;
     
     public static JedisPool getJedisPool() {
         return jedisPool;
@@ -96,7 +97,8 @@ public final class JedisFactory {
             this.getTimeout(),
             this.getPassword()
         );
+        jedisClient = new JedisClient(jedisPool);
         
-        return new JedisClient(getJedisPool());
+        return jedisClient;
     }
 }

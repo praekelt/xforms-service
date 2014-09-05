@@ -7,6 +7,7 @@ import java.util.Set;
 import org.praekelt.restforms.core.exceptions.JedisException;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**
  * 
@@ -45,7 +46,12 @@ public final class JedisClient {
      * @return
      */
     private Jedis borrow() {
-        return pool.getResource();
+        try {
+            return pool.getResource();
+        } catch (JedisConnectionException jce) {
+            System.err.println(jce.getMessage());
+        }
+        return null;
     }
 
     /**

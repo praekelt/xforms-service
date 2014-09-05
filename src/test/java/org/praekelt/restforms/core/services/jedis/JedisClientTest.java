@@ -11,6 +11,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.praekelt.restforms.core.exceptions.JedisException;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 /**
  *
@@ -19,25 +21,33 @@ import org.praekelt.restforms.core.exceptions.JedisException;
 public class JedisClientTest {
     
     private static JedisClient jedisClient;
-    private static JedisFactory jedisFactory;
     
-    public JedisClientTest() {
-        jedisFactory = new JedisFactory();
-        jedisFactory.setHost("localhost");
-        jedisFactory.setPoolSize(5);
-        jedisFactory.setPort(6379);
-        jedisFactory.setTimeout(500);
-        jedisClient = jedisFactory.build();
-    }
+    public JedisClientTest() {}
     
     @BeforeClass
     public static void setUpClass() {
+//        JedisFactory jedisFactory = new JedisFactory();
+//        jedisFactory.setHost("127.0.0.1");
+//        jedisFactory.setPoolSize(5);
+//        jedisFactory.setPort(6379);
+//        jedisFactory.setTimeout(500);
+//        jedisClient = jedisFactory.build();
+        
+        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        poolConfig.setMaxTotal(5);
+        
+        JedisPool jedisPool = new JedisPool(
+            poolConfig,
+            "localhost",
+            6379,
+            100,
+            ""
+        );
+        jedisClient = new JedisClient(jedisPool);
     }
     
     @AfterClass
-    public static void tearDownClass() {
-        JedisFactory.getJedisPool().destroy();
-    }
+    public static void tearDownClass() {}
     
     @Before
     public void setUp() {
