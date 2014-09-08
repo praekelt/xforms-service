@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import redis.clients.jedis.JedisPool;
 
 /**
  *
@@ -96,6 +97,19 @@ public class JedisFactoryTest {
         
         assertEquals(instance.getPoolSize(), poolSize);
     }
+    
+    /**
+     * Test of setExpires method, of class JedisFactory.
+     */
+    @Test
+    public void testSetExpires() {
+        System.out.println("setExpires");
+        int expires = 3600;
+        JedisFactory instance = new JedisFactory();
+        instance.setExpires(expires);
+        
+        assertEquals(instance.getExpires(), expires);
+    }
 
     /**
      * Test of build method, of class JedisFactory.
@@ -110,6 +124,7 @@ public class JedisFactoryTest {
         instance.setPort(6379);
         instance.setTimeout(100);
         instance.setPoolSize(5);
+        instance.setExpires(3600);
         
         JedisClient result = instance.build();
         
