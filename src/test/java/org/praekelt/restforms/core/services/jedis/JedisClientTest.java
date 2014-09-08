@@ -107,9 +107,8 @@ public class JedisClientTest {
     @Test
     public void testKeyTimeToLive() throws Exception {
         System.out.println("keyTimeToLive");
-        jedisClient.keyExpire("acomplexkeyfortesting", 60);
         assertTrue(jedisClient.keyTimeToLive("acomplexkeyfortesting") > 0L);
-        assertEquals(-1L, jedisClient.keyTimeToLive("xfgasdf"));
+        assertEquals(-2L, jedisClient.keyTimeToLive("xfgasdf"));
         assertEquals(-2L, jedisClient.keyTimeToLive(""));
         assertEquals(-2L, jedisClient.keyTimeToLive(null));
     }
