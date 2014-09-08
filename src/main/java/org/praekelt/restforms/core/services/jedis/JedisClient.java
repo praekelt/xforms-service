@@ -4,6 +4,7 @@ import com.codahale.metrics.health.HealthCheck;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.lang.StringUtils;
 import org.praekelt.restforms.core.exceptions.JedisException;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -36,8 +37,11 @@ public final class JedisClient {
         protected Result check() throws Exception {
             Jedis j = jedisClient.borrow();
             boolean state = j.isConnected();
+            long dbSize = j.dbSize();
+            String info = StringUtils.join(StringUtils.split(j.info(), "\r\n"), " - ");
             jedisClient.yield(j);
-            return state ? Result.healthy("A connection to Redis was established.") : Result.unhealthy("A connection to Redis was not established.");
+            
+            return state ? Result.healthy("A connection to Redis was established. Connection information: " + info + " - dbsize:" + dbSize) : Result.unhealthy("A connection to Redis was not established.");
         }
     }
     
