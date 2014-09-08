@@ -26,9 +26,8 @@ public class RestformsService extends Application<RestformsConfiguration> {
         
         env.lifecycle().manage(new JedisPoolManager(JedisFactory.getJedisPool()));
         env.healthChecks().register("JedisClient", new JedisClient.JedisHealthCheck(jedisClient));
-        
-        (env.jersey()).register(new FormsResource(jedisClient));
-        (env.jersey()).register(new AnswersResource(jedisClient));
+        env.jersey().register(new FormsResource(jedisClient));
+        env.jersey().register(new AnswersResource(jedisClient));
     }
     
 }

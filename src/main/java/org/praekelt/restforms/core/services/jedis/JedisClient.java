@@ -7,7 +7,6 @@ import java.util.Set;
 import org.praekelt.restforms.core.exceptions.JedisException;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**
  * 
@@ -17,10 +16,12 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
  */
 public final class JedisClient {
     
+    private final int expires;
     private final JedisPool pool;
     
-    JedisClient(JedisPool pool) {
+    JedisClient(JedisPool pool, int expires) {
         this.pool = pool;
+        this.expires = expires;
     }
     
     public static final class JedisHealthCheck extends HealthCheck {
@@ -84,30 +85,33 @@ public final class JedisClient {
     
     // <editor-fold defaultstate="collapsed" desc="redis key methods">
     public boolean keyPersist(final String key) throws JedisException {
-        return this.execute(new JedisAction<Boolean>() {
+        
+        return (key != null && !"".equals(key)) ? this.execute(new JedisAction<Boolean>() {
             @Override
             public Boolean execute(Jedis jedis) throws Exception {
                 return jedis.persist(key) == 1;
             }
-        });
+        }) : false;
     }
     
     public boolean keyExpire(final String key, final int seconds) throws JedisException {
-        return this.execute(new JedisAction<Boolean>() {
+        boolean safe = (key != null && !"".equals(key)) && seconds > 0;
+        return safe ? this.execute(new JedisAction<Boolean>() {
             @Override
             public Boolean execute(Jedis jedis) throws Exception {
                 return jedis.expire(key, seconds) == 1;
             }
-        });
+        }) : false;
     }
     
     public boolean keyRename(final String oldKey, final String newKey) throws JedisException {
-        return this.execute(new JedisAction<Boolean>() {
+        boolean safe = oldKey != null && !"".equals(oldKey) && (newKey != null && !"".equals(newKey));
+        return safe ? this.execute(new JedisAction<Boolean>() {
             @Override
             public Boolean execute(Jedis jedis) throws Exception {
                 return jedis.rename(oldKey, newKey).equals("OK");
             }
-        });
+        }) : false;
     }
     
     /**
@@ -127,21 +131,21 @@ public final class JedisClient {
      * @throws JedisException 
      */
     public long keyTimeToLive(final String key) throws JedisException {
-        return this.execute(new JedisAction<Long>() {
+        return (key != null && !"".equals(key)) ? this.execute(new JedisAction<Long>() {
             @Override
             public Long execute(Jedis jedis) throws Exception {
                 return jedis.ttl(key);
             }
-        });
+        }) : -2L;
     }
     
     public String keyType(final String key) throws JedisException {
-        return this.execute(new JedisAction<String>() {
+        return (key != null && !"".equals(key)) ? this.execute(new JedisAction<String>() {
             @Override
             public String execute(Jedis jedis) throws Exception {
                 return jedis.type(key);
             }
-        });
+        }) : null;
     }
     
     /**
@@ -152,13 +156,12 @@ public final class JedisClient {
      * @throws org.praekelt.restforms.core.exceptions.JedisException
      */
     public String keyGet(final String key) throws JedisException {
-        return this.execute(new JedisAction<String>() {
-            
+        return (key != null && !"".equals(key)) ? this.execute(new JedisAction<String>() {
             @Override
             public String execute(Jedis jedis) throws Exception {
                 return jedis.get(key);
             }
-        });
+        }) : null;
     }
     
     /**
@@ -218,12 +221,12 @@ public final class JedisClient {
      * @throws org.praekelt.restforms.core.exceptions.JedisException
      */
     public long keyDelete(final String key) throws JedisException {
-        return this.execute(new JedisAction<Long>() {
+        return (key != null && !"".equals(key)) ? this.execute(new JedisAction<Long>() {
             @Override
             public Long execute(Jedis jedis) throws Exception {
                 return jedis.del(key);
             }
-        });
+        }) : 0L;
     }
 
     /**
@@ -234,133 +237,148 @@ public final class JedisClient {
      * @throws JedisException 
      */
     public boolean keySet(final String key, final String value) throws JedisException {
-        return this.execute(new JedisAction<Boolean>() {
+        boolean safe = (key != null && !"".equals(key) && (value != null && !"".equals(value)));
+        return safe ? this.execute(new JedisAction<Boolean>() {
             @Override
             public Boolean execute(Jedis jedis) throws Exception {
-                return jedis.set(key, value).equals("OK");
-            }
-        });
+                boolean created = jedis.set(key, value).equals("OK");
+                if (created) {
+                    jedis.expire(key, expires);
+                    return created;
+                }
+                return !created;
+            }   
+        }) : false;
     }
     
     public boolean keyExists(final String key) throws JedisException {
-        
-        return this.execute(new JedisAction<Boolean>() {
+        return (key != null && !"".equals(key)) ? this.execute(new JedisAction<Boolean>() {
             @Override
             public Boolean execute(Jedis jedis) throws Exception {
                 return jedis.exists(key);
             }
-        });
+        }) : false;
     }
     // </editor-fold>
     
     // <editor-fold defaultstate="collapsed" desc="redis hash methods">
     public long hashDeleteFields(final String key, final String... fields) throws JedisException {
-        return this.execute(new JedisAction<Long>() {
+        boolean safe = (key != null && !"".equals(key) && fields.length > 0);
+        return safe ? this.execute(new JedisAction<Long>() {
             @Override
             public Long execute(Jedis jedis) throws Exception {
                 return jedis.hdel(key, fields);
             }
-        });
+        }) : 0L;
     }
     
     public boolean hashFieldExists(final String key, final String field) throws JedisException {
-        return this.execute(new JedisAction<Boolean>() {
+        boolean safe = (key != null && !"".equals(key) && (field != null && !"".equals(field)));
+        return safe ? this.execute(new JedisAction<Boolean>() {
             @Override
             public Boolean execute(Jedis jedis) throws Exception {
                 return jedis.hexists(key, field);
             }
-        });
+        }) : false;
     }
     
     public String hashGetFieldValue(final String key, final String field) throws JedisException {
-        return this.execute(new JedisAction<String>() {
+        boolean safe = (key != null && !"".equals(key) && (field != null && !"".equals(field)));
+        return safe ? this.execute(new JedisAction<String>() {
             @Override
             public String execute(Jedis jedis) throws Exception {
                 return jedis.hget(key, field);
             }
-        });
+        }) : null;
     }
     
     public Map<String, String> hashGetFieldsAndValues(final String key) throws JedisException {
-        return this.execute(new JedisAction<Map<String, String>>() {
+        return (key != null && !"".equals(key)) ? this.execute(new JedisAction<Map<String, String>>() {
             @Override
             public Map<String, String> execute(Jedis jedis) throws Exception {
                 return jedis.hgetAll(key);
             }
-        });
-    }
-    
-    public long hashIncrementValueBy(final String key, final String field, final long value) throws JedisException {
-        return this.execute(new JedisAction<Long>() {
-            @Override
-            public Long execute(Jedis jedis) throws Exception {
-                return jedis.hincrBy(key, field, value);
-            }
-        });
+        }) : null;
     }
     
     public Set<String> hashGetFields(final String key) throws JedisException {
-        return this.execute(new JedisAction<Set<String>>() {
+        return (key != null && !"".equals(key)) ? this.execute(new JedisAction<Set<String>>() {
             @Override
             public Set<String> execute(Jedis jedis) throws Exception {
                 return jedis.hkeys(key);
             }
-        });
+        }) : null;
     }
     
     public long hashLength(final String key) throws JedisException {
-        return this.execute(new JedisAction<Long>() {
+        return (key != null && !"".equals(key)) ? this.execute(new JedisAction<Long>() {
             @Override
             public Long execute(Jedis jedis) throws Exception {
                 return jedis.hlen(key);
             }
-        });
+        }) : 0L;
     }
     
     public List<String> hashGetFieldValues(final String key, final String... fields) throws JedisException {
-        return this.execute(new JedisAction<List<String>>() {
+        boolean safe = (key != null && !"".equals(key)) && fields.length > 0; 
+        return safe ? this.execute(new JedisAction<List<String>>() {
             @Override
             public List<String> execute(Jedis jedis) throws Exception {
                 return jedis.hmget(key, fields);
             }
-        });
+        }) : null;
     }
     
     public boolean hashSetFieldsAndValues(final String key, final Map<String, String> map) throws JedisException {
-        return this.execute(new JedisAction<Boolean>() {
+        boolean safe = (key != null && !"".equals(key)) && map.size() > 0;
+        return safe ? this.execute(new JedisAction<Boolean>() {
             @Override
             public Boolean execute(Jedis jedis) throws Exception {
-                return jedis.hmset(key, map).equals("OK");
+                boolean created = jedis.hmset(key, map).equals("OK");
+                
+                if (created) {
+                    jedis.expire(key, expires);
+                    return created;
+                }
+                return !created;
             }
-        });
+        }) : false;
     }
     
     public boolean hashSetFieldValue(final String key, final String field, final String value) throws JedisException {
-        return this.execute(new JedisAction<Boolean>() {
+        boolean safe = (key != null && !"".equals(key)) 
+            && (field != null && !"".equals(field)) 
+            && (value != null && !"".equals(value));
+        
+        return safe ? this.execute(new JedisAction<Boolean>() {
             @Override
             public Boolean execute(Jedis jedis) throws Exception {
-                long set = jedis.hset(key, field, value);
-                return set == 1 || set == 0;
+                long hset = jedis.hset(key, field, value);
+                return hset == 1L || hset == 0L;
             }
-        });
+        }) : false;
     }
     
     public boolean hashSetFieldValueIfNotExists(final String key, final String field, final String value) throws JedisException {
-        return this.execute(new JedisAction<Boolean>() {
+        boolean safe = (key != null && !"".equals(key)) 
+            && (field != null && !"".equals(field)) 
+            && (value != null && !"".equals(value));
+        
+        return safe ? this.execute(new JedisAction<Boolean>() {
             @Override
             public Boolean execute(Jedis jedis) throws Exception {
-                return jedis.hsetnx(key, field, value) == 1;
+                return jedis.hsetnx(key, field, value) == 1L;
             }
-        });
+        }) : false;
     }
     
     public List<String> hashGetValues(final String key) throws JedisException {
-        return this.execute(new JedisAction<List<String>>() {
+        return (key != null && !"".equals(key)) ? this.execute(new JedisAction<List<String>>() {
             @Override
             public List<String> execute(Jedis jedis) throws Exception {
                 return jedis.hvals(key);
             }
-        });
+        }) : null;
     }
     // </editor-fold>
 }

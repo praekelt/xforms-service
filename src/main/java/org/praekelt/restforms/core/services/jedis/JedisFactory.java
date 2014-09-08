@@ -27,6 +27,8 @@ public final class JedisFactory {
     @NotEmpty
     private String password;
     
+    private int expires;
+    
     @Min(100)
     @Max(5000)
     private int timeout = 100;
@@ -48,6 +50,11 @@ public final class JedisFactory {
     @JsonProperty
     public void setPassword(String password) {
         this.password = password;
+    }
+    
+    @JsonProperty
+    public void setExpires(int expires) {
+        this.expires = expires;
     }
     
     @JsonProperty
@@ -74,6 +81,11 @@ public final class JedisFactory {
     public String getPassword() {
         return password;
     }
+    
+    @JsonProperty
+    public int getExpires() {
+        return expires;
+    }
 
     @JsonProperty
     public int getTimeout() {
@@ -97,7 +109,7 @@ public final class JedisFactory {
             this.getTimeout(),
             this.getPassword()
         );
-        jedisClient = new JedisClient(jedisPool);
+        jedisClient = new JedisClient(jedisPool, expires);
         
         return jedisClient;
     }

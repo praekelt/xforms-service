@@ -31,6 +31,7 @@ public class JedisClientTest {
         jedisFactory.setPoolSize(5);
         jedisFactory.setPort(6379);
         jedisFactory.setTimeout(500);
+        jedisFactory.setExpires(3600);
         jedisClient = jedisFactory.build();
     }
     
@@ -62,10 +63,10 @@ public class JedisClientTest {
     @Test
     public void testKeyPersist() throws Exception {
         System.out.println("keyPersist");
-        String key = "acomplexkeyfortesting";
-        boolean expResult = false;
-        boolean result = jedisClient.keyPersist(key);
-        assertEquals(expResult, result);
+        assertFalse(jedisClient.keyPersist(""));
+        assertFalse(jedisClient.keyPersist(null));
+        assertFalse(jedisClient.keyPersist("abc"));
+        assertTrue(jedisClient.keyPersist("acomplexkeyfortesting"));
     }
 
     /**
@@ -75,11 +76,10 @@ public class JedisClientTest {
     @Test
     public void testKeyExpire() throws Exception {
         System.out.println("keyExpire");
-        String key = "";
-        int seconds = 0;
-        boolean expResult = false;
-        boolean result = jedisClient.keyExpire(key, seconds);
-        assertEquals(expResult, result);
+        assertEquals(false, jedisClient.keyExpire("", 0));
+        assertEquals(false, jedisClient.keyExpire(null, 0));
+        assertEquals(true, jedisClient.keyExpire("acomplexkeyfortesting", 60));
+        assertEquals(false, jedisClient.keyExpire("acomplexkeyfortesting", 0));
     }
 
     /**
@@ -89,11 +89,15 @@ public class JedisClientTest {
     @Test
     public void testKeyRename() throws Exception {
         System.out.println("keyRename");
-        String oldKey = "acomplexkeyfortesting";
-        String newKey = "anevenmorecomplexkeyfortesting";
-        boolean expResult = true;
-        boolean result = jedisClient.keyRename(oldKey, newKey);
-        assertEquals(expResult, result);
+        assertEquals(false, jedisClient.keyRename("", ""));
+        assertEquals(false, jedisClient.keyRename(null, null));
+        assertEquals(false, jedisClient.keyRename("", null));
+        assertEquals(false, jedisClient.keyRename(null, ""));
+        assertEquals(false, jedisClient.keyRename("acomplexkeyfortesting", ""));
+        assertEquals(false, jedisClient.keyRename("", "anevenmorecomplexkeyfortesting"));
+        assertEquals(false, jedisClient.keyRename(null, "anevenmorecomplexkeyfortesting"));
+        assertEquals(false, jedisClient.keyRename("acomplexkeyfortesting", null));
+        assertEquals(true, jedisClient.keyRename("acomplexkeyfortesting", "anevenmorecomplexkeyfortesting"));
     }
 
     /**
@@ -103,10 +107,11 @@ public class JedisClientTest {
     @Test
     public void testKeyTimeToLive() throws Exception {
         System.out.println("keyTimeToLive");
-        String key = "acomplexkeyfortesting";
-        long expResult = -1L;
-        long result = jedisClient.keyTimeToLive(key);
-        assertEquals(expResult, result);
+        jedisClient.keyExpire("acomplexkeyfortesting", 60);
+        assertTrue(jedisClient.keyTimeToLive("acomplexkeyfortesting") > 0L);
+        assertEquals(-1L, jedisClient.keyTimeToLive("xfgasdf"));
+        assertEquals(-2L, jedisClient.keyTimeToLive(""));
+        assertEquals(-2L, jedisClient.keyTimeToLive(null));
     }
 
     /**
@@ -116,10 +121,9 @@ public class JedisClientTest {
     @Test
     public void testKeyType() throws Exception {
         System.out.println("keyType");
-        String key = "acomplexkeyfortesting";
-        String expResult = "string";
-        String result = jedisClient.keyType(key);
-        assertEquals(expResult, result);
+        assertEquals("string", jedisClient.keyType("acomplexkeyfortesting"));
+        assertNull(jedisClient.keyType(null));
+        assertNull(jedisClient.keyType(""));
     }
 
     /**
@@ -129,10 +133,9 @@ public class JedisClientTest {
     @Test
     public void testKeyGet() throws Exception {
         System.out.println("keyGet");
-        String key = "acomplexkeyfortesting";
-        String expResult = "beep boop beep";
-        String result = jedisClient.keyGet(key);
-        assertEquals(expResult, result);
+        assertEquals("beep boop beep", jedisClient.keyGet("acomplexkeyfortesting"));
+        assertNull(jedisClient.keyGet(""));
+        assertNull(jedisClient.keyGet(null));
     }
 
     /**
@@ -165,21 +168,9 @@ public class JedisClientTest {
     @Test
     public void testKeyDelete() throws Exception {
         System.out.println("keyDelete");
-        String key = "";
-        long deleted = jedisClient.keyDelete(key);
-        assertEquals(deleted, 0L);
-    }
-    
-    /**
-     * Test of keyDeleteAll method, of class JedisClient.
-     * @throws java.lang.Exception
-     */
-    @Test
-    public void testKeyDeleteAll() throws Exception {
-        System.out.println("keyDeleteAll");
-        Set<String> keys = jedisClient.keyGetAll();
-        long deleted = jedisClient.keyDeleteAll();
-        assertEquals(keys.size(), deleted);
+        assertEquals(0L, jedisClient.keyDelete(""));
+        assertEquals(0L, jedisClient.keyDelete(null));
+        assertEquals(1L, jedisClient.keyDelete("acomplexkeyfortesting"));
     }
 
     /**
@@ -189,10 +180,15 @@ public class JedisClientTest {
     @Test
     public void testKeySet() throws Exception {
         System.out.println("keySet");
-        String key = "anothertestingkey";
-        String value = "somerandomvalue";
-        boolean result = jedisClient.keySet(key, value);
-        assertEquals(result, true);
+        assertFalse(jedisClient.keySet("", ""));
+        assertFalse(jedisClient.keySet(null, null));
+        assertFalse(jedisClient.keySet("", null));
+        assertFalse(jedisClient.keySet(null, ""));
+        assertFalse(jedisClient.keySet("abc", ""));
+        assertFalse(jedisClient.keySet("", "abc"));
+        assertFalse(jedisClient.keySet(null, "abc"));
+        assertFalse(jedisClient.keySet("abc", null));
+        assertTrue(jedisClient.keySet("anothertestingkey", "somerandomvalue"));
     }
 
     /**
@@ -202,137 +198,11 @@ public class JedisClientTest {
     @Test
     public void testKeyExists() throws Exception {
         System.out.println("keyExists");
-        String key = "";
-        boolean expResult = false;
-        boolean result = jedisClient.keyExists(key);
-        assertEquals(expResult, result);
+        assertFalse(jedisClient.keyExists(""));
+        assertFalse(jedisClient.keyExists(null));
+        assertTrue(jedisClient.keyExists("acomplexkeyfortesting"));
     }
-
-    /**
-     * Test of hashDeleteFields method, of class JedisClient.
-     * @throws java.lang.Exception
-     */
-    @Test
-    public void testHashDeleteFields() throws Exception {
-        System.out.println("hashDeleteFields");
-        jedisClient.hashSetFieldValue("atestingkey", "atestingfield", "atestingvalue");
-        String key = "atestingkey";
-        String[] fields = {"atestingfield"};
-        long expResult = 1L;
-        long result = jedisClient.hashDeleteFields(key, fields);
-        assertEquals(expResult, result);
-    }
-
-    /**
-     * Test of hashFieldExists method, of class JedisClient.
-     * @throws java.lang.Exception
-     */
-    @Test
-    public void testHashFieldExists() throws Exception {
-        System.out.println("hashFieldExists");
-        String key = "";
-        String field = "";
-        boolean expResult = false;
-        boolean result = jedisClient.hashFieldExists(key, field);
-        assertEquals(expResult, result);
-    }
-
-    /**
-     * Test of hashGetFieldValue method, of class JedisClient.
-     * @throws java.lang.Exception
-     */
-    @Test
-    public void testHashGetFieldValue() throws Exception {
-        System.out.println("hashGetFieldValue");
-        jedisClient.hashSetFieldValue("atestingkey", "atestingfield", "atestingvalue");
-        String key = "atestingkey";
-        String field = "atestingfield";
-        String expResult = "atestingvalue";
-        String result = jedisClient.hashGetFieldValue(key, field);
-        assertEquals(expResult, result);
-    }
-
-    /**
-     * Test of hashGetFieldsAndValues method, of class JedisClient.
-     * @throws java.lang.Exception
-     */
-    @Test
-    public void testHashGetFieldsAndValues() throws Exception {
-        System.out.println("hashGetFieldsAndValues");
-        jedisClient.hashSetFieldValue("mykey", "myfield", "myvalue");
-        String key = "mykey";
-        Map<String, String> result = jedisClient.hashGetFieldsAndValues(key);
-        assertEquals(result.size(), 1);
-    }
-
-    /**
-     * Test of hashIncrementValueBy method, of class JedisClient.
-     * @throws java.lang.Exception
-     */
-    @Test
-    public void testHashIncrementValueBy() throws Exception {
-        System.out.println("hashIncrementValueBy");
-        String key = "";
-        String field = "";
-        long value = 0L;
-        long result = jedisClient.hashIncrementValueBy(key, field, value);
-        assertEquals(result, value);
-    }
-
-    /**
-     * Test of hashGetFields method, of class JedisClient.
-     * @throws java.lang.Exception
-     */
-    @Test
-    public void testHashGetFields() throws Exception {
-        System.out.println("hashGetFields");
-        String key = "";
-        Set<String> result = jedisClient.hashGetFields(key);
-        assertEquals(result.size(), 0);
-    }
-
-    /**
-     * Test of hashLength method, of class JedisClient.
-     * @throws java.lang.Exception
-     */
-    @Test
-    public void testHashLength() throws Exception {
-        System.out.println("hashLength");
-        String key = "";
-        long expResult = 0L;
-        long result = jedisClient.hashLength(key);
-        assertEquals(expResult, result);
-    }
-
-    /**
-     * Test of hashGetFieldValues method, of class JedisClient.
-     * @throws java.lang.Exception
-     */
-    @Test
-    public void testHashGetFieldValues() throws Exception {
-        System.out.println("hashGetFieldValues");
-        jedisClient.hashSetFieldValue("atestingkey", "atestingfield", "atestingvalue");
-        String key = "atestingkey";
-        String[] fields = {"atestingfield"};
-        List<String> result = jedisClient.hashGetFieldValues(key, fields);
-        assertEquals(result.size(), 1);
-    }
-
-    /**
-     * Test of hashSetFieldsAndValues method, of class JedisClient.
-     * @throws java.lang.Exception
-     */
-    @Test
-    public void testHashSetFieldsAndValues() throws Exception {
-        System.out.println("hashSetFieldsAndValues");
-        jedisClient.hashSetFieldValue("atestingkey", "atestingfield", "atestingvalue");
-        String key = "atestingkey";
-        Map<String, String> map = new HashMap<String, String>();
-        map.put("anothertestingfield", "anothertestingvalue");
-        boolean created = jedisClient.hashSetFieldsAndValues(key, map);
-        assertEquals(created, true);
-    }
-
+    
     /**
      * Test of hashSetFieldValue method, of class JedisClient.
      * @throws java.lang.Exception
@@ -346,6 +216,149 @@ public class JedisClientTest {
         boolean result = jedisClient.hashSetFieldValue(key, field, value);
         assertEquals(true, result);
     }
+    
+    /**
+     * Test of hashDeleteFields method, of class JedisClient.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testHashDeleteFields() throws Exception {
+        System.out.println("hashDeleteFields");
+        String[] fields = {"atestingfield"};
+        String[] empty = {};
+        jedisClient.hashSetFieldValue("atestingkey", "atestingfield", "atestingvalue");
+        
+        assertEquals(0L, jedisClient.hashDeleteFields(null, empty));
+        assertEquals(0L, jedisClient.hashDeleteFields("", empty));
+        assertEquals(0L, jedisClient.hashDeleteFields("abc", empty));
+        assertEquals(0L, jedisClient.hashDeleteFields("", fields));
+        assertEquals(0L, jedisClient.hashDeleteFields(null, fields));
+        assertEquals(0L, jedisClient.hashDeleteFields("abc", fields));
+        assertEquals(1L, jedisClient.hashDeleteFields("atestingkey", fields));
+    }
+
+    /**
+     * Test of hashFieldExists method, of class JedisClient.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testHashFieldExists() throws Exception {
+        System.out.println("hashFieldExists");
+        jedisClient.hashSetFieldValue("atestingkey", "atestingfield", "atestingvalue");
+        assertFalse(jedisClient.hashFieldExists("", ""));
+        assertFalse(jedisClient.hashFieldExists(null, null));
+        assertFalse(jedisClient.hashFieldExists("", "abc"));
+        assertFalse(jedisClient.hashFieldExists("abc", ""));
+        assertFalse(jedisClient.hashFieldExists(null, "abc"));
+        assertFalse(jedisClient.hashFieldExists("abc", null));
+        assertFalse(jedisClient.hashFieldExists("def", "ghi"));
+        assertTrue(jedisClient.hashFieldExists("atestingkey", "atestingfield"));
+    }
+
+    /**
+     * Test of hashGetFieldValue method, of class JedisClient.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testHashGetFieldValue() throws Exception {
+        System.out.println("hashGetFieldValue");
+        jedisClient.hashSetFieldValue("atestingkey", "atestingfield", "atestingvalue");
+        
+        assertNull(jedisClient.hashGetFieldValue("", ""));
+        assertNull(jedisClient.hashGetFieldValue(null, null));
+        assertNull(jedisClient.hashGetFieldValue("abc", "def"));
+        
+        assertNull(jedisClient.hashGetFieldValue("", null));
+        assertNull(jedisClient.hashGetFieldValue("", "abc"));
+        
+        assertNull(jedisClient.hashGetFieldValue(null, ""));
+        assertNull(jedisClient.hashGetFieldValue(null, "abc"));
+        
+        assertNull(jedisClient.hashGetFieldValue("abc", ""));
+        assertNull(jedisClient.hashGetFieldValue("abc", null));
+        
+        assertEquals("atestingvalue", jedisClient.hashGetFieldValue("atestingkey", "atestingfield"));
+    }
+
+    /**
+     * Test of hashGetFieldsAndValues method, of class JedisClient.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testHashGetFieldsAndValues() throws Exception {
+        System.out.println("hashGetFieldsAndValues");
+        jedisClient.hashSetFieldValue("mykey", "myfield", "myvalue");
+        assertNull(jedisClient.hashGetFieldsAndValues(null));
+        assertNull(jedisClient.hashGetFieldsAndValues(""));
+        assertEquals(0, jedisClient.hashGetFieldsAndValues("abc").size());
+        assertEquals(1, jedisClient.hashGetFieldsAndValues("mykey").size());
+    }
+
+    /**
+     * Test of hashGetFields method, of class JedisClient.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testHashGetFields() throws Exception {
+        System.out.println("hashGetFields");
+        jedisClient.hashSetFieldValue("mykey", "myfield", "myvalue");
+        assertNull(jedisClient.hashGetFields(""));
+        assertNull(jedisClient.hashGetFields(null));
+        assertEquals(0, jedisClient.hashGetFields("abc").size());
+        assertEquals(1, jedisClient.hashGetFields("mykey").size());
+    }
+
+    /**
+     * Test of hashLength method, of class JedisClient.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testHashLength() throws Exception {
+        System.out.println("hashLength");
+        jedisClient.hashSetFieldValue("mykey", "myfield", "myvalue");
+        assertEquals(0L, jedisClient.hashLength(""));
+        assertEquals(0L, jedisClient.hashLength(null));
+        assertEquals(0L, jedisClient.hashLength("abc"));
+        assertEquals(1L, jedisClient.hashLength("mykey"));
+    }
+
+    /**
+     * Test of hashGetFieldValues method, of class JedisClient.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testHashGetFieldValues() throws Exception {
+        System.out.println("hashGetFieldValues");
+        jedisClient.hashSetFieldValue("atestingkey", "atestingfield", "atestingvalue");
+        String[] empty = {};
+        String[] fields = {"atestingfield"};
+        assertNull(jedisClient.hashGetFieldValues("", empty));
+        assertNull(jedisClient.hashGetFieldValues(null, empty));
+        assertNull(jedisClient.hashGetFieldValues("", fields));
+        assertNull(jedisClient.hashGetFieldValues(null, fields));
+        assertNull(jedisClient.hashGetFieldValues("abc", empty));
+        assertEquals(1, jedisClient.hashGetFieldValues("abc", fields).size());
+        assertEquals(1, jedisClient.hashGetFieldValues("atestingkey", fields).size());
+    }
+
+    /**
+     * Test of hashSetFieldsAndValues method, of class JedisClient.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testHashSetFieldsAndValues() throws Exception {
+        System.out.println("hashSetFieldsAndValues");
+        jedisClient.hashSetFieldValue("atestingkey", "atestingfield", "atestingvalue");
+        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> empty = new HashMap<String, String>();
+        map.put("anothertestingfield", "anothertestingvalue");
+        assertFalse(jedisClient.hashSetFieldsAndValues(null, map));
+        assertFalse(jedisClient.hashSetFieldsAndValues("", map));
+        assertFalse(jedisClient.hashSetFieldsAndValues(null, empty));
+        assertFalse(jedisClient.hashSetFieldsAndValues("", empty));
+        assertFalse(jedisClient.hashSetFieldsAndValues("abc", empty));
+        assertTrue(jedisClient.hashSetFieldsAndValues("atestingkey", map));
+    }
 
     /**
      * Test of hashSetFieldValueIfNotExists method, of class JedisClient.
@@ -354,11 +367,9 @@ public class JedisClientTest {
     @Test
     public void testHashSetFieldValueIfNotExists() throws Exception {
         System.out.println("hashSetFieldValueIfNotExists");
-        String key = "atestingkey";
-        String field = "atestingfield";
-        String value = "atestingvalue";
-        boolean result = jedisClient.hashSetFieldValueIfNotExists(key, field, value);
-        assertEquals(true, result);
+        jedisClient.hashSetFieldValue("mykey", "myfield", "myvalue");
+        assertFalse(jedisClient.hashSetFieldValueIfNotExists("mykey", "myfield", "myother"));
+        assertTrue(jedisClient.hashSetFieldValueIfNotExists("mykey", "myotherfield", "myothervalue"));
     }
 
     /**
@@ -368,8 +379,10 @@ public class JedisClientTest {
     @Test
     public void testHashGetValues() throws Exception {
         System.out.println("hashGetValues");
-        String key = "";
-        List<String> result = jedisClient.hashGetValues(key);
-        assertEquals(0, result.size());
+        jedisClient.hashSetFieldValue("mykey", "myfield", "myvalue");
+        assertNull(jedisClient.hashGetValues(""));
+        assertNull(jedisClient.hashGetValues(null));
+        assertEquals(1, jedisClient.hashGetValues("mykey").size());
+        assertEquals(0, jedisClient.hashGetValues("abc").size());
     }
 }
