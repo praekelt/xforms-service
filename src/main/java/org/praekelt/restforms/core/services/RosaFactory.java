@@ -136,34 +136,31 @@ public final class RosaFactory implements Serializable {
     
     public boolean answerQuestion(Object answer, int question) {
         
-        if (completed < total) {
-            
-            if (question == -1) {
-                controller.jumpToIndex(questionIndicies[completed]);
-            } else if (question >= 0 && question <= total) {
-                controller.jumpToIndex(questionIndicies[question]);
-            } else {
-                return false;
-            }
-            
-            if (model.getEvent() == FormEntryController.EVENT_QUESTION) {
-                boolean b = question != completed && question >= 0;
-                IAnswerData a = b ? castAnswer(answer, question) : castAnswer(answer);
+        if (question == -1 && completed < total) {
+            controller.jumpToIndex(questionIndicies[completed]);
+        } else if (question >= 0 && question <= total) {
+            controller.jumpToIndex(questionIndicies[question]);
+        } else {
+            return false;
+        }
 
-                if (a != null) {
+        if (model.getEvent() == FormEntryController.EVENT_QUESTION) {
+            boolean b = question != completed && question >= 0;
+            IAnswerData a = b ? castAnswer(answer, question) : castAnswer(answer);
 
-                    switch (controller.answerQuestion(a)) {
-                        case FormEntryController.ANSWER_OK:
-                            completed++;
-                            return true;
-                        case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
-                            return false;
-                        case FormEntryController.ANSWER_REQUIRED_BUT_EMPTY:
-                            return false;
-                        default:
-                            System.out.println("DEFAULT");
-                            return false;
-                    }
+            if (a != null) {
+
+                switch (controller.answerQuestion(a)) {
+                    case FormEntryController.ANSWER_OK:
+                        completed++;
+                        return true;
+                    case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
+                        return false;
+                    case FormEntryController.ANSWER_REQUIRED_BUT_EMPTY:
+                        return false;
+                    default:
+                        System.out.println("DEFAULT");
+                        return false;
                 }
             }
         }
