@@ -123,11 +123,11 @@ public class RosaFactoryTest {
         System.out.println("answerQuestion");
         RosaFactory instance = new RosaFactory();
         assertTrue(instance.setUp(this.form, true));
-        assertTrue(instance.answerQuestion("asdfas", -1));
-        assertTrue(instance.answerQuestion("asdfas", -1));
-        assertTrue(instance.answerQuestion("asdfas", -1));
-        assertTrue(instance.answerQuestion(1234, 3));
+        assertTrue(instance.answerQuestion("asdfas", 0));
         assertFalse(instance.answerQuestion("asdfas", 23445));
+        assertTrue(instance.answerQuestion("asdfas"));
+        assertTrue(instance.answerQuestion("asdfas"));
+        assertTrue(instance.answerQuestion(1234));
     }
     
     /**
@@ -155,7 +155,7 @@ public class RosaFactoryTest {
         RosaFactory instance, rebuilt;
         instance = new RosaFactory();
         instance.setUp(this.form, true);
-        instance.answerQuestion("blah", -1);
+        instance.answerQuestion("blah");
         
         byte[] stored = RosaFactory.persist(instance);
         rebuilt = RosaFactory.rebuild(stored);
