@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.Scanner;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.Constants;
@@ -30,19 +29,30 @@ public final class RosaFactory implements Serializable {
     private transient FormIndex[] questionIndicies;
     private transient String[] questionTexts;
     private transient int total, questionEvents[], questionTypes[];
+    private String xmlForm;
     private int completed;
     
-    public void setUp(ByteArrayInputStream bais, boolean unserialising) {
-        form = XFormUtils.getFormFromInputStream(bais);
+    public boolean setUp(String xmlForm, boolean fresh) {
+        this.xmlForm = xmlForm;
+        form = XFormUtils.getFormFromInputStream(new ByteArrayInputStream(this.xmlForm.getBytes()));
         model = new FormEntryModel(form);
         controller = new FormEntryController(model);
         setQuestionMetadata();
         
-        if (unserialising) {
+        if (!fresh) {
             setCursor(questionIndicies[completed]);
         } else {
             completed = 0;
         }
+        return true;
+    }
+    
+    public boolean setUp(boolean fresh) {
+        
+        if (this.xmlForm == null || this.xmlForm.isEmpty()) {
+            return false;
+        }
+        return this.setUp(this.xmlForm, fresh);
     }
     
     private void resetCursor() {
@@ -126,8 +136,13 @@ public final class RosaFactory implements Serializable {
         return index >= 0 && index <= questionTexts.length - 1 ? questionTexts[index] : null;
     }
     
-    public int getCompleted() { return completed; }
-    public int getTotal() { return total; }
+    public int getCompleted() {
+        return completed;
+    }
+    
+    public int getTotal() {
+        return total;
+    }
     
     public boolean answerQuestion(Object answer, int question) {
         
@@ -185,6 +200,7 @@ public final class RosaFactory implements Serializable {
             throw new RosaException(e);
         }
     }
+    
     public byte[] persist() throws RosaException {
         
         try {
