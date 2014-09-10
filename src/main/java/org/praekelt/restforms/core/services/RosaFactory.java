@@ -11,7 +11,6 @@ import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.FormIndex;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryModel;
-import org.javarosa.form.api.FormEntryPrompt;
 import org.javarosa.xform.util.XFormAnswerDataParser;
 import org.javarosa.xform.util.XFormUtils;
 import org.praekelt.restforms.core.exceptions.RosaException;
@@ -56,12 +55,16 @@ public final class RosaFactory implements Serializable {
         }
     }
     
-    private IAnswerData castAnswer(Object answer) {
+    private IAnswerData castAnswer(Object answer, int question) {
         return XFormAnswerDataParser.getAnswerData(
             answer.toString(),
-            questionTypes[completed],
+            questionTypes[question],
             model.getQuestionPrompt().getQuestion()
         );
+    }
+    
+    private IAnswerData castAnswer(Object answer) {
+        return castAnswer(answer, completed);
     }
     
     public static RosaFactory rebuild(byte[] buffer) throws RosaException {
@@ -144,7 +147,8 @@ public final class RosaFactory implements Serializable {
             }
             
             if (model.getEvent() == FormEntryController.EVENT_QUESTION) {
-                IAnswerData a = castAnswer(answer);
+                boolean b = question != completed && question >= 0;
+                IAnswerData a = b ? castAnswer(answer, question) : castAnswer(answer);
 
                 if (a != null) {
 
@@ -164,5 +168,9 @@ public final class RosaFactory implements Serializable {
             }
         }
         return false;
+    }
+    
+    public boolean answerQuestion(Object answer) {
+        return answerQuestion(answer, -1);
     }
 }
