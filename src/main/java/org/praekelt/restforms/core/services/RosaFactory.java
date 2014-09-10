@@ -32,36 +32,6 @@ public final class RosaFactory implements Serializable {
     private String xmlForm;
     private int completed;
     
-    public boolean setUp(String xmlForm, boolean fresh) {
-        
-        if (xmlForm != null && !xmlForm.isEmpty()) {
-            this.xmlForm = xmlForm;
-            form = XFormUtils.getFormFromInputStream(new ByteArrayInputStream(this.xmlForm.getBytes()));
-            model = new FormEntryModel(form);
-            controller = new FormEntryController(model);
-            setQuestionMetadata();
-
-            if (!fresh) {
-                setCursor(questionIndicies[completed]);
-            } else {
-                completed = 0;
-            }
-            return true;
-        }
-        return false;
-    }
-    
-    public boolean setUp(boolean fresh) {
-        return this.setUp(this.xmlForm, fresh);
-    }
-    
-    private void resetCursor() {
-        while (true) {
-            if (model.getFormIndex().isBeginningOfFormIndex()) break;
-            controller.stepToNextEvent();
-        }
-    }
-    
     private void setCursor(FormIndex position) {
         controller.jumpToIndex(position);
     }
@@ -74,9 +44,7 @@ public final class RosaFactory implements Serializable {
         questionEvents = new int[total];
         questionIndicies = new FormIndex[total];
         questionTypes = new int[total];
-        
-        resetCursor();
-        
+                
         while ((event = controller.stepToNextEvent()) != FormEntryController.EVENT_END_OF_FORM) {
 
             if (event == FormEntryController.EVENT_QUESTION) {
@@ -128,6 +96,57 @@ public final class RosaFactory implements Serializable {
         return a;
     }
     
+    public static RosaFactory rebuild(byte[] buffer) throws RosaException {
+        
+        try {
+            ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(buffer));
+            RosaFactory rf = (RosaFactory) ois.readObject();
+            ois.close();
+            return rf;
+        } catch (IOException e) {
+            throw new RosaException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RosaException(e);
+        }
+    }
+    
+    public static byte[] persist(RosaFactory r) throws RosaException {
+        
+        try {
+            ByteArrayOutputStream bao = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(bao);
+            oos.writeObject(r);
+            byte[] buffer = bao.toByteArray();
+            oos.close();
+            return buffer;
+        } catch (IOException e) {
+            throw new RosaException(e);
+        }
+    }
+    
+    public boolean setUp(String xmlForm, boolean fresh) {
+        
+        if (xmlForm != null && !xmlForm.isEmpty()) {
+            this.xmlForm = xmlForm;
+            form = XFormUtils.getFormFromInputStream(new ByteArrayInputStream(this.xmlForm.getBytes()));
+            model = new FormEntryModel(form);
+            controller = new FormEntryController(model);
+            setQuestionMetadata();
+
+            if (!fresh) {
+                setCursor(questionIndicies[completed]);
+            } else {
+                completed = 0;
+            }
+            return true;
+        }
+        return false;
+    }
+    
+    public boolean setUp() {
+        return this.setUp(this.xmlForm, false);
+    }
+    
     public String[] getQuestionTexts() {
         return questionTexts;
     }
@@ -166,52 +185,19 @@ public final class RosaFactory implements Serializable {
 
                     switch (controller.answerQuestion(a)) {
                         case FormEntryController.ANSWER_OK:
-                            System.out.println("ANSWER_OK");
                             completed++;
                             return true;
                         case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
-                            System.out.println("ANSWER_CONSTRAINT_VIOLATED");
                             return false;
                         case FormEntryController.ANSWER_REQUIRED_BUT_EMPTY:
-                            System.out.println("ANSWER_REQUIRED_BUT_EMPTY");
                             return false;
                         default:
                             System.out.println("DEFAULT");
                             return false;
                     }
-                } else {
-                    System.out.println("no data found in model/instance field for this prompt.");
                 }
             }
         }
         return false;
-    }
-    
-    public static RosaFactory rebuild(byte[] buffer) throws RosaException {
-        
-        try {
-            ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(buffer));
-            RosaFactory rf = (RosaFactory) ois.readObject();
-            ois.close();
-            return rf;
-        } catch (IOException e) {
-            throw new RosaException(e);
-        } catch (ClassNotFoundException e) {
-            throw new RosaException(e);
-        }
-    }
-    
-    public byte[] persist() throws RosaException {
-        
-        try {
-            ByteArrayOutputStream bao = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(bao);
-            oos.writeObject(this);
-            byte[] buffer = bao.toByteArray();
-            oos.close();
-            return buffer;
-        } catch (IOException e) {
-            throw new RosaException(e);
-        }
     }
 }

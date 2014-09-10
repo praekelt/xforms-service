@@ -54,9 +54,9 @@ public class RosaFactoryTest {
      * Test of setUp method, of class RosaFactory.
      */
     @Test
-    public void testSetUp_boolean() {
+    public void testSetUp() {
         System.out.println("setUp");
-        assertFalse(new RosaFactory().setUp(false));
+        assertFalse(new RosaFactory().setUp());
     }
 
     /**
@@ -139,7 +139,7 @@ public class RosaFactoryTest {
         System.out.println("persist");
         RosaFactory instance = new RosaFactory();
         instance.setUp(this.form, true);
-        byte[] stored = instance.persist();
+        byte[] stored = RosaFactory.persist(instance);
         assertTrue(stored.length > 0);
         assertTrue(stored instanceof byte[]);
     }
@@ -155,9 +155,9 @@ public class RosaFactoryTest {
         RosaFactory instance, rebuilt;
         instance = new RosaFactory();
         instance.setUp(this.form, true);
-        byte[] stored = instance.persist();
+        byte[] stored = RosaFactory.persist(instance);
         rebuilt = RosaFactory.rebuild(stored);
-        rebuilt.setUp(false);
+        rebuilt.setUp();
         
         assertEquals(instance.getTotal(), rebuilt.getTotal());
         assertArrayEquals(instance.getQuestionTexts(), rebuilt.getQuestionTexts());
