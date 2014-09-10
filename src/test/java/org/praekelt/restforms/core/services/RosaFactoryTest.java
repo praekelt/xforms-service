@@ -155,11 +155,14 @@ public class RosaFactoryTest {
         RosaFactory instance, rebuilt;
         instance = new RosaFactory();
         instance.setUp(this.form, true);
+        instance.answerQuestion("blah", -1);
+        
         byte[] stored = RosaFactory.persist(instance);
         rebuilt = RosaFactory.rebuild(stored);
         rebuilt.setUp();
         
         assertEquals(instance.getTotal(), rebuilt.getTotal());
+        assertEquals(instance.getCompleted(), rebuilt.getCompleted());
         assertArrayEquals(instance.getQuestionTexts(), rebuilt.getQuestionTexts());
     }
 }
