@@ -6,10 +6,25 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Date;
+import java.util.Vector;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.Constants;
 import org.javarosa.core.model.FormIndex;
+import org.javarosa.core.model.data.BooleanData;
+import org.javarosa.core.model.data.DateData;
+import org.javarosa.core.model.data.DateTimeData;
+import org.javarosa.core.model.data.DecimalData;
+import org.javarosa.core.model.data.GeoPointData;
+import org.javarosa.core.model.data.IntegerData;
+import org.javarosa.core.model.data.LongData;
+import org.javarosa.core.model.data.SelectMultiData;
+import org.javarosa.core.model.data.SelectOneData;
+import org.javarosa.core.model.data.StringData;
+import org.javarosa.core.model.data.TimeData;
+import org.javarosa.core.model.data.UncastData;
+import org.javarosa.core.model.data.helper.Selection;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryModel;
 import org.javarosa.form.api.FormEntryPrompt;
@@ -56,44 +71,38 @@ public final class RosaFactory implements Serializable {
         }
     }
     
-    private IAnswerData castAnswer(IAnswerData a, Object answer) {
+    private IAnswerData castAnswer(Object answer) throws ClassCastException {
         
         switch (questionTypes[completed]) {
-            case Constants.DATATYPE_UNSUPPORTED:
-                break;
-            case Constants.DATATYPE_NULL:
-                a.setValue(null);
-                break;
             case Constants.DATATYPE_INTEGER:
-                a.setValue((Integer) answer);
-                break;
+                return new IntegerData((Integer) answer);
             case Constants.DATATYPE_DECIMAL:
-                a.setValue((Float) answer);
-                break;
+                return new DecimalData((Double) answer);
             case Constants.DATATYPE_LONG:
-                a.setValue((Long) answer);
-                break;
-            case Constants.DATATYPE_BINARY:
-                a.setValue(Integer.toBinaryString((Integer) answer));
-                break;
+                return new LongData((Long) answer);
             case Constants.DATATYPE_BOOLEAN:
-                a.setValue((Boolean) answer);
-                break;
+                return new BooleanData((Boolean) answer);
             case Constants.DATATYPE_CHOICE:
-                break;
+                return new SelectOneData((Selection) answer);
             case Constants.DATATYPE_CHOICE_LIST:
-                break;
+                return new SelectMultiData((Vector) answer);
             case Constants.DATATYPE_TEXT:
+                return new StringData((String) answer);
             case Constants.DATATYPE_DATE:
+                return new DateData((Date) answer);
             case Constants.DATATYPE_TIME:
+                return new TimeData((Date) answer);
             case Constants.DATATYPE_DATE_TIME:
-            case Constants.DATATYPE_BARCODE:
+                return new DateTimeData((Date) answer);
             case Constants.DATATYPE_GEOPOINT:
+                return new GeoPointData((double[]) answer);
+            case Constants.DATATYPE_BARCODE:
+            case Constants.DATATYPE_BINARY:
+            case Constants.DATATYPE_UNSUPPORTED:
+            case Constants.DATATYPE_NULL:
             default:
-                a.setValue((String) answer);
-                break;
+                return new UncastData((String) answer);
         }
-        return a;
     }
     
     public static RosaFactory rebuild(byte[] buffer) throws RosaException {
@@ -179,22 +188,27 @@ public final class RosaFactory implements Serializable {
             
                 FormEntryPrompt prompt = model.getQuestionPrompt();
                 int controlType = prompt.getControlType();
-                IAnswerData a = castAnswer(prompt.getAnswerValue(), answer);
+                
+                try {
+                    IAnswerData a = castAnswer(answer);
 
-                if (a != null) {
+                    if (a != null) {
 
-                    switch (controller.answerQuestion(a)) {
-                        case FormEntryController.ANSWER_OK:
-                            completed++;
-                            return true;
-                        case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
-                            return false;
-                        case FormEntryController.ANSWER_REQUIRED_BUT_EMPTY:
-                            return false;
-                        default:
-                            System.out.println("DEFAULT");
-                            return false;
+                        switch (controller.answerQuestion(a)) {
+                            case FormEntryController.ANSWER_OK:
+                                completed++;
+                                return true;
+                            case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
+                                return false;
+                            case FormEntryController.ANSWER_REQUIRED_BUT_EMPTY:
+                                return false;
+                            default:
+                                System.out.println("DEFAULT");
+                                return false;
+                        }
                     }
+                } catch (ClassCastException e) {
+                    System.err.println("you entered an incorrectly typed value.");
                 }
             }
         }
