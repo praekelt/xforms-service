@@ -33,25 +33,25 @@ public final class RosaFactory implements Serializable {
     private int completed;
     
     public boolean setUp(String xmlForm, boolean fresh) {
-        this.xmlForm = xmlForm;
-        form = XFormUtils.getFormFromInputStream(new ByteArrayInputStream(this.xmlForm.getBytes()));
-        model = new FormEntryModel(form);
-        controller = new FormEntryController(model);
-        setQuestionMetadata();
         
-        if (!fresh) {
-            setCursor(questionIndicies[completed]);
-        } else {
-            completed = 0;
+        if (xmlForm != null && !xmlForm.isEmpty()) {
+            this.xmlForm = xmlForm;
+            form = XFormUtils.getFormFromInputStream(new ByteArrayInputStream(this.xmlForm.getBytes()));
+            model = new FormEntryModel(form);
+            controller = new FormEntryController(model);
+            setQuestionMetadata();
+
+            if (!fresh) {
+                setCursor(questionIndicies[completed]);
+            } else {
+                completed = 0;
+            }
+            return true;
         }
-        return true;
+        return false;
     }
     
     public boolean setUp(boolean fresh) {
-        
-        if (this.xmlForm == null || this.xmlForm.isEmpty()) {
-            return false;
-        }
         return this.setUp(this.xmlForm, fresh);
     }
     
