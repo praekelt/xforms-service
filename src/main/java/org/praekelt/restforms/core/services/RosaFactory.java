@@ -37,13 +37,13 @@ import org.praekelt.restforms.core.exceptions.RosaException;
  * @author ant cosentino
  */
 public final class RosaFactory implements Serializable {
-    
     private transient FormDef form;
     private transient FormEntryController controller;
     private transient FormEntryModel model;
     private transient FormIndex[] questionIndicies;
     private transient String[] questionTexts;
     private transient int total, questionEvents[], questionTypes[];
+    private static final long serialVersionUID = 1L;
     private String xmlForm;
     private int completed;
     
