@@ -32,10 +32,22 @@ public final class RosaFactory implements Serializable {
     private String xmlForm;
     private int completed;
     
+    /**
+     * steps the instance's formentrycontroller
+     * to the given formindex position.
+     * 
+     * @param position 
+     */
     private void setCursor(FormIndex position) {
         controller.jumpToIndex(position);
     }
     
+    /**
+     * this method is only ever used post-initialisation
+     * or post-unserialisation. its responsibility is to
+     * populate the transient fields of the instance with
+     * the data needed to process a form.
+     */
     private void setQuestionMetadata() {
         int event, current = 0;
         
@@ -91,6 +103,19 @@ public final class RosaFactory implements Serializable {
         }
     }
     
+    /**
+     * this method reads in a given xform, using a javarosa
+     * utility class, which produces a formdef instance - on 
+     * which the other instance fields of the class are dependent.
+     * the provided xform is also assigned to an instance field
+     * to make serialisation and unserialisation easier.
+     * if this method is used after unserialising, it sets the
+     * formentrycontroller's position to the next unanswered question.
+     * 
+     * @param xmlForm xform string
+     * @param fresh is this a new instance, or is it being unserialised?
+     * @return boolean whether or not the initialisation process was successful
+     */
     public boolean setUp(String xmlForm, boolean fresh) {
         
         if (xmlForm != null && !xmlForm.isEmpty()) {
@@ -130,6 +155,22 @@ public final class RosaFactory implements Serializable {
         return total;
     }
     
+    /**
+     * the initial conditional block of this method evaluates
+     * which question is to be answered. provided the given
+     * question argument is within reasonable bounds, any question
+     * of a form may be attempted and reattempted. if the question 
+     * argument is simply -1, the question flow will be regular 
+     * (ie, sequential and repeating any question that is given 
+     * an invalid answer)
+     * 
+     * @param answer
+     * @param question integer pointer to the instance's array of form indices
+     * @return boolean whether or not the answer was committed to the xform
+     * @throws RosaException thrown if the answerdata object returned is null 
+     * (indicating a numberformatexception, for example) or if the 
+     * formentrycontroller's answer constants are anything but ANSWER_OK
+     */
     public boolean answerQuestion(Object answer, int question) throws RosaException {
         
         if (question == -1 && completed < total) {
