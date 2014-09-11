@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.praekelt.restforms.core.services;
 
 import org.junit.After;
@@ -12,6 +6,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.praekelt.restforms.core.exceptions.RosaException;
 
 /**
  *
@@ -117,17 +112,22 @@ public class RosaFactoryTest {
 
     /**
      * Test of answerQuestion method, of class RosaFactory.
+     * @throws org.praekelt.restforms.core.exceptions.RosaException
      */
     @Test
-    public void testAnswerQuestion() {
+    public void testAnswerQuestion() throws RosaException {
         System.out.println("answerQuestion");
         RosaFactory instance = new RosaFactory();
         assertTrue(instance.setUp(this.form, true));
-        assertTrue(instance.answerQuestion("asdfas", 0));
-        assertFalse(instance.answerQuestion("asdfas", 23445));
-        assertTrue(instance.answerQuestion("asdfas"));
-        assertTrue(instance.answerQuestion("asdfas"));
-        assertTrue(instance.answerQuestion(1234));
+        try {
+            assertTrue(instance.answerQuestion("asdfas", 0));
+            assertFalse(instance.answerQuestion("asdfas", 23445));
+            assertTrue(instance.answerQuestion("asdfas"));
+            assertTrue(instance.answerQuestion("asdfas"));
+            assertTrue(instance.answerQuestion(1234));
+        } catch (RosaException e) {
+            System.err.println(e.getMessage());
+        }
     }
     
     /**

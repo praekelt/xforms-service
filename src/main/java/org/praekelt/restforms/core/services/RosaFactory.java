@@ -9,6 +9,7 @@ import java.io.Serializable;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.FormIndex;
+import org.javarosa.core.model.QuestionDef;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryModel;
 import org.javarosa.xform.util.XFormAnswerDataParser;
@@ -56,15 +57,10 @@ public final class RosaFactory implements Serializable {
     }
     
     private IAnswerData castAnswer(Object answer, int question) {
-        return XFormAnswerDataParser.getAnswerData(
-            answer.toString(),
-            questionTypes[question],
-            model.getQuestionPrompt().getQuestion()
-        );
-    }
-    
-    private IAnswerData castAnswer(Object answer) {
-        return castAnswer(answer, completed);
+        String a = answer.toString();
+        int i = question != -1 && question <= total ? questionTypes[question] : questionTypes[completed];
+        QuestionDef d = model.getQuestionPrompt().getQuestion();
+        return XFormAnswerDataParser.getAnswerData(a, i, d);
     }
     
     public static RosaFactory rebuild(byte[] buffer) throws RosaException {
@@ -134,7 +130,7 @@ public final class RosaFactory implements Serializable {
         return total;
     }
     
-    public boolean answerQuestion(Object answer, int question) {
+    public boolean answerQuestion(Object answer, int question) throws RosaException {
         
         if (question == -1 && completed < total) {
             controller.jumpToIndex(questionIndicies[completed]);
@@ -145,29 +141,27 @@ public final class RosaFactory implements Serializable {
         }
 
         if (model.getEvent() == FormEntryController.EVENT_QUESTION) {
-            boolean b = question != completed && question >= 0;
-            IAnswerData a = b ? castAnswer(answer, question) : castAnswer(answer);
+            IAnswerData a = castAnswer(answer, question);
 
             if (a != null) {
 
                 switch (controller.answerQuestion(a)) {
-                    case FormEntryController.ANSWER_OK:
+                    case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
+                        throw new RosaException("Answer constraint violated");
+                    case FormEntryController.ANSWER_REQUIRED_BUT_EMPTY:
+                        throw new RosaException("Answer required but found empty");
+                    default:
                         completed++;
                         return true;
-                    case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
-                        return false;
-                    case FormEntryController.ANSWER_REQUIRED_BUT_EMPTY:
-                        return false;
-                    default:
-                        System.out.println("DEFAULT");
-                        return false;
                 }
+            } else {
+                throw new RosaException("Got NULL from RosaFactory#castAnswer()");
             }
         }
         return false;
     }
     
-    public boolean answerQuestion(Object answer) {
+    public boolean answerQuestion(Object answer) throws RosaException {
         return answerQuestion(answer, -1);
     }
 }
