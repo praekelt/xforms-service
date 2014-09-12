@@ -5,6 +5,7 @@ defaultName: Stranger
 jedisFactory:
   host: localhost
   password: abcd
+  expires: 3600
 
 server:
 #  softNofileLimit: 1000
