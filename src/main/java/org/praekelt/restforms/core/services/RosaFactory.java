@@ -77,30 +77,38 @@ public final class RosaFactory implements Serializable {
     
     public static RosaFactory rebuild(byte[] buffer) throws RosaException {
         
-        try {
-            ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(buffer));
-            RosaFactory rf = (RosaFactory) ois.readObject();
-            ois.close();
-            return rf;
-        } catch (IOException e) {
-            throw new RosaException(e);
-        } catch (ClassNotFoundException e) {
-            throw new RosaException(e);
+        if (buffer != null && buffer.length > 0) {
+            
+            try {
+                ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(buffer));
+                RosaFactory rf = (RosaFactory) ois.readObject();
+                ois.close();
+                return rf;
+            } catch (IOException e) {
+                throw new RosaException(e);
+            } catch (ClassNotFoundException e) {
+                throw new RosaException(e);
+            }
         }
+        return null;
     }
     
     public static byte[] persist(RosaFactory r) throws RosaException {
         
-        try {
-            ByteArrayOutputStream bao = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(bao);
-            oos.writeObject(r);
-            byte[] buffer = bao.toByteArray();
-            oos.close();
-            return buffer;
-        } catch (IOException e) {
-            throw new RosaException(e);
+        if (r != null) {
+            
+            try {
+                ByteArrayOutputStream bao = new ByteArrayOutputStream();
+                ObjectOutputStream oos = new ObjectOutputStream(bao);
+                oos.writeObject(r);
+                byte[] buffer = bao.toByteArray();
+                oos.close();
+                return buffer;
+            } catch (IOException e) {
+                throw new RosaException(e);
+            }
         }
+        return null;
     }
     
     /**
