@@ -57,8 +57,8 @@ public final class RosaFactory implements Serializable {
         while ((event = controller.stepToNextEvent()) != FormEntryController.EVENT_END_OF_FORM) {
 
             if (event == FormEntryController.EVENT_QUESTION) {
-                questionIndicies[current++] = model.getFormIndex();
                 questionTexts[current] = fresh ? model.getQuestionPrompt().getQuestionText() : questionTexts[current];
+                questionIndicies[current++] = model.getFormIndex();
             }
         }
     }
