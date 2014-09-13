@@ -266,6 +266,69 @@ public final class JedisClient {
     // </editor-fold>
     
     // <editor-fold defaultstate="collapsed" desc="redis hash methods">
+    public boolean hashSetPOJO(String key, final byte[] objectBuffer) throws JedisException {
+	
+	if (key != null && !"".equals(key) && objectBuffer != null && objectBuffer.length > 0) {
+            final byte[] byteKey = key.getBytes();
+            final byte[] byteField = "object".getBytes();
+            return this.execute(new JedisAction<Boolean>() {
+                @Override
+                public Boolean execute(Jedis jedis) throws Exception {
+                    long hset = jedis.hset(byteKey, byteField, objectBuffer);
+                    return hset == 1L || hset == 0L;
+                }
+            });
+	}
+	return false;
+    }
+
+    public byte[] hashGetPOJO(String key) throws JedisException {
+
+        if (key != null && !"".equals(key)) {
+            final byte[] byteKey = key.getBytes();
+            final byte[] byteField = "object".getBytes();
+            return this.execute(new JedisAction<byte[]>() {
+                @Override
+                public byte[] execute(Jedis jedis) throws Exception {
+                    return jedis.hget(byteKey, byteField);
+                }
+            });
+        }
+        return null;
+    }
+
+    public boolean hashPOJOExists(String key) throws JedisException {
+
+        if (key != null && !"".equals(key)) {
+            final byte[] byteKey = key.getBytes();
+            final byte[] byteField = "object".getBytes();
+            return this.execute(new JedisAction<Boolean>() {
+                @Override
+                public Boolean execute(Jedis jedis) {
+                    return jedis.hexists(byteKey, byteField);
+                }
+            });
+        }
+        return false;
+    }
+
+    public boolean hashDeletePOJO(String key) throws JedisException {
+
+        if (key != null && !"".equals(key)) {
+            final byte[] byteKey = key.getBytes();
+            final byte[][] byteFields = {"object".getBytes()};
+            return this.execute(new JedisAction<Boolean>() {
+                @Override
+                public Boolean execute(Jedis jedis) throws Exception {
+                    long l;
+                    l = jedis.hdel(byteKey, byteFields);
+                    return l == 1L;
+                }
+            });
+        }
+        return false;
+    }
+    
     public long hashDeleteFields(final String key, final String... fields) throws JedisException {
         boolean safe = (key != null && !"".equals(key) && fields.length > 0);
         return safe ? this.execute(new JedisAction<Long>() {

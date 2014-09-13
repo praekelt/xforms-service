@@ -1,7 +1,6 @@
 package org.praekelt.restforms.core.services.jedis;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.After;
@@ -11,8 +10,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.praekelt.restforms.core.exceptions.JedisException;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
 
 /**
  *
@@ -348,8 +345,8 @@ public class JedisClientTest {
     public void testHashSetFieldsAndValues() throws Exception {
         System.out.println("hashSetFieldsAndValues");
         jedisClient.hashSetFieldValue("atestingkey", "atestingfield", "atestingvalue");
-        Map<String, String> map = new HashMap<String, String>();
-        Map<String, String> empty = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<String, String>(5);
+        Map<String, String> empty = new HashMap<String, String>(5);
         map.put("anothertestingfield", "anothertestingvalue");
         assertFalse(jedisClient.hashSetFieldsAndValues(null, map));
         assertFalse(jedisClient.hashSetFieldsAndValues("", map));
@@ -383,5 +380,66 @@ public class JedisClientTest {
         assertNull(jedisClient.hashGetValues(null));
         assertEquals(1, jedisClient.hashGetValues("mykey").size());
         assertEquals(0, jedisClient.hashGetValues("abc").size());
+    }
+    
+    /**
+     * 
+     * @throws Exception 
+     */
+    @Test
+    public void testHashSetPOJO() throws Exception {
+        System.out.println("hashSetPOJO");
+        String key = "blah";
+        byte[] objectBuffer = "lkjasdfkljasdfa".getBytes();
+        assertFalse(jedisClient.hashSetPOJO(key, new byte[0]));
+        assertFalse(jedisClient.hashSetPOJO(key, null));
+        assertTrue(jedisClient.hashSetPOJO(key, objectBuffer));
+    }
+    
+    /**
+     * 
+     * @throws Exception 
+     */
+    @Test
+    public void testHashGetPOJO() throws Exception {
+        System.out.println("hashGetPOJO");
+        String key = "mykey";
+        byte[] objectBuffer = "lkjasdfkljasdfa".getBytes();
+        assertTrue(jedisClient.hashSetPOJO(key, objectBuffer));
+        byte[] expResult = "lkjasdfkljasdfa".getBytes();
+        byte[] result = jedisClient.hashGetPOJO(key);
+        assertTrue(result instanceof byte[]);
+        assertArrayEquals(expResult, result);
+        assertNull(jedisClient.hashGetPOJO(null));
+        assertNull(jedisClient.hashGetPOJO(""));
+    }
+
+    /**
+     * 
+     * @throws Exception 
+     */
+    @Test
+    public void testHashPOJOExists() throws Exception {
+        System.out.println("hashPOJOExists");
+        String key = "mykey";
+        assertTrue(jedisClient.hashSetPOJO(key, new byte[1]));
+        assertTrue(jedisClient.hashPOJOExists(key));
+        assertFalse(jedisClient.hashPOJOExists(null));
+        assertFalse(jedisClient.hashPOJOExists(""));
+    }
+
+    /**
+     * 
+     * @throws Exception 
+     */
+    @Test
+    public void testHashDeletePOJO() throws Exception {
+        System.out.println("hashDeletePOJO");
+        String key = "mykey";
+        assertTrue(jedisClient.hashSetPOJO(key, new byte[1]));
+        assertTrue(jedisClient.hashPOJOExists(key));
+        assertTrue(jedisClient.hashDeletePOJO(key));
+        assertFalse(jedisClient.hashDeletePOJO(key));
+        assertFalse(jedisClient.hashPOJOExists(key));
     }
 }
