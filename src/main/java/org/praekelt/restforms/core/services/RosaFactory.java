@@ -72,6 +72,21 @@ public final class RosaFactory implements Serializable {
         return XFormAnswerDataParser.getAnswerData(response, type, def);
     }
     
+    private byte[] serialiseXForm() throws RosaException {
+        XFormSerializingVisitor x;
+        
+        if (completed == total) {
+            x = new XFormSerializingVisitor();
+        
+            try {
+                return x.serializeInstance(form.getInstance());
+            } catch (IOException e) {
+                throw new RosaException(e);
+            }
+        }
+        return null;
+    }
+    
     public static RosaFactory rebuild(byte[] buffer) throws RosaException {
         
         if (buffer != null && buffer.length > 0) {
@@ -194,26 +209,22 @@ public final class RosaFactory implements Serializable {
         } else {
             return false;
         }
+        
+        IAnswerData a = castAnswer(answer);
 
-        if (model.getEvent() == FormEntryController.EVENT_QUESTION) {
-            IAnswerData a = castAnswer(answer);
+        if (a != null) {
 
-            if (a != null) {
-
-                switch (controller.answerQuestion(a)) {
-                    case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
-                        throw new RosaException("Answer constraint violated");
-                    case FormEntryController.ANSWER_REQUIRED_BUT_EMPTY:
-                        throw new RosaException("Answer required but found empty");
-                    default:
-                        completed++;
-                        return true;
-                }
-            } else {
-                throw new RosaException("Got NULL from RosaFactory#castAnswer()");
+            switch (controller.answerQuestion(a)) {
+                case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
+                    throw new RosaException("Answer constraint violated");
+                case FormEntryController.ANSWER_REQUIRED_BUT_EMPTY:
+                    throw new RosaException("Answer required but found empty");
+                default:
+                    completed++;
+                    return true;
             }
         }
-        return false;
+        throw new RosaException("Got NULL from RosaFactory#castAnswer()");
     }
     
     public boolean answerQuestion(Object answer) throws RosaException {
@@ -221,16 +232,10 @@ public final class RosaFactory implements Serializable {
     }
     
     public String getCompletedXForm() throws RosaException {
-        XFormSerializingVisitor x;
+        byte[] serialised = serialiseXForm();
         
-        if (completed == total) {
-            x = new XFormSerializingVisitor();
-        
-            try {
-                return new String(x.serializeInstance(form.getInstance()));
-            } catch (IOException e) {
-                throw new RosaException(e);
-            }
+        if (serialised != null) {
+            return new String(serialised);
         }
         return null;
     }
