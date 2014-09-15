@@ -17,6 +17,7 @@ import redis.clients.jedis.JedisPool;
  */
 public final class JedisClient {
     
+    private static final byte[] OBJECT_FIELD = "object".getBytes();
     private final int expires;
     private final JedisPool pool;
     
@@ -270,11 +271,10 @@ public final class JedisClient {
 	
 	if (key != null && !"".equals(key) && objectBuffer != null && objectBuffer.length > 0) {
             final byte[] byteKey = key.getBytes();
-            final byte[] byteField = "object".getBytes();
             return this.execute(new JedisAction<Boolean>() {
                 @Override
                 public Boolean execute(Jedis jedis) throws Exception {
-                    long hset = jedis.hset(byteKey, byteField, objectBuffer);
+                    long hset = jedis.hset(byteKey, OBJECT_FIELD, objectBuffer);
                     return hset == 1L || hset == 0L;
                 }
             });
@@ -286,11 +286,10 @@ public final class JedisClient {
 
         if (key != null && !"".equals(key)) {
             final byte[] byteKey = key.getBytes();
-            final byte[] byteField = "object".getBytes();
             return this.execute(new JedisAction<byte[]>() {
                 @Override
                 public byte[] execute(Jedis jedis) throws Exception {
-                    return jedis.hget(byteKey, byteField);
+                    return jedis.hget(byteKey, OBJECT_FIELD);
                 }
             });
         }
@@ -301,11 +300,10 @@ public final class JedisClient {
 
         if (key != null && !"".equals(key)) {
             final byte[] byteKey = key.getBytes();
-            final byte[] byteField = "object".getBytes();
             return this.execute(new JedisAction<Boolean>() {
                 @Override
                 public Boolean execute(Jedis jedis) {
-                    return jedis.hexists(byteKey, byteField);
+                    return jedis.hexists(byteKey, OBJECT_FIELD);
                 }
             });
         }
@@ -316,7 +314,7 @@ public final class JedisClient {
 
         if (key != null && !"".equals(key)) {
             final byte[] byteKey = key.getBytes();
-            final byte[][] byteFields = {"object".getBytes()};
+            final byte[][] byteFields = {OBJECT_FIELD};
             return this.execute(new JedisAction<Boolean>() {
                 @Override
                 public Boolean execute(Jedis jedis) throws Exception {

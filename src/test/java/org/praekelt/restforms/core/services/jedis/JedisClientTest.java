@@ -388,7 +388,6 @@ public class JedisClientTest {
      */
     @Test
     public void testHashSetPOJO() throws Exception {
-        System.out.println("hashSetPOJO");
         String key = "blah";
         byte[] objectBuffer = "lkjasdfkljasdfa".getBytes();
         assertFalse(jedisClient.hashSetPOJO(key, new byte[0]));
@@ -402,7 +401,6 @@ public class JedisClientTest {
      */
     @Test
     public void testHashGetPOJO() throws Exception {
-        System.out.println("hashGetPOJO");
         String key = "mykey";
         byte[] objectBuffer = "lkjasdfkljasdfa".getBytes();
         assertTrue(jedisClient.hashSetPOJO(key, objectBuffer));
@@ -420,7 +418,6 @@ public class JedisClientTest {
      */
     @Test
     public void testHashPOJOExists() throws Exception {
-        System.out.println("hashPOJOExists");
         String key = "mykey";
         assertTrue(jedisClient.hashSetPOJO(key, new byte[1]));
         assertTrue(jedisClient.hashPOJOExists(key));
@@ -434,7 +431,6 @@ public class JedisClientTest {
      */
     @Test
     public void testHashDeletePOJO() throws Exception {
-        System.out.println("hashDeletePOJO");
         String key = "mykey";
         assertTrue(jedisClient.hashSetPOJO(key, new byte[1]));
         assertTrue(jedisClient.hashPOJOExists(key));
