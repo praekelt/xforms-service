@@ -23,13 +23,12 @@ import org.praekelt.restforms.core.exceptions.RosaException;
  * @author ant cosentino
  */
 public final class RosaFactory implements Serializable {
-    private transient FormDef form;
     private transient FormEntryController controller;
     private transient FormEntryModel model;
+    private transient FormDef form;
     private transient FormIndex[] questionIndicies;
     private static final long serialVersionUID = 1L;
-    private String[] questionTexts;
-    private String xmlForm;
+    private String xmlForm, questionTexts[];
     private int total, completed;
     
     /**
@@ -49,17 +48,19 @@ public final class RosaFactory implements Serializable {
      * the data needed to process a form.
      */
     private void setQuestionMetadata(boolean fresh) {
-        int event, current = 0;
+        int event, 
+            formEnd = FormEntryController.EVENT_END_OF_FORM,
+            i = 0;
         
         total = model.getNumQuestions();
         questionIndicies = new FormIndex[total];
         questionTexts = fresh ? new String[total] : questionTexts;
         
-        while ((event = controller.stepToNextEvent()) != FormEntryController.EVENT_END_OF_FORM) {
+        while ((event = controller.stepToNextEvent()) != formEnd) {
 
             if (event == FormEntryController.EVENT_QUESTION) {
-                questionTexts[current] = fresh ? model.getQuestionPrompt().getQuestionText() : questionTexts[current];
-                questionIndicies[current++] = model.getFormIndex();
+                questionTexts[i] = fresh ? model.getQuestionPrompt().getQuestionText() : questionTexts[i];
+                questionIndicies[i++] = model.getFormIndex();
             }
         }
     }
@@ -76,7 +77,8 @@ public final class RosaFactory implements Serializable {
         if (buffer != null && buffer.length > 0) {
             
             try {
-                ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(buffer));
+                ByteArrayInputStream bai = new ByteArrayInputStream(buffer);
+                ObjectInputStream ois = new ObjectInputStream(bai);
                 RosaFactory rf = (RosaFactory) ois.readObject();
                 ois.close();
                 
@@ -126,10 +128,11 @@ public final class RosaFactory implements Serializable {
     public boolean setUp(String xmlForm, boolean fresh) {
         
         if (xmlForm != null && !xmlForm.isEmpty()) {
-            this.xmlForm = xmlForm;
-            form = XFormUtils.getFormFromInputStream(new ByteArrayInputStream(this.xmlForm.getBytes()));
+            ByteArrayInputStream bai = new ByteArrayInputStream(xmlForm.getBytes());
+            form = XFormUtils.getFormFromInputStream(bai);
             model = new FormEntryModel(form);
             controller = new FormEntryController(model);
+            this.xmlForm = xmlForm;
             setQuestionMetadata(fresh);
 
             if (!fresh) {
@@ -226,7 +229,7 @@ public final class RosaFactory implements Serializable {
             try {
                 return new String(x.serializeInstance(form.getInstance()));
             } catch (IOException e) {
-                throw new RosaException(e.getMessage());
+                throw new RosaException(e);
             }
         }
         return null;
