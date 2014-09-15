@@ -12,6 +12,7 @@ import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.QuestionDef;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryModel;
+import org.javarosa.model.xform.XFormSerializingVisitor;
 import org.javarosa.xform.util.XFormAnswerDataParser;
 import org.javarosa.xform.util.XFormUtils;
 import org.praekelt.restforms.core.exceptions.RosaException;
@@ -214,5 +215,20 @@ public final class RosaFactory implements Serializable {
     
     public boolean answerQuestion(Object answer) throws RosaException {
         return answerQuestion(answer, -1);
+    }
+    
+    public String getCompletedXForm() throws RosaException {
+        XFormSerializingVisitor x;
+        
+        if (completed == total) {
+            x = new XFormSerializingVisitor();
+        
+            try {
+                return new String(x.serializeInstance(form.getInstance()));
+            } catch (IOException e) {
+                throw new RosaException(e.getMessage());
+            }
+        }
+        return null;
     }
 }
