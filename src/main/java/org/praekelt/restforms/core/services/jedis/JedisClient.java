@@ -89,6 +89,14 @@ public final class JedisClient {
     }
     
     // <editor-fold defaultstate="collapsed" desc="redis key methods">
+    
+    /**
+     * remove any time to live associated with the given key
+     * 
+     * @param key
+     * @return
+     * @throws JedisException 
+     */
     public boolean keyPersist(final String key) throws JedisException {
         
         return (key != null && !"".equals(key)) ? this.execute(new JedisAction<Boolean>() {
@@ -99,6 +107,14 @@ public final class JedisClient {
         }) : false;
     }
     
+    /**
+     * set the time to live for the given key to the given duration
+     * 
+     * @param key
+     * @param seconds
+     * @return
+     * @throws JedisException 
+     */
     public boolean keyExpire(final String key, final int seconds) throws JedisException {
         boolean safe = (key != null && !"".equals(key)) && seconds > 0;
         return safe ? this.execute(new JedisAction<Boolean>() {
@@ -109,6 +125,25 @@ public final class JedisClient {
         }) : false;
     }
     
+    /**
+     * set the time to live for the given key to the default expiry duration
+     * 
+     * @param key
+     * @return
+     * @throws JedisException 
+     */
+    public boolean keyExpire(final String key) throws JedisException {
+        return this.keyExpire(key, expires);
+    }
+    
+    /**
+     * rename a given key to a new name
+     * 
+     * @param oldKey
+     * @param newKey
+     * @return
+     * @throws JedisException 
+     */
     public boolean keyRename(final String oldKey, final String newKey) throws JedisException {
         boolean safe = oldKey != null && !"".equals(oldKey) && (newKey != null && !"".equals(newKey));
         return safe ? this.execute(new JedisAction<Boolean>() {
@@ -144,6 +179,13 @@ public final class JedisClient {
         }) : -2L;
     }
     
+    /**
+     * return a string representing the redis data type of the given key
+     * 
+     * @param key
+     * @return
+     * @throws JedisException 
+     */
     public String keyType(final String key) throws JedisException {
         return (key != null && !"".equals(key)) ? this.execute(new JedisAction<String>() {
             @Override
@@ -256,6 +298,13 @@ public final class JedisClient {
         }) : false;
     }
     
+    /**
+     * determine the existence of a given key
+     * 
+     * @param key
+     * @return
+     * @throws JedisException 
+     */
     public boolean keyExists(final String key) throws JedisException {
         return (key != null && !"".equals(key)) ? this.execute(new JedisAction<Boolean>() {
             @Override
@@ -267,6 +316,16 @@ public final class JedisClient {
     // </editor-fold>
     
     // <editor-fold defaultstate="collapsed" desc="redis hash methods">
+    
+    /**
+     * create/update a hash in redis at the given key with the given
+     * byte[] value at field "object"
+     * 
+     * @param key
+     * @param objectBuffer
+     * @return
+     * @throws JedisException 
+     */
     public boolean hashSetPOJO(String key, final byte[] objectBuffer) throws JedisException {
 	
 	if (key != null && !"".equals(key) && objectBuffer != null && objectBuffer.length > 0) {
@@ -282,6 +341,13 @@ public final class JedisClient {
 	return false;
     }
 
+    /**
+     * get the byte[] value stored at field "object" of the hash at the given key
+     * 
+     * @param key
+     * @return
+     * @throws JedisException 
+     */
     public byte[] hashGetPOJO(String key) throws JedisException {
 
         if (key != null && !"".equals(key)) {
@@ -296,6 +362,13 @@ public final class JedisClient {
         return null;
     }
 
+    /**
+     * determine the existence of field "object" in hash at the given key
+     * 
+     * @param key
+     * @return
+     * @throws JedisException 
+     */
     public boolean hashPOJOExists(String key) throws JedisException {
 
         if (key != null && !"".equals(key)) {
@@ -310,6 +383,13 @@ public final class JedisClient {
         return false;
     }
 
+    /**
+     * remove the field "object" from the hash at the given key
+     * 
+     * @param key
+     * @return
+     * @throws JedisException 
+     */
     public boolean hashDeletePOJO(String key) throws JedisException {
 
         if (key != null && !"".equals(key)) {
@@ -327,6 +407,14 @@ public final class JedisClient {
         return false;
     }
     
+    /**
+     * remove the given field(s) from hash stored at the given key
+     * 
+     * @param key
+     * @param fields
+     * @return
+     * @throws JedisException 
+     */
     public long hashDeleteFields(final String key, final String... fields) throws JedisException {
         boolean safe = (key != null && !"".equals(key) && fields.length > 0);
         return safe ? this.execute(new JedisAction<Long>() {
@@ -337,6 +425,14 @@ public final class JedisClient {
         }) : 0L;
     }
     
+    /**
+     * determine the existence of the given field at key
+     * 
+     * @param key
+     * @param field
+     * @return
+     * @throws JedisException 
+     */
     public boolean hashFieldExists(final String key, final String field) throws JedisException {
         boolean safe = (key != null && !"".equals(key) && (field != null && !"".equals(field)));
         return safe ? this.execute(new JedisAction<Boolean>() {
@@ -347,6 +443,14 @@ public final class JedisClient {
         }) : false;
     }
     
+    /**
+     * get the value stored at the given field and key
+     * 
+     * @param key
+     * @param field
+     * @return
+     * @throws JedisException 
+     */
     public String hashGetFieldValue(final String key, final String field) throws JedisException {
         boolean safe = (key != null && !"".equals(key) && (field != null && !"".equals(field)));
         return safe ? this.execute(new JedisAction<String>() {
@@ -357,6 +461,13 @@ public final class JedisClient {
         }) : null;
     }
     
+    /**
+     * get a key/value mapping of fields/values stored in the hash at the given key
+     * 
+     * @param key
+     * @return
+     * @throws JedisException 
+     */
     public Map<String, String> hashGetFieldsAndValues(final String key) throws JedisException {
         return (key != null && !"".equals(key)) ? this.execute(new JedisAction<Map<String, String>>() {
             @Override
@@ -366,6 +477,13 @@ public final class JedisClient {
         }) : null;
     }
     
+    /**
+     * get a string set of field names from the hash at the given key
+     * 
+     * @param key
+     * @return
+     * @throws JedisException 
+     */
     public Set<String> hashGetFields(final String key) throws JedisException {
         return (key != null && !"".equals(key)) ? this.execute(new JedisAction<Set<String>>() {
             @Override
@@ -375,6 +493,13 @@ public final class JedisClient {
         }) : null;
     }
     
+    /**
+     * determine the number of fields stored in a hash at the given key
+     * 
+     * @param key
+     * @return
+     * @throws JedisException 
+     */
     public long hashLength(final String key) throws JedisException {
         return (key != null && !"".equals(key)) ? this.execute(new JedisAction<Long>() {
             @Override
@@ -384,6 +509,14 @@ public final class JedisClient {
         }) : 0L;
     }
     
+    /**
+     * get a string list of values stored in the given field(s) of the hash at the given key
+     * 
+     * @param key
+     * @param fields
+     * @return
+     * @throws JedisException 
+     */
     public List<String> hashGetFieldValues(final String key, final String... fields) throws JedisException {
         boolean safe = (key != null && !"".equals(key)) && fields.length > 0; 
         return safe ? this.execute(new JedisAction<List<String>>() {
@@ -394,6 +527,15 @@ public final class JedisClient {
         }) : null;
     }
     
+    /**
+     * create/update the fields and values of a hash stored at the given key
+     * with the keys and values from the given string/string map
+     * 
+     * @param key
+     * @param map
+     * @return
+     * @throws JedisException 
+     */
     public boolean hashSetFieldsAndValues(final String key, final Map<String, String> map) throws JedisException {
         boolean safe = (key != null && !"".equals(key)) && map.size() > 0;
         return safe ? this.execute(new JedisAction<Boolean>() {
@@ -410,6 +552,15 @@ public final class JedisClient {
         }) : false;
     }
     
+    /**
+     * create/update a value stored at the given field of a hash at the given key
+     * 
+     * @param key
+     * @param field
+     * @param value
+     * @return
+     * @throws JedisException 
+     */
     public boolean hashSetFieldValue(final String key, final String field, final String value) throws JedisException {
         boolean safe = (key != null && !"".equals(key)) 
             && (field != null && !"".equals(field)) 
@@ -424,6 +575,15 @@ public final class JedisClient {
         }) : false;
     }
     
+    /**
+     * create a value stored at the given field of a hash at the given key only if the field does not yet exist
+     * 
+     * @param key
+     * @param field
+     * @param value
+     * @return
+     * @throws JedisException 
+     */
     public boolean hashSetFieldValueIfNotExists(final String key, final String field, final String value) throws JedisException {
         boolean safe = (key != null && !"".equals(key)) 
             && (field != null && !"".equals(field)) 
@@ -437,6 +597,13 @@ public final class JedisClient {
         }) : false;
     }
     
+    /**
+     * get a string list of values from all fields of a hash stored at the given key
+     * 
+     * @param key
+     * @return
+     * @throws JedisException 
+     */
     public List<String> hashGetValues(final String key) throws JedisException {
         return (key != null && !"".equals(key)) ? this.execute(new JedisAction<List<String>>() {
             @Override
