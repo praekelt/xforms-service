@@ -125,7 +125,7 @@ public class RosaFactoryTest {
             assertFalse(instance.answerQuestion("asdfas", 23445));
             assertTrue(instance.answerQuestion("asdfas"));
             assertTrue(instance.answerQuestion("asdfas"));
-            assertTrue(instance.answerQuestion(1234));
+            assertTrue(instance.answerQuestion("1234"));
         } catch (RosaException e) {
             System.err.println(e.getMessage());
         }
@@ -182,7 +182,7 @@ public class RosaFactoryTest {
         instance.answerQuestion("...");
         instance.answerQuestion("...");
         instance.answerQuestion("...");
-        instance.answerQuestion(123);
+        instance.answerQuestion("123");
         
         assertEquals(this.completed, instance.getCompletedXForm());
     }
