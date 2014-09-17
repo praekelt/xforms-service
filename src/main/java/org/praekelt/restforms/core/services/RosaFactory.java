@@ -52,24 +52,25 @@ public final class RosaFactory implements Serializable {
             formEnd = FormEntryController.EVENT_END_OF_FORM,
             i = 0;
         
-        total = model.getNumQuestions();
-        questionIndicies = new FormIndex[total];
-        questionTexts = fresh ? new String[total] : questionTexts;
-        
-        while ((event = controller.stepToNextEvent()) != formEnd) {
+        try {
+            total = model.getNumQuestions();
+            questionIndicies = new FormIndex[total];
+            questionTexts = fresh ? new String[total] : questionTexts;
 
-            if (event == FormEntryController.EVENT_QUESTION) {
-                questionTexts[i] = fresh ? model.getQuestionPrompt().getQuestionText() : questionTexts[i];
-                questionIndicies[i++] = model.getFormIndex();
+            while ((event = controller.stepToNextEvent()) != formEnd) {
+
+                if (event == FormEntryController.EVENT_QUESTION) {
+                    questionTexts[i] = fresh ? model.getQuestionPrompt().getQuestionText() : questionTexts[i];
+                    questionIndicies[i++] = model.getFormIndex();
+                }
             }
-        }
+        } catch (NullPointerException e) {}
     }
     
-    private IAnswerData castAnswer(Object answer) {
-        String response = answer.toString();
+    private IAnswerData castAnswer(String answer) {
         int type = model.getQuestionPrompt().getDataType();
         QuestionDef def = model.getQuestionPrompt().getQuestion();
-        return XFormAnswerDataParser.getAnswerData(response, type, def);
+        return XFormAnswerDataParser.getAnswerData(answer, type, def);
     }
     
     private byte[] serialiseXForm() throws RosaException {
@@ -144,16 +145,25 @@ public final class RosaFactory implements Serializable {
         
         if (xmlForm != null && !xmlForm.isEmpty()) {
             ByteArrayInputStream bai = new ByteArrayInputStream(xmlForm.getBytes());
-            form = XFormUtils.getFormFromInputStream(bai);
-            model = new FormEntryModel(form);
-            controller = new FormEntryController(model);
-            this.xmlForm = xmlForm;
-            setQuestionMetadata(fresh);
+            
+            try {
+                form = XFormUtils.getFormFromInputStream(bai);
+                model = new FormEntryModel(form);
+                controller = new FormEntryController(model);
+            } catch (RuntimeException e) {
+                return false;
+            } finally {
+                this.xmlForm = xmlForm;
+                setQuestionMetadata(fresh);
 
-            if (!fresh) {
-                setCursor(questionIndicies[completed]);
-            } else {
-                completed = 0;
+                if (!fresh) {
+
+                    if (completed != total) {
+                        setCursor(questionIndicies[completed]);
+                    }
+                } else {
+                    completed = 0;
+                }
             }
             return true;
         }
@@ -200,7 +210,7 @@ public final class RosaFactory implements Serializable {
      * (indicating a numberformatexception, for example) or if the 
      * formentrycontroller's answer constants are anything but ANSWER_OK
      */
-    public boolean answerQuestion(Object answer, int question) throws RosaException {
+    public boolean answerQuestion(String answer, int question) throws RosaException {
         
         if (question == -1 && completed < total) {
             setCursor(questionIndicies[completed]);
@@ -227,16 +237,12 @@ public final class RosaFactory implements Serializable {
         throw new RosaException("Got NULL from RosaFactory#castAnswer()");
     }
     
-    public boolean answerQuestion(Object answer) throws RosaException {
+    public boolean answerQuestion(String answer) throws RosaException {
         return answerQuestion(answer, -1);
     }
     
     public String getCompletedXForm() throws RosaException {
         byte[] serialised = serialiseXForm();
-        
-        if (serialised != null) {
-            return new String(serialised);
-        }
-        return null;
+        return serialised != null ? new String(serialised) : null;
     }
 }
