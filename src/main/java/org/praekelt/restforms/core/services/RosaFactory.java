@@ -46,8 +46,11 @@ public final class RosaFactory implements Serializable {
      * or post-unserialisation. its responsibility is to
      * populate the transient fields of the instance with
      * the data needed to process a form.
+     * 
+     * @param fresh
+     * @throws RosaException thrown if model returned null, which indicates a malformed xml document.
      */
-    private void setQuestionMetadata(boolean fresh) {
+    private void setQuestionMetadata(boolean fresh) throws RosaException {
         int event, 
             formEnd = FormEntryController.EVENT_END_OF_FORM,
             i = 0;
@@ -64,7 +67,9 @@ public final class RosaFactory implements Serializable {
                     questionIndicies[i++] = model.getFormIndex();
                 }
             }
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException e) {
+            throw new RosaException(e);
+        }
     }
     
     private IAnswerData castAnswer(String answer) {
@@ -140,8 +145,9 @@ public final class RosaFactory implements Serializable {
      * @param xmlForm xform string
      * @param fresh is this a new instance, or is it being unserialised?
      * @return boolean whether or not the initialisation process was successful
+     * @throws org.praekelt.restforms.core.exceptions.RosaException thrown if the xml provided is not valid and/or well-formed
      */
-    public boolean setUp(String xmlForm, boolean fresh) {
+    public boolean setUp(String xmlForm, boolean fresh) throws RosaException {
         
         if (xmlForm != null && !xmlForm.isEmpty()) {
             ByteArrayInputStream bai = new ByteArrayInputStream(xmlForm.getBytes());
@@ -151,7 +157,7 @@ public final class RosaFactory implements Serializable {
                 model = new FormEntryModel(form);
                 controller = new FormEntryController(model);
             } catch (RuntimeException e) {
-                return false;
+                throw new RosaException(e);
             } finally {
                 this.xmlForm = xmlForm;
                 setQuestionMetadata(fresh);
@@ -170,11 +176,11 @@ public final class RosaFactory implements Serializable {
         return false;
     }
     
-    public boolean setUp(String xmlForm) {
+    public boolean setUp(String xmlForm) throws RosaException {
         return this.setUp(xmlForm, true);
     }
     
-    public boolean setUp() {
+    public boolean setUp() throws RosaException {
         return this.setUp(this.xmlForm, false);
     }
     
@@ -226,15 +232,15 @@ public final class RosaFactory implements Serializable {
 
             switch (controller.answerQuestion(a)) {
                 case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
-                    throw new RosaException("Answer constraint violated");
+                    throw new RosaException("Answer constraint was violated.");
                 case FormEntryController.ANSWER_REQUIRED_BUT_EMPTY:
-                    throw new RosaException("Answer required but found empty");
+                    throw new RosaException("Answer was required but found empty.");
                 default:
                     completed++;
                     return true;
             }
         }
-        throw new RosaException("Got NULL from RosaFactory#castAnswer()");
+        throw new RosaException("Answer data-type was incorrect.");
     }
     
     public boolean answerQuestion(String answer) throws RosaException {

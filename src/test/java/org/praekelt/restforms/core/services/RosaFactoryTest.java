@@ -38,9 +38,10 @@ public class RosaFactoryTest {
 
     /**
      * Test of setUp method, of class RosaFactory.
+     * @throws java.lang.Exception
      */
     @Test
-    public void testSetUp_String_boolean() {
+    public void testSetUp_String_boolean() throws Exception {
         System.out.println("setUp");
         assertTrue(new RosaFactory().setUp(this.form, true));
         assertFalse(new RosaFactory().setUp("", true));
@@ -48,21 +49,23 @@ public class RosaFactoryTest {
 
     /**
      * Test of setUp method, of class RosaFactory.
+     * @throws java.lang.Exception
      */
     @Test
-    public void testSetUp() {
+    public void testSetUp() throws Exception {
         System.out.println("setUp");
         assertFalse(new RosaFactory().setUp());
     }
 
     /**
      * Test of getQuestionTexts method, of class RosaFactory.
+     * @throws java.lang.Exception
      */
     @Test
-    public void testGetQuestionTexts() {
+    public void testGetQuestionTexts() throws Exception {
         System.out.println("getQuestionTexts");
         RosaFactory instance = new RosaFactory();
-        assertTrue(instance.setUp(this.form, true));
+        assertTrue(instance.setUp(this.form));
         String[] expResult = {"what's your name?","what's your surname?","what's your gender?","what's your blah?"};
         String[] result = instance.getQuestionTexts();
         assertTrue(result.length > 0);
@@ -71,13 +74,14 @@ public class RosaFactoryTest {
 
     /**
      * Test of getQuestion method, of class RosaFactory.
+     * @throws java.lang.Exception
      */
     @Test
-    public void testGetQuestion() {
+    public void testGetQuestion() throws Exception {
         System.out.println("getQuestion");
         int index = 0;
         RosaFactory instance = new RosaFactory();
-        assertTrue(instance.setUp(this.form, true));
+        assertTrue(instance.setUp(this.form));
         String expResult = "what's your name?";
         assertNull(instance.getQuestion(123342));
         String result = instance.getQuestion(index);
@@ -87,12 +91,13 @@ public class RosaFactoryTest {
 
     /**
      * Test of getCompleted method, of class RosaFactory.
+     * @throws java.lang.Exception
      */
     @Test
-    public void testGetCompleted() {
+    public void testGetCompleted() throws Exception {
         System.out.println("getCompleted");
         RosaFactory instance = new RosaFactory();
-        assertTrue(instance.setUp(this.form, true));
+        assertTrue(instance.setUp(this.form));
         int expResult = 0;
         int result = instance.getCompleted();
         assertEquals(expResult, result);
@@ -100,12 +105,13 @@ public class RosaFactoryTest {
 
     /**
      * Test of getTotal method, of class RosaFactory.
+     * @throws java.lang.Exception
      */
     @Test
-    public void testGetTotal() {
+    public void testGetTotal() throws Exception {
         System.out.println("getTotal");
         RosaFactory instance = new RosaFactory();
-        assertTrue(instance.setUp(this.form, true));
+        assertTrue(instance.setUp(this.form));
         int expResult = 4;
         int result = instance.getTotal();
         assertEquals(expResult, result);
