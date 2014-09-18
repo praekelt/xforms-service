@@ -68,7 +68,7 @@ public final class RosaFactory implements Serializable {
                 }
             }
         } catch (NullPointerException e) {
-            throw new RosaException(e);
+            throw new RosaException("The given XML document was found to be malformed.");
         }
     }
     
@@ -87,7 +87,7 @@ public final class RosaFactory implements Serializable {
             try {
                 return x.serializeInstance(form.getInstance());
             } catch (IOException e) {
-                throw new RosaException(e);
+                throw new RosaException("Unable to create a model/instance XML document.");
             }
         }
         return null;
@@ -107,9 +107,9 @@ public final class RosaFactory implements Serializable {
                     return rf;
                 }
             } catch (IOException e) {
-                throw new RosaException(e);
+                throw new RosaException("Unable to unserialise the given xForm for processing.");
             } catch (ClassNotFoundException e) {
-                throw new RosaException(e);
+                throw new RosaException("Unable to unserialise the given xForm for processing.");
             }
         }
         return null;
@@ -127,7 +127,7 @@ public final class RosaFactory implements Serializable {
                 oos.close();
                 return buffer;
             } catch (IOException e) {
-                throw new RosaException(e);
+                throw new RosaException("Unable to serialise the given xForm instance.");
             }
         }
         return null;
@@ -156,9 +156,7 @@ public final class RosaFactory implements Serializable {
                 form = XFormUtils.getFormFromInputStream(bai);
                 model = new FormEntryModel(form);
                 controller = new FormEntryController(model);
-            } catch (RuntimeException e) {
-                throw new RosaException(e);
-            } finally {
+                
                 this.xmlForm = xmlForm;
                 setQuestionMetadata(fresh);
 
@@ -170,6 +168,8 @@ public final class RosaFactory implements Serializable {
                 } else {
                     completed = 0;
                 }
+            } catch (RuntimeException e) {
+                throw new RosaException("The given XML document was found to be malformed.");
             }
             return true;
         }
