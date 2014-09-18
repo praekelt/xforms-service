@@ -50,25 +50,21 @@ public final class RosaFactory implements Serializable {
      * @param fresh
      * @throws RosaException thrown if model returned null, which indicates a malformed xml document.
      */
-    private void setQuestionMetadata(boolean fresh) throws RosaException {
+    private void setQuestionMetadata(boolean fresh) {
         int event, 
             formEnd = FormEntryController.EVENT_END_OF_FORM,
             i = 0;
         
-        try {
-            total = model.getNumQuestions();
-            questionIndicies = new FormIndex[total];
-            questionTexts = fresh ? new String[total] : questionTexts;
+        total = model.getNumQuestions();
+        questionIndicies = new FormIndex[total];
+        questionTexts = fresh ? new String[total] : questionTexts;
 
-            while ((event = controller.stepToNextEvent()) != formEnd) {
+        while ((event = controller.stepToNextEvent()) != formEnd) {
 
-                if (event == FormEntryController.EVENT_QUESTION) {
-                    questionTexts[i] = fresh ? model.getQuestionPrompt().getQuestionText() : questionTexts[i];
-                    questionIndicies[i++] = model.getFormIndex();
-                }
+            if (event == FormEntryController.EVENT_QUESTION) {
+                questionTexts[i] = fresh ? model.getQuestionPrompt().getQuestionText() : questionTexts[i];
+                questionIndicies[i++] = model.getFormIndex();
             }
-        } catch (NullPointerException e) {
-            throw new RosaException("The given XML document was found to be malformed.");
         }
     }
     
