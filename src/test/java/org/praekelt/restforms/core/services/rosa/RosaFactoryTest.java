@@ -1,5 +1,6 @@
-package org.praekelt.restforms.core.services;
+package org.praekelt.restforms.core.services.rosa;
 
+import org.praekelt.restforms.core.services.rosa.RosaFactory;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
