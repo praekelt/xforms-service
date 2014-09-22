@@ -1,4 +1,4 @@
-package org.praekelt.restforms.core.services;
+package org.praekelt.restforms.core.services.rosa;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
