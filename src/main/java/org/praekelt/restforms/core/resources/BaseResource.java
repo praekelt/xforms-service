@@ -3,29 +3,25 @@ package org.praekelt.restforms.core.resources;
 import com.google.gson.Gson;
 import java.lang.reflect.Type;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import org.apache.commons.lang.StringUtils;
 import org.praekelt.restforms.core.exceptions.JedisException;
 import org.praekelt.restforms.core.services.jedis.JedisClient;
 
 /**
- *
- * this class serves as a base for
- * all of our server's endpoints.
- * it bakes in common utilities needed
- * by all of our endpoints for tasks
- * like json serialisation or id generation.
- * 
- * 
  * @author ant cosentino
  */
 abstract class BaseResource {
-    protected static Gson gson;
-    protected static JedisClient jedis;
-    protected String hashPool;
-    protected Type representation;
     
+    protected static JedisClient jedis;
+    protected static Gson gson;
+    protected static Type requestEntity;
+    protected static Type responseEntity;
+
+    protected BaseResource(JedisClient jc) {
+        gson = (gson == null) ? new Gson() : gson;
+        jedis = (jedis == null) ? jc : jedis;
+    }
+
     protected static class BaseResponse {
         
         private int status;
@@ -52,12 +48,11 @@ abstract class BaseResource {
             this.message = message;
         }
     }
-    
-    protected BaseResource(JedisClient jc) {
-        gson = (gson == null) ? new Gson() : gson;
-        jedis = (jedis == null) ? jc : jedis;
+
+    private String generateUUID() {
+        return UUID.randomUUID().toString();
     }
-    
+
     /**
      * serialises the object as json
      * 
@@ -65,8 +60,8 @@ abstract class BaseResource {
      * @param type class literal of static inner class for the resource
      * @return string json representation of the object
      */
-    protected String toJson(Object base, Type type) {
-        return gson.toJson(base, type);
+    protected static String toJson(Object base, Type type) {
+        return base != null && type != null ? gson.toJson(base, type) : null;
     }
     
     /**
@@ -78,86 +73,151 @@ abstract class BaseResource {
      * @param type class literal of static inner class for the resource
      * @return object deserialised representation of the given json argument
      */
-    protected Object fromJson(String json, Type type) {
-        return gson.fromJson(json, type);
+    protected static Object fromJson(String json, Type type) {
+        return !"".equals(json) && json != null && type != null ? gson.fromJson(json, type) : null;
     }
-    
-    protected String implode(String[] array, char separator) {
-        
-        if (array.length > 0) {
-            return StringUtils.join(array, separator);
-        }
-        return null;
-    }
-    
+
+    /**
+     * determine the existence of a value (of any type)
+     * stored at `key`.
+     *
+     * @param key
+     * @return boolean
+     */
     protected boolean verifyResource(String key) {
+        
         try {
-            
-            if (!key.isEmpty()) {
-                return jedis.keyExists(key);
-            }
+            return jedis.keyExists(key);
+        } catch (JedisException e) {
+            System.err.println(e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * determine the existence of a value at `field`
+     * stored in a hash at key.
+     *
+     * @param key
+     * @param field
+     * @return boolean
+     */
+    protected boolean verifyField(String key, String field) {
+
+        try {
+            return this.verifyResource(key) ? jedis.hashFieldExists(key, field) : false;
         } catch (JedisException e) {
             System.err.println(e.getMessage());
         }
         return false;
     }
     
+    /**
+     * 
+     * 
+     * @param key
+     * @param field
+     * @return string
+     */
+    protected String fetchField(String key, String field) {
+
+        try {
+            return this.verifyResource(key) ? jedis.hashGetFieldValue(key, field) : null;
+        } catch (JedisException e) {
+            System.err.println(e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * gets a key/value mapping of fields to values from a hash at the given key.
+     * returns a string/string map if exists.
+     *
+     * @param key
+     * @return string/string map
+     */
     protected Map<String, String> fetchResource(String key) {
         
         try {
-            if (!key.isEmpty()) {
-                return jedis.hashGetFieldsAndValues(key);
-            }
+            return this.verifyResource(key) ? jedis.hashGetFieldsAndValues(key) : null;
         } catch (JedisException e) {
             System.err.println(e.getMessage());
         }
         return null;
     }
-    
-    protected Set<String> fetchKeysByType(String type) {
-        
-        if (!type.isEmpty()) {
-            try {
-                return jedis.keysByPattern(type);
-            } catch (JedisException e) {
-                System.err.println(e.getMessage());
-            }
-        }
-        return null;
-    }
-    
-    protected String createResource(String hashPool, String type, String json) {
-        
-        try {
-            String id;
 
-            if (!hashPool.isEmpty() && !json.isEmpty() && !type.isEmpty()) {
-                id = hashPool + this.generateUUID();
-                jedis.hashSetFieldValue(id, type, json);
-                jedis.keyExpire(id, 3600);
-                return id;
-            }
+    /**
+     * gets the value stored at field "object" of a hash at the given id.
+     * returns a byte[] if exists.
+     *
+     * @param id
+     * @return byte[]
+     */
+    protected byte[] fetchPOJO(String key) {
+
+        try {
+            return this.verifyResource(key) ? jedis.hashGetPOJO(key) : null;
+        } catch (JedisException e) {
+            System.err.println(e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * stores the given value at the given field of a hash.
+     * generates an id (prepended with the given hash pool) to key the hash.
+     * returns the id if created.
+     *
+     * @param hashPool
+     * @param type
+     * @param value
+     * @return string
+     */
+    protected String createResource(String field, String value) {
+        
+        try {
+            String key = this.generateUUID();
+            return jedis.hashSetFieldValue(key, field, value) ? key : null;
         } catch (JedisException e) {
             System.err.println(e.getMessage());
         }
         return null;
     }
     
-    protected boolean updateResource(String id, String type, String json) {
+    /**
+     * updates the value at the given field of a hash stored at the given key.
+     * returns true if updated.
+     *
+     * @param id
+     * @param type
+     * @param value
+     * @return boolean
+     */
+    protected boolean updateResource(String key, String type, String value) {
         
         try {
-            
-            if ((!id.isEmpty() && !type.isEmpty() && !json.isEmpty()) && this.verifyResource(id)) {
-                jedis.hashSetFieldValue(id, type, json);
-                return true;
-            }
+            return this.verifyResource(key) ? jedis.hashSetFieldValue(key, type, value) : false;
         } catch (JedisException e) {
             System.err.println(e.getMessage());
         }
         return false;
     }
-    
-    private String generateUUID() {
-        return UUID.randomUUID().toString();
+
+    /**
+     * updates the given byte[] value at field "object" of the hash at the given key.
+     * returns true if updated.
+     *
+     * @param id
+     * @param pojo
+     * @return boolean
+     */
+    protected boolean updateResource(String key, byte[] pojo) {
+
+        try {
+            return this.verifyResource(key) ? jedis.hashSetPOJO(key, pojo) : false;
+        } catch (JedisException e) {
+            System.err.println(e.getMessage());
+        }
+        return false;
     }
 }

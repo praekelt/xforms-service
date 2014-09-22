@@ -128,8 +128,8 @@ public class FormsResource extends BaseResource {
     
     public FormsResource(JedisClient jc) {
         super(jc);
-        this.hashPool = "forms-";
-        this.representation = FormsRepresentation.class;
+//        this.hashPool = "forms-";
+//        this.representation = FormsRepresentation.class;
     }
     
     @Timed(name = "create")
@@ -187,7 +187,7 @@ public class FormsResource extends BaseResource {
         Iterator i;
         String current, form;
         
-        Set<String> keys = this.fetchKeysByType("forms");
+        Set<String> keys = null;
         
         if (keys != null) {
             int keyCount = keys.size();
@@ -220,7 +220,7 @@ public class FormsResource extends BaseResource {
      * @return 
      */
     public boolean formExists(String id) {
-        return this.verifyResource(this.hashPool + id);
+        return this.verifyResource(id);
     }
     
     /**
@@ -229,7 +229,7 @@ public class FormsResource extends BaseResource {
      * @return 
      */
     public String createForm(String xml) {
-        return this.createResource(this.hashPool, "form", xml);
+        return this.createResource("form", xml);
     }
     
     /**
@@ -239,7 +239,7 @@ public class FormsResource extends BaseResource {
      * @return 
      */
     public boolean updateForm(String id, String xml) {
-        return this.updateResource(this.hashPool + id, "form", xml);
+        return this.updateResource(id, "form", xml);
     }
     
     /**
@@ -248,7 +248,7 @@ public class FormsResource extends BaseResource {
      * @return 
      */
     public Map<String, String> fetchFormMap(String id) {
-        return this.fetchResource(this.hashPool + id);
+        return this.fetchResource(id);
     }
     
     /**
@@ -261,7 +261,7 @@ public class FormsResource extends BaseResource {
         if (!id.isEmpty() && this.formExists(id)) {
 
             try {
-                return jedis.hashGetFieldValue(this.hashPool + id, "form");
+                return jedis.hashGetFieldValue(id, "form");
             } catch (JedisException e) {
                 System.err.println(e.getMessage());
             }
