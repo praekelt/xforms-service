@@ -17,7 +17,6 @@ abstract class BaseResource {
     protected static Gson gson;
     protected static Type requestEntity;
     protected static Type responseEntity;
-    private static final InternalServerErrorException _500 = new InternalServerErrorException("Data-store is unreachable.");
 
     protected BaseResource(JedisClient jc) {
         gson = (gson == null) ? new Gson() : gson;
@@ -91,7 +90,7 @@ abstract class BaseResource {
         try {
             return jedis.keyExists(key);
         } catch (JedisException e) {
-            throw _500;
+            throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
 
@@ -108,7 +107,7 @@ abstract class BaseResource {
         try {
             return this.verifyResource(key) ? jedis.hashFieldExists(key, field) : false;
         } catch (JedisException e) {
-            throw _500;
+            throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
     
@@ -124,7 +123,7 @@ abstract class BaseResource {
         try {
             return this.verifyResource(key) ? jedis.hashGetFieldValue(key, field) : null;
         } catch (JedisException e) {
-            throw _500;
+            throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
 
@@ -140,7 +139,7 @@ abstract class BaseResource {
         try {
             return this.verifyResource(key) ? jedis.hashGetFieldsAndValues(key) : null;
         } catch (JedisException e) {
-            throw _500;
+            throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
 
@@ -156,7 +155,7 @@ abstract class BaseResource {
         try {
             return this.verifyResource(key) ? jedis.hashGetPOJO(key) : null;
         } catch (JedisException e) {
-            throw _500;
+            throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
 
@@ -176,7 +175,7 @@ abstract class BaseResource {
             String key = this.generateUUID();
             return jedis.hashSetFieldValue(key, field, value) ? key : null;
         } catch (JedisException e) {
-            throw _500;
+            throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
     
@@ -194,7 +193,7 @@ abstract class BaseResource {
         try {
             return this.verifyResource(key) ? jedis.hashSetFieldValue(key, type, value) : false;
         } catch (JedisException e) {
-            throw _500;
+            throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
 
@@ -211,7 +210,7 @@ abstract class BaseResource {
         try {
             return this.verifyResource(key) ? jedis.hashSetPOJO(key, pojo) : false;
         } catch (JedisException e) {
-            throw _500;
+            throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
 }
