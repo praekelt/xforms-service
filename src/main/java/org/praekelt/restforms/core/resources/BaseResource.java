@@ -5,6 +5,8 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.InternalServerErrorException;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.praekelt.restforms.core.exceptions.JedisException;
 import org.praekelt.restforms.core.services.jedis.JedisClient;
 
@@ -13,6 +15,7 @@ import org.praekelt.restforms.core.services.jedis.JedisClient;
  */
 abstract class BaseResource {
     
+    private static final Logger logger = Logger.getLogger("BaseResource");
     protected static JedisClient jedis;
     protected static Gson gson;
     protected static Type requestEntity;
@@ -90,6 +93,10 @@ abstract class BaseResource {
         try {
             return jedis.keyExists(key);
         } catch (JedisException e) {
+            logger.log(
+                Level.ERROR,
+                "BaseResource#verifyResource(): a JedisException occurred. Trace: " + e.getMessage()
+            );
             throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
@@ -107,6 +114,10 @@ abstract class BaseResource {
         try {
             return this.verifyResource(key) ? jedis.hashFieldExists(key, field) : false;
         } catch (JedisException e) {
+            logger.log(
+                Level.ERROR,
+                "BaseResource#verifyField(): a JedisException occurred. Trace: " + e.getMessage()
+            );
             throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
@@ -123,6 +134,10 @@ abstract class BaseResource {
         try {
             return this.verifyResource(key) ? jedis.hashGetFieldValue(key, field) : null;
         } catch (JedisException e) {
+            logger.log(
+                Level.ERROR,
+                "BaseResource#fetchField(): a JedisException occurred. Trace: " + e.getMessage()
+            );
             throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
@@ -139,6 +154,10 @@ abstract class BaseResource {
         try {
             return this.verifyResource(key) ? jedis.hashGetFieldsAndValues(key) : null;
         } catch (JedisException e) {
+            logger.log(
+                Level.ERROR,
+                "BaseResource#fetchResource(): a JedisException occurred. Trace: " + e.getMessage()
+            );
             throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
@@ -155,6 +174,10 @@ abstract class BaseResource {
         try {
             return this.verifyResource(key) ? jedis.hashGetPOJO(key) : null;
         } catch (JedisException e) {
+            logger.log(
+                Level.ERROR,
+                "BaseResource#fetchPOJO(): a JedisException occurred. Trace: " + e.getMessage()
+            );
             throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
@@ -175,6 +198,10 @@ abstract class BaseResource {
             String key = this.generateUUID();
             return jedis.hashSetFieldValue(key, field, value) ? key : null;
         } catch (JedisException e) {
+            logger.log(
+                Level.ERROR,
+                "BaseResource#createResource(): a JedisException occurred. Trace: " + e.getMessage()
+            );
             throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
@@ -193,6 +220,10 @@ abstract class BaseResource {
         try {
             return this.verifyResource(key) ? jedis.hashSetFieldValue(key, type, value) : false;
         } catch (JedisException e) {
+            logger.log(
+                Level.ERROR,
+                "BaseResource#updateResource(key, type, value): a JedisException occurred. Trace: " + e.getMessage()
+            );
             throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
@@ -210,6 +241,10 @@ abstract class BaseResource {
         try {
             return this.verifyResource(key) ? jedis.hashSetPOJO(key, pojo) : false;
         } catch (JedisException e) {
+            logger.log(
+                Level.ERROR,
+                "BaseResource#updateResource(key, pojo): a JedisException occurred. Trace: " + e.getMessage()
+            );
             throw new InternalServerErrorException("Data-store is unreachable.");
         }
     }
