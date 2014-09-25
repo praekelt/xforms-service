@@ -118,8 +118,8 @@ public class AnswersResource extends BaseResource {
     
     public AnswersResource(JedisClient jc) {
         super(jc);
-        this.hashPool = "answers-";
-        this.representation = AnswersRepresentation.class;
+//        this.hashPool = "answers-";
+//        this.representation = AnswersRepresentation.class;
     }
     
     @Timed(name = "create")
