@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.UUID;
+import javax.ws.rs.InternalServerErrorException;
 import org.praekelt.restforms.core.exceptions.JedisException;
 import org.praekelt.restforms.core.services.jedis.JedisClient;
 
@@ -16,6 +17,7 @@ abstract class BaseResource {
     protected static Gson gson;
     protected static Type requestEntity;
     protected static Type responseEntity;
+    private static final InternalServerErrorException _500 = new InternalServerErrorException("Data-store is unreachable.");
 
     protected BaseResource(JedisClient jc) {
         gson = (gson == null) ? new Gson() : gson;
@@ -61,7 +63,7 @@ abstract class BaseResource {
      * @return string json representation of the object
      */
     protected static String toJson(Object base, Type type) {
-        return base != null && type != null ? gson.toJson(base, type) : null;
+        return (base != null && type != null) ? gson.toJson(base, type) : null;
     }
     
     /**
@@ -74,7 +76,7 @@ abstract class BaseResource {
      * @return object deserialised representation of the given json argument
      */
     protected static Object fromJson(String json, Type type) {
-        return !"".equals(json) && json != null && type != null ? gson.fromJson(json, type) : null;
+        return (!"".equals(json) && json != null && type != null) ? gson.fromJson(json, type) : null;
     }
 
     /**
@@ -84,14 +86,13 @@ abstract class BaseResource {
      * @param key
      * @return boolean
      */
-    protected boolean verifyResource(String key) {
+    protected boolean verifyResource(String key) throws InternalServerErrorException {
         
         try {
             return jedis.keyExists(key);
         } catch (JedisException e) {
-            System.err.println(e.getMessage());
+            throw _500;
         }
-        return false;
     }
 
     /**
@@ -102,14 +103,13 @@ abstract class BaseResource {
      * @param field
      * @return boolean
      */
-    protected boolean verifyField(String key, String field) {
+    protected boolean verifyField(String key, String field) throws InternalServerErrorException {
 
         try {
             return this.verifyResource(key) ? jedis.hashFieldExists(key, field) : false;
         } catch (JedisException e) {
-            System.err.println(e.getMessage());
+            throw _500;
         }
-        return false;
     }
     
     /**
@@ -119,14 +119,13 @@ abstract class BaseResource {
      * @param field
      * @return string
      */
-    protected String fetchField(String key, String field) {
+    protected String fetchField(String key, String field) throws InternalServerErrorException {
 
         try {
             return this.verifyResource(key) ? jedis.hashGetFieldValue(key, field) : null;
         } catch (JedisException e) {
-            System.err.println(e.getMessage());
+            throw _500;
         }
-        return null;
     }
 
     /**
@@ -136,14 +135,13 @@ abstract class BaseResource {
      * @param key
      * @return string/string map
      */
-    protected Map<String, String> fetchResource(String key) {
+    protected Map<String, String> fetchResource(String key) throws InternalServerErrorException {
         
         try {
             return this.verifyResource(key) ? jedis.hashGetFieldsAndValues(key) : null;
         } catch (JedisException e) {
-            System.err.println(e.getMessage());
+            throw _500;
         }
-        return null;
     }
 
     /**
@@ -153,14 +151,13 @@ abstract class BaseResource {
      * @param id
      * @return byte[]
      */
-    protected byte[] fetchPOJO(String key) {
+    protected byte[] fetchPOJO(String key) throws InternalServerErrorException {
 
         try {
             return this.verifyResource(key) ? jedis.hashGetPOJO(key) : null;
         } catch (JedisException e) {
-            System.err.println(e.getMessage());
+            throw _500;
         }
-        return null;
     }
 
     /**
@@ -173,15 +170,14 @@ abstract class BaseResource {
      * @param value
      * @return string
      */
-    protected String createResource(String field, String value) {
+    protected String createResource(String field, String value) throws InternalServerErrorException {
         
         try {
             String key = this.generateUUID();
             return jedis.hashSetFieldValue(key, field, value) ? key : null;
         } catch (JedisException e) {
-            System.err.println(e.getMessage());
+            throw _500;
         }
-        return null;
     }
     
     /**
@@ -193,14 +189,13 @@ abstract class BaseResource {
      * @param value
      * @return boolean
      */
-    protected boolean updateResource(String key, String type, String value) {
+    protected boolean updateResource(String key, String type, String value) throws InternalServerErrorException {
         
         try {
             return this.verifyResource(key) ? jedis.hashSetFieldValue(key, type, value) : false;
         } catch (JedisException e) {
-            System.err.println(e.getMessage());
+            throw _500;
         }
-        return false;
     }
 
     /**
@@ -211,13 +206,12 @@ abstract class BaseResource {
      * @param pojo
      * @return boolean
      */
-    protected boolean updateResource(String key, byte[] pojo) {
+    protected boolean updateResource(String key, byte[] pojo) throws InternalServerErrorException {
 
         try {
             return this.verifyResource(key) ? jedis.hashSetPOJO(key, pojo) : false;
         } catch (JedisException e) {
-            System.err.println(e.getMessage());
+            throw _500;
         }
-        return false;
     }
 }
