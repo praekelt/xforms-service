@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.FormIndex;
@@ -27,6 +29,7 @@ public final class RosaFactory implements Serializable {
     private transient FormEntryModel model;
     private transient FormDef form;
     private transient FormIndex[] questionIndices;
+    private transient static final Logger logger = Logger.getLogger("RosaFactory");
     private static final long serialVersionUID = 1L;
     private String xmlForm, questionTexts[];
     private int total, completed;
@@ -44,6 +47,7 @@ public final class RosaFactory implements Serializable {
         } else if (question > -1 && question < total) {
             return controller.jumpToIndex(questionIndices[question]);
         } else {
+            logger.log(Level.ERROR, "RosaFactory#setCursor(): given argument, " + question + " , is out of bounds.");
             throw new RosaException("The question number was out of bounds.");
         }
     }
@@ -90,6 +94,11 @@ public final class RosaFactory implements Serializable {
             try {
                 return x.serializeInstance(form.getInstance());
             } catch (IOException e) {
+                logger.log(
+                    Level.ERROR,
+                    "RosaFactory#serialiseXForm(): unable to parse and generate a model/instance XML document from the given argument, " + form.getInstance().toString() + "." + 
+                    " IOException trace: " + e.getMessage()
+                );
                 throw new RosaException("Unable to create a model/instance XML document.");
             }
         }
@@ -122,8 +131,16 @@ public final class RosaFactory implements Serializable {
                     return rf;
                 }
             } catch (IOException e) {
+                logger.log(
+                    Level.ERROR,
+                    "RosaFactory#rebuild(): an IOException occurred while attempting to unserialise an instance. Trace: " + e.getMessage()
+                );
                 throw new RosaException("Unable to unserialise the given xForm for processing.");
             } catch (ClassNotFoundException e) {
+                logger.log(
+                    Level.ERROR,
+                    "RosaFactory#rebuild(): a ClassNotFoundException occurred while attempting to unserialise an instance. Trace: " + e.getMessage()
+                );
                 throw new RosaException("Unable to unserialise the given xForm for processing.");
             }
         }
@@ -142,6 +159,10 @@ public final class RosaFactory implements Serializable {
                 oos.close();
                 return buffer;
             } catch (IOException e) {
+                logger.log(
+                    Level.ERROR,
+                    "RosaFactory#rebuild(): an IOException occurred while attempting to serialise an instance. Trace: " + e.getMessage()
+                );
                 throw new RosaException("Unable to serialise the given xForm instance.");
             }
         }
@@ -184,6 +205,14 @@ public final class RosaFactory implements Serializable {
                     completed = 0;
                 }
             } catch (RuntimeException e) {
+                logger.log(
+                    Level.ERROR,
+                    "RosaFactory#setUp(): a RuntimeException occurred while attempting to initialise a RosaFactory instance." + 
+                    "This may suggest a malformed XML document given as a method argument. Arguments: " + 
+                    xmlForm + ", " +
+                    true + ", Trace: " + 
+                    e.getMessage()
+                );
                 throw new RosaException("The given XML document was found to be malformed.");
             }
             return true;
