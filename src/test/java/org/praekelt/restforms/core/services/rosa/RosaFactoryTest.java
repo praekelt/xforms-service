@@ -1,13 +1,15 @@
 package org.praekelt.restforms.core.services.rosa;
 
-import org.praekelt.restforms.core.services.rosa.RosaFactory;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Rule;
+import static org.junit.matchers.JUnitMatchers.containsString;
 import org.praekelt.restforms.core.exceptions.RosaException;
+import org.junit.rules.ExpectedException;
 
 /**
  *
@@ -36,6 +38,9 @@ public class RosaFactoryTest {
     @After
     public void tearDown() {
     }
+    
+    @Rule
+    public ExpectedException e = ExpectedException.none();
 
     /**
      * Test of setUp method, of class RosaFactory.
@@ -46,6 +51,10 @@ public class RosaFactoryTest {
         System.out.println("setUp");
         assertTrue(new RosaFactory().setUp(this.form, true));
         assertFalse(new RosaFactory().setUp("", true));
+        
+        e.expect(RosaException.class);
+        e.expectMessage(containsString("The given XML document was found to be malformed."));
+        new RosaFactory().setUp("not-valid-xml", true);
     }
 
     /**
@@ -123,19 +132,23 @@ public class RosaFactoryTest {
      * @throws org.praekelt.restforms.core.exceptions.RosaException
      */
     @Test
-    public void testAnswerQuestion() throws RosaException {
+    public void testAnswerQuestion() throws Exception {
         System.out.println("answerQuestion");
         RosaFactory instance = new RosaFactory();
         assertTrue(instance.setUp(this.form, true));
-        try {
-            assertTrue(instance.answerQuestion("asdfas", 0));
-            assertFalse(instance.answerQuestion("asdfas", 23445));
-            assertTrue(instance.answerQuestion("asdfas"));
-            assertTrue(instance.answerQuestion("asdfas"));
-            assertTrue(instance.answerQuestion("1234"));
-        } catch (RosaException e) {
-            System.err.println(e.getMessage());
-        }
+        assertTrue(instance.answerQuestion("asdfas", 0) > 0);
+        assertTrue(instance.answerQuestion("asdfas") > 0);
+        assertTrue(instance.answerQuestion("asdfas") > 0);
+        
+        e.expect(RosaException.class);
+        e.expectMessage(containsString("Answer data-type was incorrect."));
+        instance.answerQuestion("abcd");
+        
+        e.expect(RosaException.class);
+        e.expectMessage(containsString("The question number was out of bounds."));
+        instance.answerQuestion("asdfas", 23445);
+        
+        assertTrue(instance.answerQuestion("abcdefg") > 0);
     }
     
     /**

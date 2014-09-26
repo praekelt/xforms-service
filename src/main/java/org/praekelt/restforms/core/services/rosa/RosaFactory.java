@@ -26,7 +26,7 @@ public final class RosaFactory implements Serializable {
     private transient FormEntryController controller;
     private transient FormEntryModel model;
     private transient FormDef form;
-    private transient FormIndex[] questionIndicies;
+    private transient FormIndex[] questionIndices;
     private static final long serialVersionUID = 1L;
     private String xmlForm, questionTexts[];
     private int total, completed;
@@ -37,8 +37,15 @@ public final class RosaFactory implements Serializable {
      * 
      * @param position 
      */
-    private void setCursor(FormIndex position) {
-        controller.jumpToIndex(position);
+    private int setCursor(int question) throws RosaException {
+        
+        if (question == -1 && completed < total) {
+            return controller.jumpToIndex(questionIndices[completed]);
+        } else if (question > -1 && question < total) {
+            return controller.jumpToIndex(questionIndices[question]);
+        } else {
+            throw new RosaException("The question number was out of bounds.");
+        }
     }
     
     /**
@@ -56,14 +63,14 @@ public final class RosaFactory implements Serializable {
             i = 0;
         
         total = model.getNumQuestions();
-        questionIndicies = new FormIndex[total];
+        questionIndices = new FormIndex[total];
         questionTexts = fresh ? new String[total] : questionTexts;
 
         while ((event = controller.stepToNextEvent()) != formEnd) {
 
             if (event == FormEntryController.EVENT_QUESTION) {
                 questionTexts[i] = fresh ? model.getQuestionPrompt().getQuestionText() : questionTexts[i];
-                questionIndicies[i++] = model.getFormIndex();
+                questionIndices[i++] = model.getFormIndex();
             }
         }
     }
@@ -87,6 +94,18 @@ public final class RosaFactory implements Serializable {
             }
         }
         return null;
+    }
+    
+    private void checkRelevanceOfRemaining() {
+        int question = completed;
+        
+        while (question < total) {
+            
+            if (model.isIndexRelevant(questionIndices[question++])) {
+                break;
+            }
+            completed++;
+        }
     }
     
     public static RosaFactory rebuild(byte[] buffer) throws RosaException {
@@ -153,15 +172,15 @@ public final class RosaFactory implements Serializable {
                 model = new FormEntryModel(form);
                 controller = new FormEntryController(model);
                 
-                this.xmlForm = xmlForm;
                 setQuestionMetadata(fresh);
 
                 if (!fresh) {
 
                     if (completed != total) {
-                        setCursor(questionIndicies[completed]);
+                        setCursor(completed);
                     }
                 } else {
+                    this.xmlForm = xmlForm;
                     completed = 0;
                 }
             } catch (RuntimeException e) {
@@ -207,21 +226,13 @@ public final class RosaFactory implements Serializable {
      * 
      * @param answer
      * @param question integer pointer to the instance's array of form indices
-     * @return boolean whether or not the answer was committed to the xform
+     * @return boolean whether or not the question was relevant
      * @throws RosaException thrown if the answerdata object returned is null 
      * (indicating a numberformatexception, for example) or if the 
      * formentrycontroller's answer constants are anything but ANSWER_OK
      */
-    public boolean answerQuestion(String answer, int question) throws RosaException {
-        
-        if (question == -1 && completed < total) {
-            setCursor(questionIndicies[completed]);
-        } else if (question > -1 && question < total) {
-            setCursor(questionIndicies[question]);
-        } else {
-            return false;
-        }
-        
+    public int answerQuestion(String answer, int question) throws RosaException {
+        setCursor(question);
         IAnswerData a = castAnswer(answer);
 
         if (a != null) {
@@ -233,13 +244,14 @@ public final class RosaFactory implements Serializable {
                     throw new RosaException("Answer was required but found empty.");
                 default:
                     completed++;
-                    return true;
+                    checkRelevanceOfRemaining();
+                    return (completed < total) ? completed : -1;
             }
         }
         throw new RosaException("Answer data-type was incorrect.");
     }
     
-    public boolean answerQuestion(String answer) throws RosaException {
+    public int answerQuestion(String answer) throws RosaException {
         return answerQuestion(answer, -1);
     }
     
