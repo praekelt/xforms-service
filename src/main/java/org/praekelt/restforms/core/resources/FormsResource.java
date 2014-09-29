@@ -103,14 +103,22 @@ public final class FormsResource extends BaseResource {
     @GET
     @Path("{formId}")
     public Response getSingle(@PathParam("formId") String formId) {
-        String xform = fetchField(formId, "form");
         
-        if (xform != null) {
-            return Response.ok(xform).type(MediaType.APPLICATION_XML).build();
+        try {
+            String xform = fetchField(formId, "form");
+        
+            if (xform != null) {
+                return Response.ok(xform).type(MediaType.APPLICATION_XML).build();
+            }
+            return Response.status(Response.Status.NOT_FOUND).entity(toJson(
+                new FormsResponse(404, "No XForm was found associated with the given ID."),
+                responseEntity
+            )).type(MediaType.APPLICATION_JSON).build();
+        } catch (InternalServerErrorException e) {
+            return Response.serverError().entity(toJson(
+                new FormsResponse(500, "A XForm processing error occurred: " + e.getMessage() + "."),
+                responseEntity
+            )).build();
         }
-        return Response.status(Response.Status.NOT_FOUND).entity(toJson(
-            new FormsResponse(404, "No XForm was found associated with the given ID."),
-            responseEntity
-        )).type(MediaType.APPLICATION_JSON).build();
     }
 }
