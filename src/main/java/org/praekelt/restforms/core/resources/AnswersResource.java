@@ -12,9 +12,7 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.praekelt.restforms.core.exceptions.JedisException;
-import org.praekelt.restforms.core.exceptions.RosaException;
 import org.praekelt.restforms.core.services.jedis.JedisClient;
-import org.praekelt.restforms.core.services.rosa.RosaFactory;
 
 /**
  * @author ant cosentino
@@ -42,41 +40,15 @@ public final class AnswersResource extends BaseResource {
     @GET
     @Path("{formId}")
     public Response getSingle(@PathParam("formId") String formId) {
-
-        String modelInstance;
-        byte[] serialised = fetchPOJO(formId);
-
+        
         try {
-
-            if (serialised != null) {
-                RosaFactory r = RosaFactory.rebuild(serialised);
-
-                if (r != null) {
-
-                    if (r.getCompleted() == r.getTotal()) {
-                        modelInstance = fetchModelInstance(formId);
-
-                        if (modelInstance != null) {
-                            return Response.ok(modelInstance).type(MediaType.APPLICATION_XML).build();
-                        }
-                        return Response.serverError().entity(toJson(
-                            new AnswersResponse(500, "Unable to process the XForm associated with the given ID."),
-                            responseEntity
-                        )).type(MediaType.APPLICATION_JSON).build();
-                    }
-                    return Response.status(Response.Status.BAD_REQUEST).entity(toJson(
-                        new AnswersResponse(400, "The XForm associated with the given ID is not ready for output. Please complete all questions first."),
-                        responseEntity
-                    )).type(MediaType.APPLICATION_JSON).build();
-                }
-                return Response.serverError().entity(toJson(
-                    new AnswersResponse(500, "Unable to process the XForm associated with the given ID."),
-                    responseEntity
-                )).type(MediaType.APPLICATION_JSON).build();
+            String modelInstance = fetchModelInstance(formId);
+            
+            if (modelInstance != null && !"".equals(modelInstance)) {
+                return Response.ok(modelInstance).type(MediaType.APPLICATION_XML).build();
             }
-        } catch (RosaException e) {
-            return Response.serverError().entity(toJson(
-                new AnswersResponse(500, "Unable to process the XForm associated with the given ID."),
+            return Response.status(Response.Status.NOT_FOUND).entity(toJson(
+                new AnswersResponse(404, "No XForm was found to be associated with the given ID. This could also indicate server error."),
                 responseEntity
             )).type(MediaType.APPLICATION_JSON).build();
         } catch (InternalServerErrorException e) {
@@ -85,10 +57,6 @@ public final class AnswersResource extends BaseResource {
                 responseEntity
             )).type(MediaType.APPLICATION_JSON).build();
         }
-        return Response.status(Response.Status.NOT_FOUND).entity(toJson(
-            new AnswersResponse(404, "No XForm was found to be associated with the given ID. This could also indicate server error."),
-            responseEntity
-        )).type(MediaType.APPLICATION_JSON).build();
     }
 
     /**
