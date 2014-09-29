@@ -66,9 +66,9 @@ public final class JedisClient {
     
     /**
      * 
-     * @param dynamic type
-     * @param action
-     * @return dynamic type
+     * @param <T> dynamic type set in overridden implementation
+     * @param action anonymous jedisaction instance
+     * @return <T> dynamic type set in overridden implementation
      * @throws JedisException 
      */
     private <T> T execute(JedisAction<T> action) throws JedisException {
@@ -94,8 +94,8 @@ public final class JedisClient {
      * remove any time to live associated with the given key
      * 
      * @param key
-     * @return
-     * @throws JedisException 
+     * @return boolean whether the operation succeeded
+     * @throws JedisException
      */
     public boolean keyPersist(final String key) throws JedisException {
         
@@ -112,7 +112,7 @@ public final class JedisClient {
      * 
      * @param key
      * @param seconds
-     * @return
+     * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
     public boolean keyExpire(final String key, final int seconds) throws JedisException {
@@ -126,10 +126,11 @@ public final class JedisClient {
     }
     
     /**
-     * set the time to live for the given key to the default expiry duration
+     * set the time to live for the given key to the configured
+     * default expiry duration
      * 
      * @param key
-     * @return
+     * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
     public boolean keyExpire(final String key) throws JedisException {
@@ -141,7 +142,7 @@ public final class JedisClient {
      * 
      * @param oldKey
      * @param newKey
-     * @return
+     * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
     public boolean keyRename(final String oldKey, final String newKey) throws JedisException {
@@ -155,7 +156,6 @@ public final class JedisClient {
     }
     
     /**
-     * 
      * Returns the remaining time to live of a key that has a timeout.
      * This introspection capability allows a Redis client to check 
      * how many seconds a given key will continue to be part of the dataset.
@@ -167,7 +167,7 @@ public final class JedisClient {
      *  - The command returns -1 if the key exists but has no associated expire.
      * 
      * @param key
-     * @return
+     * @return long integer timeout duration in seconds
      * @throws JedisException 
      */
     public long keyTimeToLive(final String key) throws JedisException {
@@ -183,7 +183,7 @@ public final class JedisClient {
      * return a string representing the redis data type of the given key
      * 
      * @param key
-     * @return
+     * @return string redis type of the given key
      * @throws JedisException 
      */
     public String keyType(final String key) throws JedisException {
@@ -199,8 +199,8 @@ public final class JedisClient {
      * Return a value from Redis
      *
      * @param key
-     * @return
-     * @throws org.praekelt.restforms.core.exceptions.JedisException
+     * @return string value stored at the given key
+     * @throws JedisException
      */
     public String keyGet(final String key) throws JedisException {
         return (key != null && !"".equals(key)) ? this.execute(new JedisAction<String>() {
@@ -215,8 +215,8 @@ public final class JedisClient {
      * Get a Set of String keysByPattern from the database
      *
      * @param pattern
-     * @return
-     * @throws org.praekelt.restforms.core.exceptions.JedisException
+     * @return set of strings of keys matching the given string pattern
+     * @throws JedisException
      */
     public Set<String> keysByPattern(final String pattern) throws JedisException {
         return this.execute(new JedisAction<Set<String>>() {
@@ -230,18 +230,18 @@ public final class JedisClient {
     /**
      * Get all available keysByPattern "*" as a String Set
      *
-     * @return
-     * @throws org.praekelt.restforms.core.exceptions.JedisException
+     * @return set of strings of keys
+     * @throws JedisException
      */
     public Set<String> keyGetAll() throws JedisException {
         return this.keysByPattern("*");
     }
     
     /**
-     * nuke all keysByPattern within the instance
+     * nuke all keys within redis storage
      * 
-     * @return 
-     * @throws JedisException 
+     * @return long integer number of keys deleted from redis
+     * @throws JedisException
      */
     public long keyDeleteAll() throws JedisException {
         
@@ -264,8 +264,8 @@ public final class JedisClient {
      * Remove a key from the database
      *
      * @param key
-     * @return 
-     * @throws org.praekelt.restforms.core.exceptions.JedisException
+     * @return long integer
+     * @throws JedisException
      */
     public long keyDelete(final String key) throws JedisException {
         return (key != null && !"".equals(key)) ? this.execute(new JedisAction<Long>() {
@@ -277,10 +277,12 @@ public final class JedisClient {
     }
 
     /**
+     * sets a given key's value to the given value
+     * and sets the configured default time to live duration
      * 
      * @param key
      * @param value
-     * @return 
+     * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
     public boolean keySet(final String key, final String value) throws JedisException {
@@ -302,7 +304,7 @@ public final class JedisClient {
      * determine the existence of a given key
      * 
      * @param key
-     * @return
+     * @return boolean whether the given key exists
      * @throws JedisException 
      */
     public boolean keyExists(final String key) throws JedisException {
@@ -323,7 +325,7 @@ public final class JedisClient {
      * 
      * @param key
      * @param objectBuffer
-     * @return
+     * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
     public boolean hashSetPOJO(String key, final byte[] objectBuffer) throws JedisException {
@@ -345,7 +347,7 @@ public final class JedisClient {
      * get the byte[] value stored at field "object" of the hash at the given key
      * 
      * @param key
-     * @return
+     * @return byte[] value stored at given key and "object" field
      * @throws JedisException 
      */
     public byte[] hashGetPOJO(String key) throws JedisException {
@@ -366,7 +368,7 @@ public final class JedisClient {
      * determine the existence of field "object" in hash at the given key
      * 
      * @param key
-     * @return
+     * @return boolean whether the byte[] value exists
      * @throws JedisException 
      */
     public boolean hashPOJOExists(String key) throws JedisException {
@@ -387,7 +389,7 @@ public final class JedisClient {
      * remove the field "object" from the hash at the given key
      * 
      * @param key
-     * @return
+     * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
     public boolean hashDeletePOJO(String key) throws JedisException {
@@ -412,7 +414,7 @@ public final class JedisClient {
      * 
      * @param key
      * @param fields
-     * @return
+     * @return long integer number of fields deleted
      * @throws JedisException 
      */
     public long hashDeleteFields(final String key, final String... fields) throws JedisException {
@@ -430,7 +432,7 @@ public final class JedisClient {
      * 
      * @param key
      * @param field
-     * @return
+     * @return boolean whether the field exists
      * @throws JedisException 
      */
     public boolean hashFieldExists(final String key, final String field) throws JedisException {
@@ -448,7 +450,7 @@ public final class JedisClient {
      * 
      * @param key
      * @param field
-     * @return
+     * @return string value stored at the given key and field
      * @throws JedisException 
      */
     public String hashGetFieldValue(final String key, final String field) throws JedisException {
@@ -465,7 +467,7 @@ public final class JedisClient {
      * get a key/value mapping of fields/values stored in the hash at the given key
      * 
      * @param key
-     * @return
+     * @return map of string to string containing hash fields and values stored at the given key
      * @throws JedisException 
      */
     public Map<String, String> hashGetFieldsAndValues(final String key) throws JedisException {
@@ -481,7 +483,7 @@ public final class JedisClient {
      * get a string set of field names from the hash at the given key
      * 
      * @param key
-     * @return
+     * @return set of strings of field names stored at the given key
      * @throws JedisException 
      */
     public Set<String> hashGetFields(final String key) throws JedisException {
@@ -497,7 +499,7 @@ public final class JedisClient {
      * determine the number of fields stored in a hash at the given key
      * 
      * @param key
-     * @return
+     * @return long integer number of fields stored at the given key
      * @throws JedisException 
      */
     public long hashLength(final String key) throws JedisException {
@@ -514,7 +516,7 @@ public final class JedisClient {
      * 
      * @param key
      * @param fields
-     * @return
+     * @return list of strings of hash field values (potentially multiple hash fields)
      * @throws JedisException 
      */
     public List<String> hashGetFieldValues(final String key, final String... fields) throws JedisException {
@@ -533,7 +535,7 @@ public final class JedisClient {
      * 
      * @param key
      * @param map
-     * @return
+     * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
     public boolean hashSetFieldsAndValues(final String key, final Map<String, String> map) throws JedisException {
@@ -558,7 +560,7 @@ public final class JedisClient {
      * @param key
      * @param field
      * @param value
-     * @return
+     * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
     public boolean hashSetFieldValue(final String key, final String field, final String value) throws JedisException {
@@ -581,7 +583,7 @@ public final class JedisClient {
      * @param key
      * @param field
      * @param value
-     * @return
+     * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
     public boolean hashSetFieldValueIfNotExists(final String key, final String field, final String value) throws JedisException {
@@ -601,7 +603,7 @@ public final class JedisClient {
      * get a string list of values from all fields of a hash stored at the given key
      * 
      * @param key
-     * @return
+     * @return list of strings of values stored in all fields of a hash at the given key
      * @throws JedisException 
      */
     public List<String> hashGetValues(final String key) throws JedisException {
