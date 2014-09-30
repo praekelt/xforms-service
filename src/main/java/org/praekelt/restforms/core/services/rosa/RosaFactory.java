@@ -61,6 +61,10 @@ public final class RosaFactory implements Serializable {
     }
     
     /**
+     * captures the form indices corresponding to questions
+     * in the xform and populates other instance fields needed
+     * for xform processing.
+     * 
      * this method is only ever used post-initialisation
      * or post-unserialisation. its responsibility is to
      * populate the transient fields of the instance with
@@ -86,6 +90,13 @@ public final class RosaFactory implements Serializable {
         }
     }
     
+    /**
+     * casts the answer from string to the correct type
+     * expected in the current question.
+     * 
+     * @param answer string representation of answer to be added to xform
+     * @return ianswerdata wrapped typed answer data
+     */
     private IAnswerData castAnswer(String answer) {
         int type = model.getQuestionPrompt().getDataType();
         QuestionDef def = model.getQuestionPrompt().getQuestion();
@@ -207,6 +218,8 @@ public final class RosaFactory implements Serializable {
     }
     
     /**
+     * initialises instance fields needed for xform processing.
+     * 
      * this method reads in a given xform, using a javarosa
      * utility class, which produces a formdef instance - on 
      * which the other instance fields of the class are dependent.
@@ -283,12 +296,7 @@ public final class RosaFactory implements Serializable {
     }
     
     /**
-     * the initial conditional block of this method evaluates
-     * which question is to be answered. provided the given
-     * question argument is within reasonable bounds, any question
-     * of a form may be attempted. if the question argument is 
-     * simply -1, the question flow will be regular (ie, sequential 
-     * and repeating any question that is given an invalid answer)
+     * commits an answer to the instance's internal form model.
      * 
      * @param answer the actual answer value (to be converted to 
      * the applicable type from within this method)
