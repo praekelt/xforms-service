@@ -9,6 +9,7 @@ import redis.clients.jedis.JedisPool;
  * 
  * @author ant cosentino <ant@io.co.za>
  * @since 2014-10-01
+ * @see io.dropwizard.lifecycle.Managed
  */
 public class JedisPoolManager implements Managed {
 

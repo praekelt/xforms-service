@@ -26,6 +26,7 @@ import org.praekelt.restforms.core.exceptions.RosaException;
  * 
  * @author ant cosentino <ant@io.co.za>
  * @since 2014-10-10
+ * @see java.io.Serializable
  */
 public final class RosaFactory implements Serializable {
     private transient FormEntryController controller;

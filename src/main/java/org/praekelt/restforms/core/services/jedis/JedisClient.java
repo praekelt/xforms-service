@@ -27,6 +27,11 @@ public final class JedisClient {
         this.expires = expires;
     }
     
+    /**
+     * @author ant cosentino <ant@io.co.za>
+     * @since 2014-10-10
+     * @see com.codahale.metrics.health.HealthCheck
+     */
     public static final class JedisHealthCheck extends HealthCheck {
         
         private final JedisClient jedisClient;
