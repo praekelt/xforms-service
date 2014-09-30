@@ -20,9 +20,13 @@ import org.javarosa.xform.util.XFormUtils;
 import org.praekelt.restforms.core.exceptions.RosaException;
 
 /**
+ * this service facilitates the processing
+ * of xform documents. an instance of this 
+ * class represents a single xform document.
  * 
- * 
- * @author ant cosentino
+ * @author ant cosentino <ant@io.co.za>
+ * @since 2014-10-10
+ * @see java.io.Serializable
  */
 public final class RosaFactory implements Serializable {
     private transient FormEntryController controller;
@@ -35,10 +39,14 @@ public final class RosaFactory implements Serializable {
     private int total, completed;
     
     /**
-     * steps the instance's formentrycontroller
-     * to the given formindex position.
+     * steps the instance's formentrycontroller to the 
+     * given formindex position.
      * 
-     * @param position 
+     * @param question integer pointer to a desired 
+     * form index
+     * @return integer the integer event value
+     * @throws RosaException if the integer pointer is 
+     * out of bounds
      */
     private int setCursor(int question) throws RosaException {
         
@@ -53,13 +61,16 @@ public final class RosaFactory implements Serializable {
     }
     
     /**
+     * captures the form indices corresponding to questions
+     * in the xform and populates other instance fields needed
+     * for xform processing.
+     * 
      * this method is only ever used post-initialisation
      * or post-unserialisation. its responsibility is to
      * populate the transient fields of the instance with
      * the data needed to process a form.
      * 
      * @param fresh
-     * @throws RosaException thrown if model returned null, which indicates a malformed xml document.
      */
     private void setQuestionMetadata(boolean fresh) {
         int event, 
@@ -79,12 +90,27 @@ public final class RosaFactory implements Serializable {
         }
     }
     
+    /**
+     * casts the answer from string to the correct type
+     * expected in the current question.
+     * 
+     * @param answer string representation of answer to be added to xform
+     * @return ianswerdata wrapped typed answer data
+     */
     private IAnswerData castAnswer(String answer) {
         int type = model.getQuestionPrompt().getDataType();
         QuestionDef def = model.getQuestionPrompt().getQuestion();
         return XFormAnswerDataParser.getAnswerData(answer, type, def);
     }
     
+    /**
+     * parses the form model and generates complete
+     * instance data
+     * 
+     * @return byte[] representing the generated model/instance
+     * @throws RosaException if an ioexception occurred within
+     * the javarosa library
+     */
     private byte[] serialiseXForm() throws RosaException {
         XFormSerializingVisitor x;
         
@@ -105,6 +131,10 @@ public final class RosaFactory implements Serializable {
         return null;
     }
     
+    /**
+     * increments the completed question counter until
+     * a relevant question is found
+     */
     private void checkRelevanceOfRemaining() {
         int question = completed;
         
@@ -117,6 +147,15 @@ public final class RosaFactory implements Serializable {
         }
     }
     
+    /**
+     * unserialises a rosafactory instance from a byte[]
+     * 
+     * @param buffer byte[] serialised rosafactory
+     * @return rosafactory unserialised instance
+     * @throws RosaException if an ioexception occurred during
+     * unserialisation or if a classnotfoundexception occurred
+     * during unserialisation
+     */
     public static RosaFactory rebuild(byte[] buffer) throws RosaException {
         
         if (buffer != null && buffer.length > 0) {
@@ -133,20 +172,29 @@ public final class RosaFactory implements Serializable {
             } catch (IOException e) {
                 logger.log(
                     Level.ERROR,
-                    "RosaFactory#rebuild(): an IOException occurred while attempting to unserialise an instance. Trace: " + e.getMessage()
+                    "RosaFactory#rebuild(): an IOException occurred while attempting to unserialise an instance. Message: " + e.getMessage()
                 );
                 throw new RosaException("Unable to unserialise the given xForm for processing.");
             } catch (ClassNotFoundException e) {
                 logger.log(
                     Level.ERROR,
-                    "RosaFactory#rebuild(): a ClassNotFoundException occurred while attempting to unserialise an instance. Trace: " + e.getMessage()
+                    "RosaFactory#rebuild(): a ClassNotFoundException occurred while attempting to unserialise an instance. Message: " + e.getMessage() + "."
                 );
-                throw new RosaException("Unable to unserialise the given xForm for processing.");
+                throw new RosaException("Unable to unserialise the given XForm for processing.");
             }
         }
         return null;
     }
     
+    /**
+     * serialises a given rosafactory instance to a byte[]
+     * ready for external storage
+     * 
+     * @param r rosafactory instance to be serialised
+     * @return byte[] serialised rosafactory instance
+     * @throws RosaException if an ioexception occurred
+     * during serialisation
+     */
     public static byte[] persist(RosaFactory r) throws RosaException {
         
         if (r != null) {
@@ -161,15 +209,17 @@ public final class RosaFactory implements Serializable {
             } catch (IOException e) {
                 logger.log(
                     Level.ERROR,
-                    "RosaFactory#rebuild(): an IOException occurred while attempting to serialise an instance. Trace: " + e.getMessage()
+                    "RosaFactory#rebuild(): an IOException occurred while attempting to serialise an instance. Message: " + e.getMessage() + "."
                 );
-                throw new RosaException("Unable to serialise the given xForm instance.");
+                throw new RosaException("Unable to serialise the given XForm instance.");
             }
         }
         return null;
     }
     
     /**
+     * initialises instance fields needed for xform processing.
+     * 
      * this method reads in a given xform, using a javarosa
      * utility class, which produces a formdef instance - on 
      * which the other instance fields of the class are dependent.
@@ -178,10 +228,11 @@ public final class RosaFactory implements Serializable {
      * if this method is used after unserialising, it sets the
      * formentrycontroller's position to the next unanswered question.
      * 
-     * @param xmlForm xform string
-     * @param fresh is this a new instance, or is it being unserialised?
-     * @return boolean whether or not the initialisation process was successful
-     * @throws org.praekelt.restforms.core.exceptions.RosaException thrown if the xml provided is not valid and/or well-formed
+     * @param xmlForm xform document assumed to be valid and well-formed
+     * @param fresh whether this is a new instance or recently unserialised
+     * @return boolean whether the method succeeded
+     * @throws RosaException if a runtime exception is caught which 
+     * suggests a malformed xml document
      */
     public boolean setUp(String xmlForm, boolean fresh) throws RosaException {
         
@@ -208,9 +259,9 @@ public final class RosaFactory implements Serializable {
                 logger.log(
                     Level.ERROR,
                     "RosaFactory#setUp(): a RuntimeException occurred while attempting to initialise a RosaFactory instance." + 
-                    "This may suggest a malformed XML document given as a method argument. Arguments: " + 
+                    " This may suggest a malformed XML document given as a method argument. Arguments: " + 
                     xmlForm + ", " +
-                    true + ", Trace: " + 
+                    true + ", Message: " + 
                     e.getMessage()
                 );
                 throw new RosaException("The given XML document was found to be malformed.");
@@ -245,20 +296,16 @@ public final class RosaFactory implements Serializable {
     }
     
     /**
-     * the initial conditional block of this method evaluates
-     * which question is to be answered. provided the given
-     * question argument is within reasonable bounds, any question
-     * of a form may be attempted and reattempted. if the question 
-     * argument is simply -1, the question flow will be regular 
-     * (ie, sequential and repeating any question that is given 
-     * an invalid answer)
+     * commits an answer to the instance's internal form model.
      * 
-     * @param answer
+     * @param answer the actual answer value (to be converted to 
+     * the applicable type from within this method)
      * @param question integer pointer to the instance's array of form indices
-     * @return boolean whether or not the question was relevant
-     * @throws RosaException thrown if the answerdata object returned is null 
-     * (indicating a numberformatexception, for example) or if the 
-     * formentrycontroller's answer constants are anything but ANSWER_OK
+     * @return integer pointer to the next question string or -1 if form is complete
+     * @throws RosaException if the answerdata object returned is null 
+     * (indicating a {@link java.lang.NumberFormatException}, for example) or if the 
+     * {@link org.javarosa.form.api.FormEntryController}'s answer constants are anything but ANSWER_OK
+     * 
      */
     public int answerQuestion(String answer, int question) throws RosaException {
         setCursor(question);
@@ -284,6 +331,13 @@ public final class RosaFactory implements Serializable {
         return answerQuestion(answer, -1);
     }
     
+    /**
+     * serialises and stringifies the model/instance data of the
+     * xform associated with this {@link org.praekelt.restforms.core.services.rosa.RosaFactory} instance.
+     * 
+     * @return string model/instance data
+     * @throws RosaException 
+     */
     public String getCompletedXForm() throws RosaException {
         byte[] serialised = serialiseXForm();
         return serialised != null ? new String(serialised) : null;

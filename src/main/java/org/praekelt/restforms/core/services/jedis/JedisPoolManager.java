@@ -4,8 +4,12 @@ import io.dropwizard.lifecycle.Managed;
 import redis.clients.jedis.JedisPool;
 
 /**
- *
- * @author ant cosentino
+ * a manager to control the lifecycle of
+ * the redis connection pool
+ * 
+ * @author ant cosentino <ant@io.co.za>
+ * @since 2014-10-01
+ * @see io.dropwizard.lifecycle.Managed
  */
 public class JedisPoolManager implements Managed {
 
@@ -22,5 +26,4 @@ public class JedisPoolManager implements Managed {
     public void stop() throws Exception {
         pool.destroy();
     }
-    
 }

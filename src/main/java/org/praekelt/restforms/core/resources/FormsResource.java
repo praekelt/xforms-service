@@ -20,7 +20,9 @@ import org.praekelt.restforms.core.services.jedis.JedisClient;
 
 /**
  *
- * @author ant cosentino
+ * @author ant cosentino <ant@io.co.za>
+ * @since 2014-09-20
+ * @see org.praekelt.restforms.core.resources.BaseResource
  */
 @Path("/forms")
 @Consumes({
