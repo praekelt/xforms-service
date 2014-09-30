@@ -303,8 +303,9 @@ public final class RosaFactory implements Serializable {
      * @param question integer pointer to the instance's array of form indices
      * @return integer pointer to the next question string or -1 if form is complete
      * @throws RosaException if the answerdata object returned is null 
-     * (indicating a numberformatexception, for example) or if the 
-     * formentrycontroller's answer constants are anything but ANSWER_OK
+     * (indicating a {@link java.lang.NumberFormatException}, for example) or if the 
+     * {@link org.javarosa.form.api.FormEntryController}'s answer constants are anything but ANSWER_OK
+     * 
      */
     public int answerQuestion(String answer, int question) throws RosaException {
         setCursor(question);
@@ -330,6 +331,13 @@ public final class RosaFactory implements Serializable {
         return answerQuestion(answer, -1);
     }
     
+    /**
+     * serialises and stringifies the model/instance data of the
+     * xform associated with this {@link org.praekelt.restforms.core.services.rosa.RosaFactory} instance.
+     * 
+     * @return string model/instance data
+     * @throws RosaException 
+     */
     public String getCompletedXForm() throws RosaException {
         byte[] serialised = serialiseXForm();
         return serialised != null ? new String(serialised) : null;
