@@ -110,48 +110,50 @@ public final class ResponsesResource extends BaseResource {
         try {
             fromPersist = fetchPOJO(formId);
             
-            if (fromPersist != null) {
-                rf = RosaFactory.rebuild(fromPersist);
+            if (fromPersist == null) {
+                return Response.status(Response.Status.NOT_FOUND).entity(toJson(
+                    new ResponsesResponse(404, "No XForm was found associated with the given ID."),
+                    responseEntity
+                )).build();
+            }
+            
+            rf = RosaFactory.rebuild(fromPersist);
+
+            if (rf != null && rf.setUp()) {
                 
-                if (rf != null && rf.setUp()) {
-
-                    if (rf.getCompleted() < rf.getTotal()) {
-                        nextQuestion = rf.getQuestion(rf.answerQuestion(answer));
-                        toPersist = RosaFactory.persist(rf);
-
-                        if (updateResource(formId, toPersist)) {
-
-                            if (nextQuestion != null) {
-                                return Response.ok(toJson(
-                                    new ResponsesResponse(200, "Question completed.", formId, nextQuestion),
-                                    responseEntity
-                                )).build();
-                            }
-
-                            if (createModelInstance(formId, rf.getCompletedXForm())) {
-                                return Response.ok(toJson(
-                                    new ResponsesResponse(200, "XForm completed.", formId, null),
-                                    responseEntity
-                                )).build();
-                            }
-                        }
-                        return Response.serverError().entity(toJson(
-                            new ResponsesResponse(500, "A XForm processing error occurred."),
-                            responseEntity
-                        )).build();
-                    }
+                if (rf.getCompleted() >= rf.getTotal()) {
                     return Response.status(Response.Status.BAD_REQUEST).entity(toJson(
                         new ResponsesResponse(400, "The XForm you identified has already been completed."),
                         responseEntity
                     )).build();
+                }
+                
+                nextQuestion = rf.getQuestion(rf.answerQuestion(answer));
+                toPersist = RosaFactory.persist(rf);
+
+                if (updateResource(formId, toPersist)) {
+
+                    if (nextQuestion != null) {
+                        return Response.ok(toJson(
+                            new ResponsesResponse(200, "Question completed.", formId, nextQuestion),
+                            responseEntity
+                        )).build();
+                    }
+
+                    if (createModelInstance(formId, rf.getCompletedXForm())) {
+                        return Response.ok(toJson(
+                            new ResponsesResponse(200, "XForm completed.", formId, null),
+                            responseEntity
+                        )).build();
+                    }
                 }
                 return Response.serverError().entity(toJson(
                     new ResponsesResponse(500, "A XForm processing error occurred."),
                     responseEntity
                 )).build();
             }
-            return Response.status(Response.Status.NOT_FOUND).entity(toJson(
-                new ResponsesResponse(404, "No XForm was found associated with the given ID."),
+            return Response.serverError().entity(toJson(
+                new ResponsesResponse(500, "A XForm processing error occurred."),
                 responseEntity
             )).build();
         } catch (RosaException e) {
@@ -184,24 +186,24 @@ public final class ResponsesResource extends BaseResource {
             if ((serialised = fetchPOJO(formId)) != null) {
                 rf = RosaFactory.rebuild(serialised);
 
-                if (rf != null && rf.setUp()) {
+                if (rf.getCompleted() >= rf.getTotal()) {
+                    return Response.status(Response.Status.BAD_REQUEST).entity(toJson(
+                        new ResponsesResponse(400, "The XForm you identified has already been completed."),
+                        responseEntity
+                    )).build();
+                }
+                
+                if (rf.setUp()) {
+                    question = rf.getQuestion(questionIndex);
 
-                    if (rf.getCompleted() < rf.getTotal()) {
-                        question = rf.getQuestion(questionIndex);
-
-                        if (question != null) {
-                            return Response.ok(toJson(
-                                new ResponsesResponse(200, "Question retrieved successfully.", formId, question),
-                                responseEntity
-                            )).build();
-                        }
-                        return Response.status(Response.Status.BAD_REQUEST).entity(toJson(
-                            new ResponsesResponse(400, "The question you requested was out of bounds. Please try again."),
+                    if (question != null) {
+                        return Response.ok(toJson(
+                            new ResponsesResponse(200, "Question retrieved successfully.", formId, question),
                             responseEntity
                         )).build();
                     }
                     return Response.status(Response.Status.BAD_REQUEST).entity(toJson(
-                        new ResponsesResponse(400, "The XForm you identified has already been completed."),
+                        new ResponsesResponse(400, "The question you requested was out of bounds. Please try again."),
                         responseEntity
                     )).build();
                 }
