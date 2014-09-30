@@ -99,7 +99,7 @@ public final class JedisClient {
     /**
      * remove any time to live associated with the given key
      * 
-     * @param key
+     * @param key redis identifier
      * @return boolean whether the operation succeeded
      * @throws JedisException
      */
@@ -116,8 +116,8 @@ public final class JedisClient {
     /**
      * set the time to live for the given key to the given duration
      * 
-     * @param key
-     * @param seconds
+     * @param key redis identifier
+     * @param seconds integer duration
      * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
@@ -135,7 +135,7 @@ public final class JedisClient {
      * set the time to live for the given key to the configured
      * default expiry duration
      * 
-     * @param key
+     * @param key redis identifier
      * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
@@ -146,8 +146,8 @@ public final class JedisClient {
     /**
      * rename a given key to a new name
      * 
-     * @param oldKey
-     * @param newKey
+     * @param oldKey redis identifier
+     * @param newKey redis identifier
      * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
@@ -172,7 +172,7 @@ public final class JedisClient {
      *  - The command returns -2 if the key does not exist.
      *  - The command returns -1 if the key exists but has no associated expire.
      * 
-     * @param key
+     * @param key redis identifier
      * @return long integer timeout duration in seconds
      * @throws JedisException 
      */
@@ -188,7 +188,7 @@ public final class JedisClient {
     /**
      * return a string representing the redis data type of the given key
      * 
-     * @param key
+     * @param key redis identifier
      * @return string redis type of the given key
      * @throws JedisException 
      */
@@ -204,7 +204,7 @@ public final class JedisClient {
     /**
      * Return a value from Redis
      *
-     * @param key
+     * @param key redis identifier
      * @return string value stored at the given key
      * @throws JedisException
      */
@@ -220,7 +220,7 @@ public final class JedisClient {
     /**
      * Get a Set of String keysByPattern from the database
      *
-     * @param pattern
+     * @param pattern regular expression
      * @return set of strings of keys matching the given string pattern
      * @throws JedisException
      */
@@ -269,7 +269,7 @@ public final class JedisClient {
     /**
      * Remove a key from the database
      *
-     * @param key
+     * @param key redis identifier
      * @return long integer
      * @throws JedisException
      */
@@ -286,8 +286,8 @@ public final class JedisClient {
      * sets a given key's value to the given value
      * and sets the configured default time to live duration
      * 
-     * @param key
-     * @param value
+     * @param key redis identifier
+     * @param value desired string value to set
      * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
@@ -309,7 +309,7 @@ public final class JedisClient {
     /**
      * determine the existence of a given key
      * 
-     * @param key
+     * @param key redis identifier
      * @return boolean whether the given key exists
      * @throws JedisException 
      */
@@ -329,8 +329,8 @@ public final class JedisClient {
      * create/update a hash in redis at the given key with the given
      * byte[] value at field "object"
      * 
-     * @param key
-     * @param objectBuffer
+     * @param key redis identifier
+     * @param objectBuffer desired byte[] value to set
      * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
@@ -352,7 +352,7 @@ public final class JedisClient {
     /**
      * get the byte[] value stored at field "object" of the hash at the given key
      * 
-     * @param key
+     * @param key redis identifier
      * @return byte[] value stored at given key and "object" field
      * @throws JedisException 
      */
@@ -373,7 +373,7 @@ public final class JedisClient {
     /**
      * determine the existence of field "object" in hash at the given key
      * 
-     * @param key
+     * @param key redis identifier
      * @return boolean whether the byte[] value exists
      * @throws JedisException 
      */
@@ -394,7 +394,7 @@ public final class JedisClient {
     /**
      * remove the field "object" from the hash at the given key
      * 
-     * @param key
+     * @param key redis identifier
      * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
@@ -418,8 +418,8 @@ public final class JedisClient {
     /**
      * remove the given field(s) from hash stored at the given key
      * 
-     * @param key
-     * @param fields
+     * @param key redis identifier
+     * @param fields desired fields to delete (string array or variable length parameters)
      * @return long integer number of fields deleted
      * @throws JedisException 
      */
@@ -436,8 +436,8 @@ public final class JedisClient {
     /**
      * determine the existence of the given field at key
      * 
-     * @param key
-     * @param field
+     * @param key redis identifier
+     * @param field string field to verify
      * @return boolean whether the field exists
      * @throws JedisException 
      */
@@ -454,8 +454,8 @@ public final class JedisClient {
     /**
      * get the value stored at the given field and key
      * 
-     * @param key
-     * @param field
+     * @param key redis identifier
+     * @param field string field to retrieve
      * @return string value stored at the given key and field
      * @throws JedisException 
      */
@@ -472,7 +472,7 @@ public final class JedisClient {
     /**
      * get a key/value mapping of fields/values stored in the hash at the given key
      * 
-     * @param key
+     * @param key redis identifier
      * @return map of string to string containing hash fields and values stored at the given key
      * @throws JedisException 
      */
@@ -488,7 +488,7 @@ public final class JedisClient {
     /**
      * get a string set of field names from the hash at the given key
      * 
-     * @param key
+     * @param key redis identifier
      * @return set of strings of field names stored at the given key
      * @throws JedisException 
      */
@@ -504,7 +504,7 @@ public final class JedisClient {
     /**
      * determine the number of fields stored in a hash at the given key
      * 
-     * @param key
+     * @param key redis identifier
      * @return long integer number of fields stored at the given key
      * @throws JedisException 
      */
@@ -520,8 +520,8 @@ public final class JedisClient {
     /**
      * get a string list of values stored in the given field(s) of the hash at the given key
      * 
-     * @param key
-     * @param fields
+     * @param key redis identifier
+     * @param fields desired fields to retrieve (string array or variable length parameters)
      * @return list of strings of hash field values (potentially multiple hash fields)
      * @throws JedisException 
      */
@@ -539,8 +539,8 @@ public final class JedisClient {
      * create/update the fields and values of a hash stored at the given key
      * with the keys and values from the given string/string map
      * 
-     * @param key
-     * @param map
+     * @param key redis identifier
+     * @param map desired key/value mapping to store
      * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
@@ -563,9 +563,9 @@ public final class JedisClient {
     /**
      * create/update a value stored at the given field of a hash at the given key
      * 
-     * @param key
-     * @param field
-     * @param value
+     * @param key redis identifier
+     * @param field desired string field to set value at
+     * @param value desired string value to store
      * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
@@ -586,9 +586,9 @@ public final class JedisClient {
     /**
      * create a value stored at the given field of a hash at the given key only if the field does not yet exist
      * 
-     * @param key
-     * @param field
-     * @param value
+     * @param key redis identifier
+     * @param field desired string field to set value at
+     * @param value desired string value to store
      * @return boolean whether the operation succeeded
      * @throws JedisException 
      */
@@ -608,7 +608,7 @@ public final class JedisClient {
     /**
      * get a string list of values from all fields of a hash stored at the given key
      * 
-     * @param key
+     * @param key redis identifier
      * @return list of strings of values stored in all fields of a hash at the given key
      * @throws JedisException 
      */
