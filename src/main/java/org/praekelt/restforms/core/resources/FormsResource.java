@@ -57,33 +57,33 @@ public final class FormsResource extends BaseResource {
     @POST
     @Consumes(MediaType.APPLICATION_XML)
     public Response create(String payload) {
+        String id;
         
-        try {
-            
-            if (!"".equals(payload)) {
-                String id = createResource("form", payload);
-
-                if (id != null) {
-                    
-                    RosaFactory r = new RosaFactory();
-                    
-                    if (r.setUp(payload)) {
-                        
-                        if (updateResource(id, RosaFactory.persist(r))) {
-                            return Response.status(Response.Status.CREATED).entity(toJson(
-                                new FormsResponse(201, "Created XForm.", id),
-                                responseEntity
-                            )).build();
-                        }
-                    }
-                }
-                return Response.serverError().entity(toJson(
-                    new FormsResponse(500, "An error occurred while attempting to save the provided XForm. Please ensure the XML you provided is well-formed and valid."),
-                    responseEntity
-                )).build();
-            }
+        if ("".equals(payload)) {
+            // we're outta here
             return Response.status(Response.Status.BAD_REQUEST).entity(toJson(
                 new FormsResponse(400, "No XML payload was provided in the request."),
+                responseEntity
+            )).build();
+        }
+        
+        try {
+            if ((id = createResource("form", payload)) != null) {
+
+                RosaFactory r = new RosaFactory();
+
+                if (r.setUp(payload)) {
+
+                    if (updateResource(id, RosaFactory.persist(r))) {
+                        return Response.status(Response.Status.CREATED).entity(toJson(
+                            new FormsResponse(201, "Created XForm.", id),
+                            responseEntity
+                        )).build();
+                    }
+                }
+            }
+            return Response.serverError().entity(toJson(
+                new FormsResponse(500, "An error occurred while attempting to save the provided XForm. Please ensure the XML you provided is well-formed and valid."),
                 responseEntity
             )).build();
         } catch (InternalServerErrorException e) {
@@ -92,8 +92,8 @@ public final class FormsResource extends BaseResource {
                 responseEntity
             )).build();
         } catch (RosaException e) {
-            return Response.serverError().entity(toJson(
-                new FormsResponse(500, "An error occurred while attempting to save the provided XForm. Please ensure the XML you provided is well-formed and valid."),
+            return Response.status(Response.Status.BAD_REQUEST).entity(toJson(
+                new FormsResponse(400, "An error occurred while attempting to save the provided XForm. Please ensure the XML you provided is well-formed and valid."),
                 responseEntity
             )).build();
         }

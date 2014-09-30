@@ -20,7 +20,6 @@ import org.praekelt.restforms.core.services.jedis.JedisFactory;
 public class FormsResourceTest {
     
     private static FormsResource instance;
-    private static FormsResource noJedisInstance;
     private final String form = "<h:html xmlns=\"http://www.w3.org/2002/xforms\" xmlns:h=\"http://www.w3.org/1999/xhtml\" xmlns:ev=\"http://www.w3.org/2001/xml-events\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:jr=\"http://openrosa.org/javarosa\"><h:head><h:title>xforms service form</h:title><model><instance><person><name></name><surname></surname><gender></gender><blah></blah></person></instance><bind nodeset=\"name\" type=\"string\" /><bind nodeset=\"surname\" type=\"string\" /><bind nodeset=\"gender\" type=\"string\" /><bind nodeset=\"blah\" type=\"int\" /></model></h:head><h:body><input ref=\"name\"><label>what's your name?</label></input><input ref=\"surname\"><label>what's your surname?</label></input><input ref=\"gender\"><label>what's your gender?</label></input><input ref=\"blah\"><label>what's your blah?</label></input></h:body></h:html>";
     
     public FormsResourceTest() {
@@ -35,9 +34,8 @@ public class FormsResourceTest {
         jedisFactory.setTimeout(500);
         jedisFactory.setExpires(3600);
         instance = new FormsResource(jedisFactory.build());
-        noJedisInstance = new FormsResource(null);
         
-        if (instance == null || noJedisInstance == null) {
+        if (instance == null) {
             fail("Couldn't initialise one of the FormsResource instances for testing.");
         }
     }
@@ -82,13 +80,12 @@ public class FormsResourceTest {
         
         String id = fr.getId(),
                created = "{\"id\":\""+id+"\",\"status\":201,\"message\":\"Created XForm.\"}",
-               internalServerError = "{\"status\":500,\"message\":\"An error occurred while attempting to save the provided XForm. Please ensure the XML you provided is well-formed and valid.\"}",
-               badRequest = "{\"status\":400,\"message\":\"No XML payload was provided in the request.\"}";
+               badRequestPayload = "{\"status\":400,\"message\":\"No XML payload was provided in the request.\"}",
+               badRequestInvalid = "{\"status\":400,\"message\":\"An error occurred while attempting to save the provided XForm. Please ensure the XML you provided is well-formed and valid.\"}";
         
         assertEquals(created, result.getEntity());
-        assertEquals(internalServerError, instance.create("abcdefg").getEntity());
-        assertEquals(badRequest, instance.create("").getEntity());
-        assertEquals(internalServerError, noJedisInstance.create("abcdefg").getEntity());
+        assertEquals(badRequestInvalid, instance.create("abcdefg").getEntity());
+        assertEquals(badRequestPayload, instance.create("").getEntity());
     }
 
     /**
