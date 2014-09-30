@@ -4,6 +4,5 @@ jdk:
     - openjdk7
 before_install:
     - mvn install:install-file -Dfile=lib/javarosa.jar -DgroupId=org.javarosa -DartifactId=javarosa-libraries -Dversion=latest -Dpackaging=jar -DgeneratePom=true
-    - mvn install:install-file -Dfile=lib/regexp-me.jar -DgroupId=me.regexp -DartifactId=regexp -Dversion=latest -Dpackaging=jar -DgeneratePom=true
 services:
     - redis-server
