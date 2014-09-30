@@ -2,7 +2,8 @@ package org.praekelt.restforms.core.exceptions;
 
 /**
  *
- * @author ant cosentino
+ * @author ant cosentino <ant@io.co.za>
+ * @since 2014-10-20
  */
 public class RosaException extends Exception {
 

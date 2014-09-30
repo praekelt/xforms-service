@@ -12,8 +12,9 @@ import redis.clients.jedis.JedisPool;
 /**
  * 
  * @author victor geere
- * @author ant cosentino
- * @author simon kelly
+ * @author ant cosentino <ant@io.co.za>
+ * @author simon kelly <skelly@dimagi.com>
+ * @since 2014-09-31
  */
 public final class JedisClient {
     

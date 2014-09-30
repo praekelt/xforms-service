@@ -7,7 +7,8 @@ import redis.clients.jedis.JedisPool;
  * a manager to control the lifecycle of
  * the redis connection pool
  * 
- * @author ant cosentino
+ * @author ant cosentino <ant@io.co.za>
+ * @since 2014-10-01
  */
 public class JedisPoolManager implements Managed {
 

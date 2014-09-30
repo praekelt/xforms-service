@@ -24,7 +24,8 @@ import org.praekelt.restforms.core.exceptions.RosaException;
  * of xform documents. an instance of this 
  * class represents a single xform document.
  * 
- * @author ant cosentino
+ * @author ant cosentino <ant@io.co.za>
+ * @since 2014-10-10
  */
 public final class RosaFactory implements Serializable {
     private transient FormEntryController controller;
