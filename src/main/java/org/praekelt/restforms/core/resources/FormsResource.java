@@ -64,7 +64,6 @@ public final class FormsResource extends BaseResource {
         String id;
         
         if ("".equals(payload)) {
-            // we're outta here
             return Response.status(Response.Status.BAD_REQUEST).entity(toJson(
                 new FormsResponse(400, "No XML payload was provided in the request."),
                 responseEntity
@@ -72,18 +71,16 @@ public final class FormsResource extends BaseResource {
         }
         
         try {
+            
             if ((id = createResource("form", payload)) != null) {
 
                 RosaFactory r = new RosaFactory();
 
-                if (r.setUp(payload)) {
-
-                    if (updateResource(id, RosaFactory.persist(r))) {
-                        return Response.status(Response.Status.CREATED).entity(toJson(
-                            new FormsResponse(201, "Created XForm.", id),
-                            responseEntity
-                        )).build();
-                    }
+                if (r.setUp(payload) && updateResource(id, RosaFactory.persist(r))) {
+                    return Response.status(Response.Status.CREATED).entity(toJson(
+                        new FormsResponse(201, "Created XForm.", id),
+                        responseEntity
+                    )).build();
                 }
             }
             return Response.serverError().entity(toJson(
