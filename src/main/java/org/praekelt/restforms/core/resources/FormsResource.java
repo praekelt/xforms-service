@@ -15,6 +15,10 @@ import org.praekelt.restforms.core.services.jedis.JedisClient;
 import org.praekelt.restforms.core.services.rosa.RosaFactory;
 
 /**
+ *
+ * @author ant cosentino <ant@io.co.za>
+ * @since 2014-09-20
+ * @see org.praekelt.restforms.core.resources.BaseResource
  * @author ant cosentino
  */
 @Path("/forms")
