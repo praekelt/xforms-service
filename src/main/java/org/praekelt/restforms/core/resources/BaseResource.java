@@ -1,6 +1,7 @@
 package org.praekelt.restforms.core.resources;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.UUID;
@@ -19,11 +20,11 @@ abstract class BaseResource {
     private static final Logger logger = Logger.getLogger("BaseResource");
     protected static JedisClient jedis;
     protected static Gson gson;
-    protected static Type requestEntity;
-    protected static Type responseEntity;
+    protected Type requestEntity;
+    protected Type responseEntity;
 
     protected BaseResource(JedisClient jc) {
-        gson = (gson == null) ? new Gson() : gson;
+        gson = (gson == null) ? new GsonBuilder().disableHtmlEscaping().create() : gson;
         jedis = (jedis == null) ? jc : jedis;
     }
 
