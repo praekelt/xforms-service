@@ -76,7 +76,7 @@ public class FormsResourceTest {
         System.out.println("create");
         
         Response result = instance.create(form);
-        FormsResponse fr = (FormsResponse) fromJson(result.getEntity().toString(), FormsResource.responseEntity);
+        FormsResponse fr = (FormsResponse) fromJson(result.getEntity().toString(), instance.responseEntity);
         
         String id = fr.getId(),
                created = "{\"id\":\""+id+"\",\"status\":201,\"message\":\"Created XForm.\"}",
