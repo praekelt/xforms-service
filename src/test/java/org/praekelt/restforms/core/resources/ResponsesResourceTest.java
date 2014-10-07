@@ -78,11 +78,11 @@ public class ResponsesResourceTest {
         System.out.println("answerQuestion");
         
         String ok1 = "{\"id\":\"" + id + "\",\"status\":200,\"message\":\"XForm completed.\"}";
-        String ok2 = "{\"id\":\"" + id + "\",\"question\":\"what\\u0027s your surname?\",\"status\":200,\"message\":\"Question completed.\"}";
-        String ok3 = "{\"id\":\"" + id + "\",\"question\":\"what\\u0027s your gender?\",\"status\":200,\"message\":\"Question completed.\"}";
-        String ok4 = "{\"id\":\"" + id + "\",\"question\":\"what\\u0027s your blah?\",\"status\":200,\"message\":\"Question completed.\"}";
+        String ok2 = "{\"id\":\"" + id + "\",\"question\":\"what's your surname?\",\"status\":200,\"message\":\"Question completed.\"}";
+        String ok3 = "{\"id\":\"" + id + "\",\"question\":\"what's your gender?\",\"status\":200,\"message\":\"Question completed.\"}";
+        String ok4 = "{\"id\":\"" + id + "\",\"question\":\"what's your blah?\",\"status\":200,\"message\":\"Question completed.\"}";
         String notFound = "{\"status\":404,\"message\":\"No XForm was found associated with the given ID.\"}";
-        String badRequest = "{\"status\":400,\"message\":\"No `response` field was provided in the request payload.\"}";
+        String badRequest = "{\"status\":400,\"message\":\"No `answer` field was provided in the request payload.\"}";
         
         assertEquals(badRequest, instance.answerQuestion(id, new ResponsesResource.ResponsesRepresentation(null, 0)).getEntity());
         assertEquals(notFound, instance.answerQuestion("abcdefg", new ResponsesResource.ResponsesRepresentation("abc", 0)).getEntity());
@@ -99,7 +99,7 @@ public class ResponsesResourceTest {
     public void testGetQuestion() {
         System.out.println("getQuestion");
         
-        String ok = "{\"id\":\"" + id + "\",\"question\":\"what\\u0027s your name?\",\"status\":200,\"message\":\"Question retrieved successfully.\"}";
+        String ok = "{\"id\":\"" + id + "\",\"question\":\"what's your name?\",\"status\":200,\"message\":\"Question retrieved successfully.\"}";
         String badRequest = "{\"status\":400,\"message\":\"The question you requested was out of bounds. Please try again.\"}";
         String notFound = "{\"status\":404,\"message\":\"No XForm was found associated with the given ID.\"}";
         
