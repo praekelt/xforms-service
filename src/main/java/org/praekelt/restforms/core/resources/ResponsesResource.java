@@ -32,29 +32,15 @@ public final class ResponsesResource extends BaseResource {
 
     public static class ResponsesRepresentation {
         
-        private String response;
-        private int question;
+        private String answer;
         
         @JsonCreator
-        public ResponsesRepresentation(
-            @JsonProperty("response") String response,
-            @JsonProperty("question") int question
-        ) {
-            this.response = response;
-            this.question = question;
+        public ResponsesRepresentation(@JsonProperty("answer") String answer) {
+            this.answer = answer;
         }
         
-        @JsonCreator
-        public ResponsesRepresentation(@JsonProperty("question") int question) {
-            this.response = null;
-            this.question = question;
-        }
-        
-        @JsonProperty("response")
-        public String getResponse() { return response; }
-        
-        @JsonProperty("question")
-        public int getQuestion() { return question; }
+        @JsonProperty("answer")
+        public String getAnswer() { return answer; }
     }
     
     public static class ResponsesResponse extends BaseResponse {
@@ -96,13 +82,13 @@ public final class ResponsesResource extends BaseResource {
         @PathParam("formId") String formId,
         ResponsesRepresentation r
     ) {
-        String nextQuestion, answer = r.getResponse();
+        String nextQuestion, answer = r.getAnswer();
         byte[] fromPersist, toPersist;
         RosaFactory rf;
         
         if (answer == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity(toJson(
-                new ResponsesResponse(400, "No `response` field was provided in the request payload."),
+                new ResponsesResponse(400, "No `answer` field was provided in the request payload."),
                 responseEntity
             )).build();
         }
@@ -139,7 +125,7 @@ public final class ResponsesResource extends BaseResource {
                             responseEntity
                         )).build();
                     }
-
+                    
                     if (createModelInstance(formId, rf.getCompletedXForm())) {
                         return Response.ok(toJson(
                             new ResponsesResponse(200, "XForm completed.", formId, null),
@@ -171,12 +157,11 @@ public final class ResponsesResource extends BaseResource {
 
     @Timed(name = "getQuestion")
     @GET
-    @Path("{formId}")
+    @Path("{formId}/{questionIndex}")
     public Response getQuestion(
         @PathParam("formId") String formId,
-        ResponsesRepresentation r
+        @PathParam("questionIndex") int questionIndex
     ) {
-        int questionIndex = r.getQuestion();
         String question;
         RosaFactory rf;
         byte[] serialised;
