@@ -1,28 +1,25 @@
 package org.praekelt.restforms.core.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.praekelt.restforms.core.exceptions.JedisException;
+import org.praekelt.restforms.core.exceptions.RosaException;
 import org.praekelt.restforms.core.services.jedis.JedisClient;
+import org.praekelt.restforms.core.services.rosa.RosaFactory;
 
 /**
  *
  * @author ant cosentino <ant@io.co.za>
  * @since 2014-09-20
  * @see org.praekelt.restforms.core.resources.BaseResource
+ * @author ant cosentino
  */
 @Path("/forms")
 @Consumes({
@@ -33,241 +30,96 @@ import org.praekelt.restforms.core.services.jedis.JedisClient;
     MediaType.APPLICATION_JSON,
     MediaType.APPLICATION_XML
 })
-public class FormsResource extends BaseResource {
-    
-    /**
-     * used to construct a json document containing
-     * all xforms stored within our redis instance.
-     */
-    public static class FormsRepresentation {
-        
-        @NotEmpty
-        private String uuid;
-        
-        @NotEmpty
-        private String xml;
-        
-        @JsonCreator
-        public FormsRepresentation() {}
-        
-        @JsonCreator
-        public FormsRepresentation(
-            @JsonProperty("uuid") String uuid,
-            @JsonProperty("xml") String xml
-        ) {
-            this.uuid = uuid;
-            this.xml = xml;
-        }
-        
-        @JsonProperty("uuid")
-        public String getUuid() {
-            return uuid;
-        }
-        
-        @JsonProperty("uuid")
-        public void setUuid(String uuid) {
-            this.uuid = uuid;
-        }
-        
-        @JsonProperty("xml")
-        public String getXml() {
-            return xml;
-        }
-        
-        @JsonProperty("xml")
-        public void setXml(String xml) {
-            this.xml = xml;
-        }
-    }
-    
-    public static class FormsResponse extends BaseResponse {
-        
-        private FormsRepresentation[] xforms;
-        private String xform;
-        private Integer count;
-        
-        public FormsResponse(int status, String message) {
-            super(status, message);
-            this.count = null;
-        }
-        
-        public FormsResponse(int status, String message, String xform) {
-            super(status, message);
-            this.xform = xform;
-            this.count = null;
-        }
-        
-        public FormsResponse(int status, String message, int count, FormsRepresentation[] xforms) {
-            super(status, message);
-            this.count = count;
-            this.xforms = xforms;
-        }
-        
-        public FormsRepresentation[] getXforms() {
-            return xforms;
-        }
-
-        public void setXforms(FormsRepresentation[] xforms) {
-            this.setXforms(xforms);
-        }
-
-        public String getXform() {
-            return xform;
-        }
-
-        public void setXform(String xform) {
-            this.xform = xform;
-        }
-
-        public int getCount() {
-            return count;
-        }
-
-        public void setCount(int count) {
-            this.count = count;
-        }
-    }
+public final class FormsResource extends BaseResource {
     
     public FormsResource(JedisClient jc) {
         super(jc);
-//        this.hashPool = "forms-";
-//        this.representation = FormsRepresentation.class;
+        responseEntity = FormsResponse.class;
     }
     
+    public static class FormsResponse extends BaseResponse {
+
+        private String id;
+
+        public FormsResponse(int status, String message) {
+            super(status, message);
+        }
+        
+        public FormsResponse(int status, String message, String id) {
+            this(status, message);
+            this.id = id;
+        }
+        
+        public String getId() { return id; }
+        
+        public void setId(String id) {
+            this.id = id;
+        }
+    }
+
     @Timed(name = "create")
     @POST
     @Consumes(MediaType.APPLICATION_XML)
     public Response create(String payload) {
+        String id;
         
-        final String id;
-        
-        if (!payload.isEmpty()) {
-            id = this.createForm(payload);
-        
-            if (id != null) {
-                return Response.status(Response.Status.CREATED).entity(
-                    this.toJson(
-                        new FormsResponse(201, "Created xForm.", id),
-                        FormsResponse.class
-                    )
-                ).build();
-            }
-            return Response.serverError().entity(
-                this.toJson(
-                    new FormsResponse(500, "A Redis error occurred while attempting to save the provided xForm."),
-                    FormsResponse.class
-                )
-            ).build();
+        if ("".equals(payload)) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(toJson(
+                new FormsResponse(400, "No XML payload was provided in the request."),
+                responseEntity
+            )).build();
         }
-        return Response.status(Response.Status.BAD_REQUEST).entity(
-            this.toJson(
-                new FormsResponse(400, "No request payload was provided."),
-                FormsResponse.class
-            )
-        ).build();
+        
+        try {
+            
+            if ((id = createResource("form", payload)) != null) {
+
+                RosaFactory r = new RosaFactory();
+
+                if (r.setUp(payload) && updateResource(id, RosaFactory.persist(r))) {
+                    return Response.status(Response.Status.CREATED).entity(toJson(
+                        new FormsResponse(201, "Created XForm.", id),
+                        responseEntity
+                    )).build();
+                }
+            }
+            return Response.serverError().entity(toJson(
+                new FormsResponse(500, "An error occurred while attempting to save the provided XForm. Please ensure the XML you provided is well-formed and valid."),
+                responseEntity
+            )).build();
+        } catch (InternalServerErrorException e) {
+            return Response.serverError().entity(toJson(
+                new FormsResponse(500, "An error occurred while attempting to save the provided XForm: " + e.getMessage() + "."),
+                responseEntity
+            )).build();
+        } catch (RosaException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(toJson(
+                new FormsResponse(400, "An error occurred while attempting to save the provided XForm. Please ensure the XML you provided is well-formed and valid."),
+                responseEntity
+            )).build();
+        }
     }
     
     @Timed(name = "getSingle")
     @GET
     @Path("{formId}")
     public Response getSingle(@PathParam("formId") String formId) {
-        String xform = this.fetchFormValue(formId);
         
-        if (xform != null) {
-            return Response.ok(xform).type(MediaType.APPLICATION_XML).build();
-        }
-        return Response.status(Response.Status.NOT_FOUND).entity(
-            this.toJson(new FormsResponse(404, "xForm not found.", null), FormsResponse.class)
-        ).type(MediaType.APPLICATION_JSON).build();
-    }
-    
-    @Timed(name = "getAll")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getAll() {
-        int key;
-        Iterator i;
-        String current, form;
+        try {
+            String xform = fetchField(formId, "form");
         
-        Set<String> keys = null;
-        
-        if (keys != null) {
-            int keyCount = keys.size();
-            FormsRepresentation[] forms = new FormsRepresentation[keyCount];
-
-            if (keyCount > 0) {
-                i = keys.iterator();
-                key = 0;
-
-                while (i.hasNext()) {
-                    current = i.next().toString();
-                    form = this.fetchFormValue(current);
-                    forms[key++] = new FormsRepresentation();
-                    forms[key].setUuid(current);
-                    forms[key].setXml(form);
-                }
+            if (xform != null) {
+                return Response.ok(xform).type(MediaType.APPLICATION_XML).build();
             }
-            return Response.ok().entity(
-                this.toJson(new FormsResponse(200, "Success.", keyCount, forms), FormsResponse.class)
-            ).build();
+            return Response.status(Response.Status.NOT_FOUND).entity(toJson(
+                new FormsResponse(404, "No XForm was found associated with the given ID."),
+                responseEntity
+            )).type(MediaType.APPLICATION_JSON).build();
+        } catch (InternalServerErrorException e) {
+            return Response.serverError().entity(toJson(
+                new FormsResponse(500, "A XForm processing error occurred: " + e.getMessage() + "."),
+                responseEntity
+            )).build();
         }
-        return Response.serverError().entity(
-            this.toJson(new FormsResponse(500, "Failed to retrieve records from Redis instance."), FormsResponse.class)
-        ).build();
-    }
-    
-    /**
-     * 
-     * @param id
-     * @return 
-     */
-    public boolean formExists(String id) {
-        return this.verifyResource(id);
-    }
-    
-    /**
-     * 
-     * @param xml
-     * @return 
-     */
-    public String createForm(String xml) {
-        return this.createResource("form", xml);
-    }
-    
-    /**
-     * 
-     * @param id
-     * @param xml
-     * @return 
-     */
-    public boolean updateForm(String id, String xml) {
-        return this.updateResource(id, "form", xml);
-    }
-    
-    /**
-     * 
-     * @param id
-     * @return 
-     */
-    public Map<String, String> fetchFormMap(String id) {
-        return this.fetchResource(id);
-    }
-    
-    /**
-     * 
-     * @param id
-     * @return 
-     */
-    public String fetchFormValue(String id) {
-        
-        if (!id.isEmpty() && this.formExists(id)) {
-
-            try {
-                return jedis.hashGetFieldValue(id, "form");
-            } catch (JedisException e) {
-                System.err.println(e.getMessage());
-            }
-        }
-        return null;
     }
 }
