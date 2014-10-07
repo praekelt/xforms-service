@@ -71,7 +71,7 @@ public class ResponsesResourceTest {
     }
 
     /**
-     * Test of answerQuestion method, of class ResponsesResource.
+     * Test of processAnswer method, of class ResponsesResource.
      */
     @Test
     public void testAnswerQuestion() {
@@ -84,12 +84,12 @@ public class ResponsesResourceTest {
         String notFound = "{\"status\":404,\"message\":\"No XForm was found associated with the given ID.\"}";
         String badRequest = "{\"status\":400,\"message\":\"No `answer` field was provided in the request payload.\"}";
         
-        assertEquals(badRequest, instance.answerQuestion(id, new ResponsesResource.ResponsesRepresentation(null, 0)).getEntity());
-        assertEquals(notFound, instance.answerQuestion("abcdefg", new ResponsesResource.ResponsesRepresentation("abc", 0)).getEntity());
-        assertEquals(ok2, instance.answerQuestion(id, new ResponsesResource.ResponsesRepresentation("abc", 0)).getEntity());
-        assertEquals(ok3, instance.answerQuestion(id, new ResponsesResource.ResponsesRepresentation("abc", 1)).getEntity());
-        assertEquals(ok4, instance.answerQuestion(id, new ResponsesResource.ResponsesRepresentation("abc", 2)).getEntity());
-        assertEquals(ok1, instance.answerQuestion(id, new ResponsesResource.ResponsesRepresentation("123", 3)).getEntity());
+        assertEquals(badRequest, instance.answerQuestion(id, new ResponsesResource.ResponsesRepresentation(null)).getEntity());
+        assertEquals(notFound, instance.answerQuestion("abcdefg", new ResponsesResource.ResponsesRepresentation("abc")).getEntity());
+        assertEquals(ok2, instance.answerQuestion(id, new ResponsesResource.ResponsesRepresentation("abc")).getEntity());
+        assertEquals(ok3, instance.answerQuestion(id, new ResponsesResource.ResponsesRepresentation("abc")).getEntity());
+        assertEquals(ok4, instance.answerQuestion(id, new ResponsesResource.ResponsesRepresentation("abc")).getEntity());
+        assertEquals(ok1, instance.answerQuestion(id, new ResponsesResource.ResponsesRepresentation("123")).getEntity());
     }
 
     /**
@@ -103,8 +103,8 @@ public class ResponsesResourceTest {
         String badRequest = "{\"status\":400,\"message\":\"The question you requested was out of bounds. Please try again.\"}";
         String notFound = "{\"status\":404,\"message\":\"No XForm was found associated with the given ID.\"}";
         
-        assertEquals(ok, instance.getQuestion(id, new ResponsesResource.ResponsesRepresentation(0)).getEntity());
-        assertEquals(badRequest, instance.getQuestion(id, new ResponsesResource.ResponsesRepresentation(10)).getEntity());
-        assertEquals(notFound, instance.getQuestion("abcdefg", new ResponsesResource.ResponsesRepresentation(0)).getEntity());
+        assertEquals(ok, instance.getQuestion(id, 0).getEntity());
+        assertEquals(badRequest, instance.getQuestion(id, 10).getEntity());
+        assertEquals(notFound, instance.getQuestion("abcdefg", 0).getEntity());
     }
 }
