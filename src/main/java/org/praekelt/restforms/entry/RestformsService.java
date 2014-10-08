@@ -31,5 +31,4 @@ public class RestformsService extends Application<RestformsConfiguration> {
         env.jersey().register(new AnswersResource(jedisClient));
         env.jersey().register(new ResponsesResource(jedisClient));
     }
-    
 }
