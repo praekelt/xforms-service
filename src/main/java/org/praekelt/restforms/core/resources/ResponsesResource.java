@@ -114,7 +114,7 @@ public final class ResponsesResource extends BaseResource {
                     )).build();
                 }
                 
-                nextQuestion = rf.getQuestion(rf.answerQuestion(answer));
+                nextQuestion = rf.getQuestion(rf.processAnswer(answer));
                 toPersist = RosaFactory.persist(rf);
 
                 if (updateResource(formId, toPersist)) {

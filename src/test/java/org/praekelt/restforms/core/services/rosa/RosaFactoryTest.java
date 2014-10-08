@@ -64,6 +64,10 @@ public class RosaFactoryTest {
     @Test
     public void testSetUp() throws Exception {
         System.out.println("setUp");
+        
+        RosaFactory rosa = new RosaFactory();
+        rosa.setUp(form);
+        assertTrue(RosaFactory.rebuild(RosaFactory.persist(rosa)).setUp());
         assertFalse(new RosaFactory().setUp());
     }
 
@@ -128,7 +132,7 @@ public class RosaFactoryTest {
     }
 
     /**
-     * Test of answerQuestion method, of class RosaFactory.
+     * Test of processAnswer method, of class RosaFactory.
      * @throws org.praekelt.restforms.core.exceptions.RosaException
      */
     @Test
@@ -136,19 +140,16 @@ public class RosaFactoryTest {
         System.out.println("answerQuestion");
         RosaFactory instance = new RosaFactory();
         assertTrue(instance.setUp(this.form, true));
-        assertTrue(instance.answerQuestion("asdfas", 0) > 0);
-        assertTrue(instance.answerQuestion("asdfas") > 0);
-        assertTrue(instance.answerQuestion("asdfas") > 0);
+        assertTrue(instance.processAnswer("asdfas") > 0);
+        assertTrue(instance.processAnswer("asdfas") > 0);
+        assertTrue(instance.processAnswer("asdfas") > 0);
         
         e.expect(RosaException.class);
         e.expectMessage(containsString("Answer data-type was incorrect."));
-        instance.answerQuestion("abcd");
+        instance.processAnswer("abcd");
         
-        e.expect(RosaException.class);
-        e.expectMessage(containsString("The question number was out of bounds."));
-        instance.answerQuestion("asdfas", 23445);
         
-        assertTrue(instance.answerQuestion("abcdefg") > 0);
+        assertTrue(instance.processAnswer("abcdefg") > 0);
     }
     
     /**
@@ -176,11 +177,10 @@ public class RosaFactoryTest {
         RosaFactory instance, rebuilt;
         instance = new RosaFactory();
         instance.setUp(this.form, true);
-        instance.answerQuestion("blah");
+        instance.processAnswer("blah");
         
         byte[] stored = RosaFactory.persist(instance);
         rebuilt = RosaFactory.rebuild(stored);
-        rebuilt.setUp();
         
         assertEquals(instance.getTotal(), rebuilt.getTotal());
         assertEquals(instance.getCompleted(), rebuilt.getCompleted());
@@ -199,11 +199,41 @@ public class RosaFactoryTest {
         
         instance = new RosaFactory();
         instance.setUp(this.form);
-        instance.answerQuestion("...");
-        instance.answerQuestion("...");
-        instance.answerQuestion("...");
-        instance.answerQuestion("123");
+        instance.processAnswer("...");
+        instance.processAnswer("...");
+        instance.processAnswer("...");
+        instance.processAnswer("123");
         
         assertEquals(this.completed, instance.getCompletedXForm());
+    }
+
+    /**
+     * Test of processAnswer method, of class RosaFactory.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testProcessAnswer_String_boolean() throws Exception {
+        System.out.println("processAnswer");
+        RosaFactory instance = new RosaFactory();
+        instance.setUp(form);
+        assertEquals(1, instance.processAnswer("abc", true));
+        assertEquals(2, instance.processAnswer("abc", true));
+        assertEquals(3, instance.processAnswer("abc", true));
+        assertEquals(-1, instance.processAnswer("123", true));
+    }
+
+    /**
+     * Test of processAnswer method, of class RosaFactory.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testProcessAnswer_String() throws Exception {
+        System.out.println("processAnswer");
+        RosaFactory instance = new RosaFactory();
+        instance.setUp(form);
+        assertEquals(1, instance.processAnswer("abc"));
+        assertEquals(2, instance.processAnswer("abc"));
+        assertEquals(3, instance.processAnswer("abc"));
+        assertEquals(-1, instance.processAnswer("123"));
     }
 }

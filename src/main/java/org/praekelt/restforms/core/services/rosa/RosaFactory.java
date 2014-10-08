@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Vector;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.javarosa.core.model.FormDef;
@@ -37,6 +38,7 @@ public final class RosaFactory implements Serializable {
     private static final long serialVersionUID = 1L;
     private String xmlForm, questionTexts[];
     private int total, completed;
+    private Vector<String> answers;
     
     /**
      * steps the instance's formentrycontroller to the 
@@ -72,7 +74,7 @@ public final class RosaFactory implements Serializable {
      * 
      * @param fresh
      */
-    private void setQuestionMetadata(boolean fresh) {
+    private void setXFormMetadata(boolean fresh) throws RosaException {
         int event, 
             formEnd = FormEntryController.EVENT_END_OF_FORM,
             i = 0;
@@ -243,16 +245,13 @@ public final class RosaFactory implements Serializable {
                 form = XFormUtils.getFormFromInputStream(bai);
                 model = new FormEntryModel(form);
                 controller = new FormEntryController(model);
+                setXFormMetadata(fresh);
                 
-                setQuestionMetadata(fresh);
-
-                if (!fresh) {
-
-                    if (completed != total) {
-                        setCursor(completed);
-                    }
+                if (!fresh && completed != total) {
+                    setCursor(completed);
                 } else {
                     this.xmlForm = xmlForm;
+                    answers = new Vector<String>(total);
                     completed = 0;
                 }
             } catch (RuntimeException e) {
@@ -300,19 +299,23 @@ public final class RosaFactory implements Serializable {
      * 
      * @param answer the actual answer value (to be converted to 
      * the applicable type from within this method)
-     * @param question integer pointer to the instance's array of form indices
+     * @param bulk answering all questions at once
      * @return integer pointer to the next question string or -1 if form is complete
      * @throws RosaException if the answerdata object returned is null 
      * (indicating a {@link java.lang.NumberFormatException}, for example) or if the 
      * {@link org.javarosa.form.api.FormEntryController}'s answer constants are anything but ANSWER_OK
      * 
      */
-    public int answerQuestion(String answer, int question) throws RosaException {
-        setCursor(question);
+    public int processAnswer(String answer, boolean bulk) throws RosaException {
+        setCursor(completed);
         IAnswerData a = castAnswer(answer);
 
         if (a != null) {
-
+            
+            if (!bulk) {
+                answers.insertElementAt(answer, completed);
+            }
+            
             switch (controller.answerQuestion(a)) {
                 case FormEntryController.ANSWER_CONSTRAINT_VIOLATED:
                     throw new RosaException("Answer constraint was violated.");
@@ -327,8 +330,16 @@ public final class RosaFactory implements Serializable {
         throw new RosaException("Answer data-type was incorrect.");
     }
     
-    public int answerQuestion(String answer) throws RosaException {
-        return answerQuestion(answer, -1);
+    public int processAnswer(String answer) throws RosaException {
+        return processAnswer(answer, false);
+    }
+    
+    private void answerAllQuestions() throws RosaException {
+        completed = 0;
+        
+        while (completed < total) {
+            processAnswer(answers.get(completed), true);
+        }
     }
     
     /**
@@ -339,6 +350,7 @@ public final class RosaFactory implements Serializable {
      * @throws RosaException 
      */
     public String getCompletedXForm() throws RosaException {
+        answerAllQuestions();
         byte[] serialised = serialiseXForm();
         return serialised != null ? new String(serialised) : null;
     }

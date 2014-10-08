@@ -91,7 +91,7 @@ public class RosaFactoryJedisClientIntegrationTest {
         byte[] serialised, stored;
         String key;
 
-        assertTrue(serialiseRosa.answerQuestion("test") > 0);
+        assertTrue(serialiseRosa.processAnswer("test") > 0);
         completed = serialiseRosa.getCompleted();
 
         serialised = RosaFactory.persist(serialiseRosa);
