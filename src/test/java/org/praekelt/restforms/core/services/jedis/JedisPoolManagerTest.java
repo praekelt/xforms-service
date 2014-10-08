@@ -54,9 +54,8 @@ public class JedisPoolManagerTest {
     @Test
     public void testStop() throws Exception {
         System.out.println("stop");
+        new JedisFactory().build();
         JedisPoolManager instance = new JedisPoolManager(JedisFactory.getJedisPool());
-        
-        e.expect(NullPointerException.class);
         instance.stop();
     }
     
