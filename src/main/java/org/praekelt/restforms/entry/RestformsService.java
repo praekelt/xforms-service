@@ -6,6 +6,7 @@ import io.dropwizard.setup.Environment;
 import org.praekelt.restforms.core.RestformsConfiguration;
 import org.praekelt.restforms.core.resources.AnswersResource;
 import org.praekelt.restforms.core.resources.FormsResource;
+import org.praekelt.restforms.core.resources.ResponsesResource;
 import org.praekelt.restforms.core.services.jedis.JedisClient;
 import org.praekelt.restforms.core.services.jedis.JedisFactory;
 import org.praekelt.restforms.core.services.jedis.JedisPoolManager;
@@ -28,6 +29,6 @@ public class RestformsService extends Application<RestformsConfiguration> {
         env.healthChecks().register("JedisClient", new JedisClient.JedisHealthCheck(jedisClient));
         env.jersey().register(new FormsResource(jedisClient));
         env.jersey().register(new AnswersResource(jedisClient));
+        env.jersey().register(new ResponsesResource(jedisClient));
     }
-    
 }
