@@ -440,5 +440,7 @@ public class JedisClientTest {
         assertTrue(jedisClient.hashDeletePOJO(key));
         assertFalse(jedisClient.hashDeletePOJO(key));
         assertFalse(jedisClient.hashPOJOExists(key));
+        assertFalse(jedisClient.hashDeletePOJO(""));
+        assertFalse(jedisClient.hashDeletePOJO(null));
     }
 }
