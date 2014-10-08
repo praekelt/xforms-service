@@ -168,6 +168,7 @@ public class RosaFactoryTest {
         byte[] stored = RosaFactory.persist(instance);
         assertTrue(stored.length > 0);
         assertTrue(stored instanceof byte[]);
+        assertNull(RosaFactory.persist(null));
     }
 
     /**
@@ -189,6 +190,8 @@ public class RosaFactoryTest {
         assertEquals(instance.getTotal(), rebuilt.getTotal());
         assertEquals(instance.getCompleted(), rebuilt.getCompleted());
         assertArrayEquals(instance.getQuestionTexts(), rebuilt.getQuestionTexts());
+        assertNull(RosaFactory.rebuild(null));
+        assertNull(RosaFactory.rebuild(new byte[]{}));
     }
     
     /**
