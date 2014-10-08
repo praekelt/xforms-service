@@ -57,7 +57,7 @@ public class AnswersResourceTest {
             fail("Couldn't initialise RosaFactory instance.");
         }
         
-        while (rf.answerQuestion("123") != -1) {}
+        while (rf.processAnswer("123") != -1) {}
         
         completedForm = rf.getCompletedXForm();
         
@@ -95,9 +95,9 @@ public class AnswersResourceTest {
                id = instance.createResource("form", form);
         
         assertTrue(r.setUp(form));
-        assertTrue(r.answerQuestion("d") > 0);
-        assertTrue(r.answerQuestion("e") > 0);
-        assertTrue(r.answerQuestion("f") > 0);
+        assertTrue(r.processAnswer("d") > 0);
+        assertTrue(r.processAnswer("e") > 0);
+        assertTrue(r.processAnswer("f") > 0);
         assertTrue(instance.updateResource(id, RosaFactory.persist(r)));
         
         Response instanceIdResponse = instance.getSingle(instanceId);
