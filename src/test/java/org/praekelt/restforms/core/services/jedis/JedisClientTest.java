@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static org.junit.matchers.JUnitMatchers.containsString;
 import org.praekelt.restforms.core.exceptions.JedisException;
 
 /**
@@ -51,6 +52,15 @@ public class JedisClientTest {
         } catch (JedisException e) {
             System.err.println("Couldn't tear down...");
         }
+    }
+    
+    @Test
+    public void testJedisHealthCheck() throws Exception {
+        System.out.println("jedisHealthCheck");
+        JedisClient.JedisHealthCheck jhc = new JedisClient.JedisHealthCheck(jedisClient);
+        JedisClient.JedisHealthCheck.Result r = jhc.check();
+        assertTrue(r.isHealthy());
+        assertThat(r.getMessage(), containsString("A connection to Redis was established."));
     }
 
     /**
