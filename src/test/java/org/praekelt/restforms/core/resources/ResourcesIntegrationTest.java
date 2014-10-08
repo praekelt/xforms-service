@@ -1,5 +1,6 @@
 package org.praekelt.restforms.core.resources;
 
+import javax.ws.rs.core.Response;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
@@ -57,15 +58,37 @@ public class ResourcesIntegrationTest {
     public void testXFormResources() throws Exception {
         System.out.println("XFormResources");
         
-        assertEquals(201, forms.create(xform).getStatus());
+        Response createdForm = forms.create(xform);
+        String formId = jedis.keyGetAll().iterator().next(),
+               createdFormJson = "{\"id\":\""+formId+"\",\"status\":201,\"message\":\"Created XForm.\"}",
+               firstQuestionJson = "{\"id\":\""+formId+"\",\"question\":\"what's your surname?\",\"status\":200,\"message\":\"Question completed.\"}",
+               secondQuestionJson = "{\"id\":\""+formId+"\",\"question\":\"what's your gender?\",\"status\":200,\"message\":\"Question completed.\"}",
+               thirdQuestionJson = "{\"id\":\""+formId+"\",\"question\":\"what's your blah?\",\"status\":200,\"message\":\"Question completed.\"}",
+               fourthQuestionJson = "{\"id\":\""+formId+"\",\"status\":200,\"message\":\"XForm completed.\"}",
+               completedFormXml = "<?xml version='1.0' ?><person><name>123</name><surname>123</surname><gender>123</gender><blah>123</blah></person>";
         
-        String formId = jedis.keyGetAll().iterator().next();
+        Response firstQuestion = responses.answerQuestion(formId, rr),
+                 secondQuestion = responses.answerQuestion(formId, rr),
+                 thirdQuestion = responses.answerQuestion(formId, rr),
+                 fourthQuestion = responses.answerQuestion(formId, rr),
+                 completedForm = answers.getSingle(formId);
         
-        assertEquals(200, responses.answerQuestion(formId, rr).getStatus());
-        assertEquals(200, responses.answerQuestion(formId, rr).getStatus());
-        assertEquals(200, responses.answerQuestion(formId, rr).getStatus());
-        assertEquals(200, responses.answerQuestion(formId, rr).getStatus());
+        assertEquals(201, createdForm.getStatus());
+        assertEquals(createdFormJson, createdForm.getEntity());
         
-        assertEquals(200, answers.getSingle(formId).getStatus());
+        assertEquals(200, firstQuestion.getStatus());
+        assertEquals(firstQuestionJson, firstQuestion.getEntity());
+        
+        assertEquals(200, secondQuestion.getStatus());
+        assertEquals(secondQuestionJson, secondQuestion.getEntity());
+        
+        assertEquals(200, thirdQuestion.getStatus());
+        assertEquals(thirdQuestionJson, thirdQuestion.getEntity());
+        
+        assertEquals(200, fourthQuestion.getStatus());
+        assertEquals(fourthQuestionJson, fourthQuestion.getEntity());
+        
+        assertEquals(200, completedForm.getStatus());
+        assertEquals(completedFormXml, completedForm.getEntity());
     }
 }
