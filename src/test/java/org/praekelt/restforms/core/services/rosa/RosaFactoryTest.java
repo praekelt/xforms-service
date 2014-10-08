@@ -17,7 +17,7 @@ import org.junit.rules.ExpectedException;
  */
 public class RosaFactoryTest {
     
-    private final String form = "<h:html xmlns=\"http://www.w3.org/2002/xforms\" xmlns:h=\"http://www.w3.org/1999/xhtml\" xmlns:ev=\"http://www.w3.org/2001/xml-events\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:jr=\"http://openrosa.org/javarosa\"><h:head><h:title>xforms service form</h:title><model><instance><person><name>default</name><surname>default</surname><gender>default</gender><blah>123</blah></person></instance><bind nodeset=\"name\" type=\"string\" /><bind nodeset=\"surname\" type=\"string\" /><bind nodeset=\"gender\" type=\"string\" /><bind nodeset=\"blah\" type=\"int\" /></model></h:head><h:body><input ref=\"name\"><label>what's your name?</label></input><input ref=\"surname\"><label>what's your surname?</label></input><input ref=\"gender\"><label>what's your gender?</label></input><input ref=\"blah\"><label>what's your blah?</label></input></h:body></h:html>";
+    private final String form = "<h:html xmlns=\"http://www.w3.org/2002/xforms\" xmlns:h=\"http://www.w3.org/1999/xhtml\" xmlns:ev=\"http://www.w3.org/2001/xml-events\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:jr=\"http://openrosa.org/javarosa\"><h:head><h:title>xforms service form</h:title><model><instance><person><name></name><surname></surname><gender></gender><blah></blah></person></instance><bind nodeset=\"name\" type=\"string\" required=\"true()\"/><bind nodeset=\"surname\" type=\"string\" /><bind nodeset=\"gender\" type=\"string\" /><bind nodeset=\"blah\" type=\"int\" constraint=\". &gt; 0\"/></model></h:head><h:body><input ref=\"name\"><label>what's your name?</label></input><input ref=\"surname\"><label>what's your surname?</label></input><input ref=\"gender\"><label>what's your gender?</label></input><input ref=\"blah\"><label>what's your blah?</label></input></h:body></h:html>";
     private final String completed = "<?xml version='1.0' ?><person><name>...</name><surname>...</surname><gender>...</gender><blah>123</blah></person>";
     
     public RosaFactoryTest() {
@@ -150,6 +150,10 @@ public class RosaFactoryTest {
         
         
         assertTrue(instance.processAnswer("abcdefg") > 0);
+        
+        e.expect(RosaException.class);
+        e.expectMessage(containsString("The question number was out of bounds."));
+        instance.processAnswer("abcd");
     }
     
     /**
@@ -164,6 +168,7 @@ public class RosaFactoryTest {
         byte[] stored = RosaFactory.persist(instance);
         assertTrue(stored.length > 0);
         assertTrue(stored instanceof byte[]);
+        assertNull(RosaFactory.persist(null));
     }
 
     /**
@@ -185,6 +190,8 @@ public class RosaFactoryTest {
         assertEquals(instance.getTotal(), rebuilt.getTotal());
         assertEquals(instance.getCompleted(), rebuilt.getCompleted());
         assertArrayEquals(instance.getQuestionTexts(), rebuilt.getQuestionTexts());
+        assertNull(RosaFactory.rebuild(null));
+        assertNull(RosaFactory.rebuild(new byte[]{}));
     }
     
     /**
@@ -199,10 +206,14 @@ public class RosaFactoryTest {
         
         instance = new RosaFactory();
         instance.setUp(this.form);
+        
+        assertNull(instance.getCompletedXForm());
         instance.processAnswer("...");
         instance.processAnswer("...");
         instance.processAnswer("...");
-        instance.processAnswer("123");
+        e.expect(RosaException.class);
+        e.expectMessage(containsString("Answer constraint was violated."));
+        instance.processAnswer("0");
         
         assertEquals(this.completed, instance.getCompletedXForm());
     }

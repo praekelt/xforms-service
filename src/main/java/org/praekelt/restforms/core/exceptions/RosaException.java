@@ -11,8 +11,4 @@ public class RosaException extends Exception {
     public RosaException(String message) {
         super(message);
     }
-    
-    public RosaException(Throwable cause) {
-        super(cause);
-    }
 }

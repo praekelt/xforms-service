@@ -32,6 +32,15 @@ public class JedisFactoryTest {
     @After
     public void tearDown() {
     }
+    
+    /**
+     * Test of getJedisPool method, of class JedisFactory.
+     */
+    @Test
+    public void testGetJedisPool() {
+        System.out.println("getJedisPool");
+        assertTrue(JedisFactory.getJedisPool() instanceof JedisPool);
+    }
 
     /**
      * Test of setHost method, of class JedisFactory.

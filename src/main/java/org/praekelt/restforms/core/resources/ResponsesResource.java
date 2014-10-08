@@ -105,7 +105,7 @@ public final class ResponsesResource extends BaseResource {
             
             rf = RosaFactory.rebuild(fromPersist);
 
-            if (rf != null && rf.setUp()) {
+            if (rf != null) {
                 
                 if (rf.getCompleted() >= rf.getTotal()) {
                     return Response.status(Response.Status.BAD_REQUEST).entity(toJson(

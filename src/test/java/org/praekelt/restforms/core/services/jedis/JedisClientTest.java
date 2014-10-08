@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static org.junit.matchers.JUnitMatchers.containsString;
 import org.praekelt.restforms.core.exceptions.JedisException;
 
 /**
@@ -52,6 +53,15 @@ public class JedisClientTest {
             System.err.println("Couldn't tear down...");
         }
     }
+    
+    @Test
+    public void testJedisHealthCheck() throws Exception {
+        System.out.println("jedisHealthCheck");
+        JedisClient.JedisHealthCheck jhc = new JedisClient.JedisHealthCheck(jedisClient);
+        JedisClient.JedisHealthCheck.Result r = jhc.check();
+        assertTrue(r.isHealthy());
+        assertThat(r.getMessage(), containsString("A connection to Redis was established."));
+    }
 
     /**
      * Test of keyPersist method, of class JedisClient.
@@ -73,10 +83,13 @@ public class JedisClientTest {
     @Test
     public void testKeyExpire() throws Exception {
         System.out.println("keyExpire");
-        assertEquals(false, jedisClient.keyExpire("", 0));
-        assertEquals(false, jedisClient.keyExpire(null, 0));
-        assertEquals(true, jedisClient.keyExpire("acomplexkeyfortesting", 60));
-        assertEquals(false, jedisClient.keyExpire("acomplexkeyfortesting", 0));
+        assertFalse(jedisClient.keyExpire("", 0));
+        assertFalse(jedisClient.keyExpire(null, 0));
+        assertTrue(jedisClient.keyExpire("acomplexkeyfortesting", 60));
+        assertFalse(jedisClient.keyExpire("acomplexkeyfortesting", 0));
+        assertTrue(jedisClient.keyExpire("acomplexkeyfortesting"));
+        assertFalse(jedisClient.keyExpire(null));
+        assertFalse(jedisClient.keyExpire(""));
     }
 
     /**
@@ -437,5 +450,7 @@ public class JedisClientTest {
         assertTrue(jedisClient.hashDeletePOJO(key));
         assertFalse(jedisClient.hashDeletePOJO(key));
         assertFalse(jedisClient.hashPOJOExists(key));
+        assertFalse(jedisClient.hashDeletePOJO(""));
+        assertFalse(jedisClient.hashDeletePOJO(null));
     }
 }

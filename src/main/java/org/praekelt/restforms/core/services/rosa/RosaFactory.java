@@ -114,23 +114,17 @@ public final class RosaFactory implements Serializable {
      * the javarosa library
      */
     private byte[] serialiseXForm() throws RosaException {
-        XFormSerializingVisitor x;
         
-        if (completed == total) {
-            x = new XFormSerializingVisitor();
-        
-            try {
-                return x.serializeInstance(form.getInstance());
-            } catch (IOException e) {
-                logger.log(
-                    Level.ERROR,
-                    "RosaFactory#serialiseXForm(): unable to parse and generate a model/instance XML document from the given argument, " + form.getInstance().toString() + "." + 
-                    " IOException trace: " + e.getMessage()
-                );
-                throw new RosaException("Unable to create a model/instance XML document.");
-            }
+        try {
+            return new XFormSerializingVisitor().serializeInstance(form.getInstance());
+        } catch (IOException e) {
+            logger.log(
+                Level.ERROR,
+                "RosaFactory#serialiseXForm(): unable to parse and generate a model/instance XML document from the given argument, " + form.getInstance().toString() + "." + 
+                " IOException trace: " + e.getMessage()
+            );
+            throw new RosaException("Unable to create a model/instance XML document.");
         }
-        return null;
     }
     
     /**
@@ -350,8 +344,12 @@ public final class RosaFactory implements Serializable {
      * @throws RosaException 
      */
     public String getCompletedXForm() throws RosaException {
-        answerAllQuestions();
-        byte[] serialised = serialiseXForm();
-        return serialised != null ? new String(serialised) : null;
+        
+        if (completed == total) {
+            answerAllQuestions();
+            byte[] serialised = serialiseXForm();
+            return serialised != null ? new String(serialised) : null;
+        }
+        return null;
     }
 }
