@@ -150,6 +150,10 @@ public class RosaFactoryTest {
         
         
         assertTrue(instance.processAnswer("abcdefg") > 0);
+        
+        e.expect(RosaException.class);
+        e.expectMessage(containsString("The question number was out of bounds."));
+        instance.processAnswer("abcd");
     }
     
     /**
