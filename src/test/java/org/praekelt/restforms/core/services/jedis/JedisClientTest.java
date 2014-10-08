@@ -73,10 +73,13 @@ public class JedisClientTest {
     @Test
     public void testKeyExpire() throws Exception {
         System.out.println("keyExpire");
-        assertEquals(false, jedisClient.keyExpire("", 0));
-        assertEquals(false, jedisClient.keyExpire(null, 0));
-        assertEquals(true, jedisClient.keyExpire("acomplexkeyfortesting", 60));
-        assertEquals(false, jedisClient.keyExpire("acomplexkeyfortesting", 0));
+        assertFalse(jedisClient.keyExpire("", 0));
+        assertFalse(jedisClient.keyExpire(null, 0));
+        assertTrue(jedisClient.keyExpire("acomplexkeyfortesting", 60));
+        assertFalse(jedisClient.keyExpire("acomplexkeyfortesting", 0));
+        assertTrue(jedisClient.keyExpire("acomplexkeyfortesting"));
+        assertFalse(jedisClient.keyExpire(null));
+        assertFalse(jedisClient.keyExpire(""));
     }
 
     /**
