@@ -203,6 +203,8 @@ public class RosaFactoryTest {
         
         instance = new RosaFactory();
         instance.setUp(this.form);
+        
+        assertNull(instance.getCompletedXForm());
         instance.processAnswer("...");
         instance.processAnswer("...");
         instance.processAnswer("...");
