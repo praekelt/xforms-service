@@ -4,5 +4,7 @@ jdk:
     - openjdk7
 before_install:
     - mvn install:install-file -Dfile=lib/javarosa.jar -DgroupId=org.javarosa -DartifactId=javarosa-libraries -Dversion=latest -Dpackaging=jar -DgeneratePom=true
+after_success:
+    - mvn clean cobertura:cobertura coveralls:cobertura
 services:
     - redis-server
