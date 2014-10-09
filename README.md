@@ -13,11 +13,11 @@ Dropwizard also provides [documentation](https://dropwizard.github.io/dropwizard
 ##### Building
 
     git clone https://github.com/praekelt/xforms-service.git
-    
+
     cd xforms-service
-    
+
     mvn install:install-file -Dfile=lib/javarosa.jar -DgroupId=org.javarosa -DartifactId=javarosa-libraries -Dversion=latest -Dpackaging=jar -DgeneratePom=true
-    
+
     mvn clean package
 
 This'll grab the project sources, install any bundled dependencies, build the entire package and run any contained tests.
@@ -31,7 +31,7 @@ _From NetBeans_:
 _From the terminal_:
 
 From the project's root directory, assuming the project has been successfully built
-	
+
     java -jar target/restforms-1.0-SNAPSHOT.jar server example_conf.yml
 
 ##### Endpoints
@@ -53,3 +53,5 @@ localhost:8081
 - `GET /ping`: pongs the client.
 - `GET /threads`: dumps thread data for debugging.
 - `POST /tasks/gc`: invokes the application's garbage collector.
+
+See the [API documentation](./http-api-docs.md) for more details on the available endpoints.
