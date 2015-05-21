@@ -1,0 +1,37 @@
+template: Hello, %s!
+
+defaultName: Stranger
+
+jedisFactory:
+  host: redis
+  expires: 3600
+
+server:
+#  softNofileLimit: 1000
+#  hardNofileLimit: 1000
+  applicationConnectors:
+    - type: http
+      port: 8080
+  adminConnectors:
+    - type: http
+      port: 8081
+      
+logging:
+
+  level: DEBUG
+  appenders:
+    - type: console
+      threshold: WARN
+      target: stderr
+    - type: file
+      threshold: INFO
+      currentLogFilename: ./logs/main.log
+      archivedLogFilenamePattern: ./logs/main-%d.log.gz
+      archivedFileCount: 20
+      timeZone: UTC
+    - type: file
+      threshold: DEBUG
+      currentLogFilename: ./logs/debug.log
+      archivedLogFilenamePattern: ./logs/debug-%d.log.gz
+      archivedFileCount: 40
+      timeZone: UTC
